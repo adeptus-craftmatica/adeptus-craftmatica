@@ -19,14 +19,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: living-library
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      - name: Extract merge script from main
+        run: git show origin/main:.github/scripts/merge_submissions.py > /tmp/merge_submissions.py
+
       - name: Merge submissions into master files
-        run: python .github/scripts/merge_submissions.py
+        run: python /tmp/merge_submissions.py
 
       - name: Commit updated master files
         run: |
