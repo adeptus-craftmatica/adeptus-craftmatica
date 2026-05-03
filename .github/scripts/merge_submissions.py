@@ -14,6 +14,8 @@ Run from repo root on the living-library branch.
 from __future__ import annotations
 
 import csv
+import datetime
+import json
 import re
 from pathlib import Path
 
@@ -119,8 +121,34 @@ def merge(filename: str, headers: list[str], key_fn):
 
 # ── Entry point ────────────────────────────────────────────────────────────────
 
+def write_status():
+    totals = {}
+    label_map = {
+        "paints.csv":    "paints",
+        "materials.csv": "materials",
+        "tools.csv":     "tools",
+        "models.csv":    "models",
+    }
+    for fname, _, __ in TRACKERS:
+        path = MASTER_DIR / fname
+        if path.exists():
+            with path.open(newline="", encoding="utf-8") as f:
+                count = sum(1 for _ in csv.DictReader(f))
+            totals[label_map[fname]] = count
+
+    status = {
+        "last_merge": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "totals": totals,
+    }
+    status_path = MASTER_DIR / "community_status.json"
+    status_path.write_text(json.dumps(status, indent=2), encoding="utf-8")
+    print(f"  community_status.json written — totals: {totals}")
+
+
 if __name__ == "__main__":
     print("Merging community submissions into master files…\n")
     for fname, hdrs, key_fn in TRACKERS:
         merge(fname, hdrs, key_fn)
+    print()
+    write_status()
     print("\nDone.")
