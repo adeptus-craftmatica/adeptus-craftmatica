@@ -1,30 +1,4 @@
 brand,name,type,color
-Citadel,Abaddon Black,Base,#000000
-Citadel,Agrax Earthshade,Shade,#71725F
-Citadel,Armageddon Dust,Technical,#E3D374
-Citadel,Astrogranite,Technical,#8D8D8D
-Citadel,Balthasar Gold,Base,#B99362
-Citadel,Bugman's Glow,Base,#7C4B44
-Citadel,Corax White,Base,#FFFFFF
-Citadel,Guilliman Flesh,Contrast,#DC9E91
-Citadel,Kantor Blue,Base,#09134E
-Citadel,Khorne Red,Base,#5F0004
-Citadel,Leadbelcher,Base,#959595
-Citadel,Macragge Blue,Base,#1F3D7B
-Citadel,Magos Purple,Contrast,#BCA5C1
-Citadel,Mephiston Red,Base,#8E020F
-Citadel,Naggaroth Night,Base,#3B2B50
-Citadel,Nuln Oil,Shade,#696971
-Citadel,Rakarth Flesh,Base,#9B998D
-Citadel,Retribution Armor,Base,#B5A071
-Citadel,Skeleton Horde,Contrast,#EDE0C0
-Citadel,Snakebite Leather,Contrast,#BC7837
-Citadel,Steel Legion Drab,Base,#574E2F
-Citadel,Stirland Mud,Technical,#62441F
-Citadel,Thunderhawk Blue,Layer,#436A71
-Citadel,Wraithbone,Base,#DAD0B4
-Citadel,Wyldwood,Contrast,#766261
-Golden,Titan Buff,High Flow Acrylics,#C9C5AB
 The Army Painter,Absolution Green,Speedpaint 2.0,#2C4A2D
 The Army Painter,Aged Hide,Speedpaint 2.0,#CD7559
 The Army Painter,Algae Green,Speedpaint 2.0,#A1AE64
@@ -115,6 +89,33 @@ The Army Painter,Tidal Wave,Speedpaint 2.0,#3A7CBB
 The Army Painter,Tyrian Navy,Speedpaint 2.0,#324352
 The Army Painter,Warrior Skin,Speedpaint 2.0,#A0785D
 The Army Painter,Zealot Yellow,Speedpaint 2.0,#F6DB4A
+Citadel,Abaddon Black,Base,#000000
+Citadel,Agrax Earthshade,Shade,#71725F
+Citadel,Armageddon Dust,Technical,#E3D374
+Citadel,Astrogranite,Technical,#8D8D8D
+Citadel,Balthasar Gold,Base,#B99362
+Citadel,Bugman's Glow,Base,#7C4B44
+Citadel,Corax White,Base,#FFFFFF
+Citadel,Guilliman Flesh,Contrast,#DC9E91
+Citadel,Kantor Blue,Base,#09134E
+Citadel,Khorne Red,Base,#5F0004
+Citadel,Leadbelcher,Base,#959595
+Citadel,Macragge Blue,Base,#1F3D7B
+Citadel,Magos Purple,Contrast,#BCA5C1
+Citadel,Mephiston Red,Base,#8E020F
+Citadel,Naggaroth Night,Base,#3B2B50
+Citadel,Nuln Oil,Shade,#696971
+Citadel,Rakarth Flesh,Base,#9B998D
+Citadel,Retribution Armor,Base,#B5A071
+Citadel,Skeleton Horde,Contrast,#EDE0C0
+Citadel,Snakebite Leather,Contrast,#BC7837
+Citadel,Steel Legion Drab,Base,#574E2F
+Citadel,Stirland Mud,Technical,#62441F
+Citadel,Testing Merge Red,High Flow Acrylics,#F81000
+Citadel,Thunderhawk Blue,Layer,#436A71
+Citadel,Wraithbone,Base,#DAD0B4
+Citadel,Wyldwood,Contrast,#766261
+Golden,Titan Buff,High Flow Acrylics,#C9C5AB
 Vallejo,Basic Skin Tone,Model Color,#E9AC8D
 Vallejo,Brassy Brass,Game Color,#C28A69
 Vallejo,Bronze Fleshtone,Game Color,#AC6520
