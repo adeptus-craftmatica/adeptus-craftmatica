@@ -1,0 +1,42 @@
+name: Merge Community Submissions
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - living-library
+    paths:
+      - 'submissions/**'
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout living-library
+        uses: actions/checkout@v4
+        with:
+          ref: living-library
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Extract merge script from main
+        run: git show origin/main:.github/scripts/merge_submissions.py > /tmp/merge_submissions.py
+
+      - name: Merge submissions into master files
+        run: python /tmp/merge_submissions.py
+
+      - name: Commit updated master files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add master/
+          git diff --staged --quiet && echo "No changes to commit." || \
+            git commit -m "chore: merge community submissions [skip ci]"
+          git push
