@@ -1,0 +1,12 @@
+{
+    "name": "Paint Tracker 2.0",
+    "id": "paint_tracker_v2",
+    "version": "1.0.0",
+    "description": "Redesigned paint collection manager with card grid, usage logging, and smart restocking.",
+    "author": "The Fabricator",
+    "entry": "plugin",
+    "ui": true,
+    "category": "hobby",
+    "dependencies": [],
+    "events": ["paint_added", "paint_updated", "paint_removed"]
+}
