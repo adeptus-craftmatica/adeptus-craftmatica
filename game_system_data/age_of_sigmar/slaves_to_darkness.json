@@ -1,0 +1,1534 @@
+{
+  "army": "Slaves to Darkness",
+  "units": [
+    {
+      "name": "Chaos Chariots",
+      "size": "120 x 92 mm",
+      "move": "12",
+      "save": "4+",
+      "bravery": "6",
+      "wounds": "7",
+      "melee_weapon": [
+        {
+          "name": "Lashing Whip",
+          "range": "2",
+          "attacks": "2",
+          "to_hit": "4+",
+          "to_wound": "4+",
+          "rend": "-",
+          "damage": "1"
+        },
+        {
+          "name": "Chaos Greatblade",
+          "range": "2",
+          "attacks": "2",
+          "to_hit": "3+",
+          "to_wound": "3+",
+          "rend": "-1",
+          "damage": "2"
+        },
+        {
+          "name": "Chaos War-flail",
+          "range": "2",
+          "attacks": "D6",
+          "to_hit": "4+",
+          "to_wound": "3+",
+          "rend": "-",
+          "damage": "1"
+        },
+        {
+          "name": "Trampling Hooves",
+          "range": "1",
+          "attacks": "4",
+          "to_hit": "4+",
+          "to_wound": "4+",
+          "rend": "-",
+          "damage": "1"
+        }
+      ],
+      "abilites": [
+        {
+          "name": "Mark of Chaos",
+          "desc": "When you select this unit to be part of your army, you must give it one of the following Mark of Chaos keywords: Khorne, Tzeentch, Nurgle, Slaanesh, Undivided."
+        },
+        {
+          "name": "Don't Spare the Lash",
+          "desc": "Once per battle, this unit can run and still charge later in the same turn."
+        },
+        {
+          "name": "Swift Death",
+          "desc": "After this unit makes a charge move, you can pick 1 enemy unit within 1\" of this unit and roll a number of diece equal to the charge roll for that charge move. For each 5+, the enemy unit suffers 1 mortal wound."
+        }
+      ],
+      "keywords": [
+        "CHAOS",
+        "MORTAL",
+        "SLAVES TO DARKNESS",
+        "MARK OF CHAOS",
+        "CHAOS CHARIOTS"
+      ]
+    },
+    {
+      "name": "Chaos Chosen",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Gorebeast Chariots",
+      "size": "120 x 92 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Knights",
+      "size": "75 x 42 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Lord on Daemonic Mount",
+      "size": "75 x 42 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Lord on Manticore",
+      "size": "120 x 92 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Marauder Horsemen",
+      "size": "60 x 35 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Marauders",
+      "size": "25 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Sorcerer Lord",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Sorcerer Lord on Chaos Steed",
+      "size": "75 x 42 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Sorcerer Lord on Manticore",
+      "size": "120 x 92 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Spawn",
+      "size": "50 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Warriors",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos Warshrine",
+      "size": "120 x 92 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Daemon Prince",
+      "size": "60 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Darkoath Chieftain",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Darkoath Warqueen",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Exalted Hero of Chaos",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Lord of Chaos",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Nightmaw",
+      "size": "50 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Sayl the Faithless",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "The Godsworn Hunt",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "The Godsworn Hunt - Grawl",
+      "size": "25 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Theddra Skull-Scryer",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Archaon",
+      "size": "160 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Gaunt Summoner of Tzeentch",
+      "size": "40 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Varanguard",
+      "size": "75 x 42 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Cursd Ettin",
+      "size": "120 x 92 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Mutalith Vortex Beast",
+      "size": "120 x 92 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Chaos War Mammoth",
+      "size": "280 x 210 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Slaughterbrute",
+      "size": "120 x 92 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Be’lakor Chaos Daemon Prince",
+      "size": "60mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Daemon Prince",
+      "size": "60mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Furies",
+      "size": "25mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Soul Grinder",
+      "size": "160mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    }
+  ]
+}

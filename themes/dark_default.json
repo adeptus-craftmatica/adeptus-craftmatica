@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "id": "dark_default",
+    "name": "Dark (Default)",
+    "author": "System",
+    "builtin": true,
+    "generated_from": null
+  },
+  "colors": {
+    "bg_deep":    "#141414",
+    "bg_base":    "#1c1c1c",
+    "bg_raised":  "#212121",
+    "bg_input":   "#2a2a2a",
+    "header_bg":  "#141414",
+    "card_bg":    "#1e1e1e",
+    "sidebar_bg": "#161616",
+    "border":     "#363636",
+    "border_hi":  "#484848",
+    "text_hi":    "#f0f0f0",
+    "text_mid":   "#d8d8d8",
+    "text_lo":    "#909090",
+    "text_dim":   "#606060",
+    "accent":     "#0078d4",
+    "accent_hi":  "#1a8ee8",
+    "accent_lo":  "#0f4a7a",
+    "danger":     "#e05555",
+    "danger_hi":  "#eb6868",
+    "danger_lo":  "#2a1515",
+    "success":    "#3dba6e",
+    "warning":    "#e07800"
+  },
+  "typography": {
+    "font_family": "Segoe UI",
+    "font_mono":   "Consolas",
+    "font_xs":   10,
+    "font_sm":   11,
+    "font_base": 12,
+    "font_lg":   13,
+    "font_xl":   15,
+    "font_2xl":  18,
+    "font_3xl":  22
+  },
+  "shape": {
+    "radius_xs":   3,
+    "radius_sm":   4,
+    "radius_base": 6,
+    "radius_lg":   8,
+    "radius_xl":   12
+  }
+}

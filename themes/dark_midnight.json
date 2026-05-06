@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "id": "dark_midnight",
+    "name": "Midnight Blue",
+    "author": "System",
+    "builtin": true,
+    "generated_from": null
+  },
+  "colors": {
+    "bg_deep":    "#0d0f14",
+    "bg_base":    "#131720",
+    "bg_raised":  "#191e2a",
+    "bg_input":   "#212736",
+    "header_bg":  "#0a0c11",
+    "card_bg":    "#161b26",
+    "sidebar_bg": "#0f1219",
+    "border":     "#252d42",
+    "border_hi":  "#3a4560",
+    "text_hi":    "#edf0f7",
+    "text_mid":   "#c8cfdf",
+    "text_lo":    "#7a88a8",
+    "text_dim":   "#4a5570",
+    "accent":     "#4f9eff",
+    "accent_hi":  "#70b4ff",
+    "accent_lo":  "#142244",
+    "danger":     "#e05555",
+    "danger_hi":  "#eb6868",
+    "danger_lo":  "#2a1515",
+    "success":    "#3dba6e",
+    "warning":    "#e07800"
+  },
+  "typography": {
+    "font_family": "Segoe UI",
+    "font_mono":   "Consolas",
+    "font_xs":   10,
+    "font_sm":   11,
+    "font_base": 12,
+    "font_lg":   13,
+    "font_xl":   15,
+    "font_2xl":  18,
+    "font_3xl":  22
+  },
+  "shape": {
+    "radius_xs":   3,
+    "radius_sm":   4,
+    "radius_base": 6,
+    "radius_lg":   8,
+    "radius_xl":   12
+  }
+}

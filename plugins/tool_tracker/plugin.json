@@ -1,0 +1,16 @@
+{
+    "name": "Tool Tracker",
+    "id": "tool_tracker",
+    "version": "1.0.0",
+    "description": "Track hobby tools — nippers, files, blades, brushes, adhesives and more",
+    "author": "The Fabricator",
+    "entry": "plugin",
+    "ui": true,
+    "category": "hobby",
+    "dependencies": [],
+    "events": [
+        "tool_added",
+        "tool_removed",
+        "tool_updated"
+    ]
+}

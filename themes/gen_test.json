@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "id": "gen_test",
+    "name": "Test",
+    "author": "Paint Scheme Generator",
+    "builtin": false,
+    "generated_from": null
+  },
+  "colors": {
+    "bg_deep": "#101311",
+    "bg_base": "#191D1A",
+    "bg_raised": "#202521",
+    "bg_input": "#282F29",
+    "header_bg": "#0E110F",
+    "card_bg": "#1B201C",
+    "sidebar_bg": "#121513",
+    "border": "#353B36",
+    "border_hi": "#49504A",
+    "text_hi": "#ECEEED",
+    "text_mid": "#D7DAD8",
+    "text_lo": "#89908A",
+    "text_dim": "#5C605D",
+    "accent": "#59D472",
+    "accent_hi": "#82DE94",
+    "accent_lo": "#223A27",
+    "danger": "#e05555",
+    "danger_hi": "#eb6868",
+    "danger_lo": "#2a1515",
+    "success": "#3dba6e",
+    "warning": "#e07800"
+  },
+  "typography": {
+    "font_family": "Segoe UI",
+    "font_mono": "Consolas",
+    "font_xs": 10,
+    "font_sm": 11,
+    "font_base": 12,
+    "font_lg": 13,
+    "font_xl": 15,
+    "font_2xl": 18,
+    "font_3xl": 22
+  },
+  "shape": {
+    "radius_xs": 3,
+    "radius_sm": 4,
+    "radius_base": 6,
+    "radius_lg": 8,
+    "radius_xl": 12
+  }
+}

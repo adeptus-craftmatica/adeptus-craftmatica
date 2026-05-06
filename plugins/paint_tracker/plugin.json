@@ -1,0 +1,18 @@
+{
+    "name": "Paint Tracker",
+    "id": "paint_tracker",
+    "version": "0.3.0",
+    "description": "Track paints by brand, name, color, and type with advanced filtering and statistics",
+    "author": "The Fabricator",
+    "entry": "plugin",
+
+
+  "ui": true,
+  "category": "hobby",
+
+  "dependencies": [],
+  "events": [
+    "paint_added",
+    "paint_removed"
+  ]
+}

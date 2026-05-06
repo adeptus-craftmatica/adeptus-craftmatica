@@ -1,0 +1,16 @@
+{
+    "name": "Materials Tracker",
+    "id": "materials_tracker",
+    "version": "1.0.0",
+    "description": "Track basing materials, mediums, and scenic supplies — static grass, tufts, sand, water effects and more",
+    "author": "The Fabricator",
+    "entry": "plugin",
+    "ui": true,
+    "category": "hobby",
+    "dependencies": [],
+    "events": [
+        "material_added",
+        "material_removed",
+        "material_updated"
+    ]
+}

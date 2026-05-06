@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "id": "gen_necron_horde",
+    "name": "Necron Horde",
+    "author": "Paint Scheme Generator",
+    "builtin": false,
+    "generated_from": null
+  },
+  "colors": {
+    "bg_deep": "#111310",
+    "bg_base": "#1A1D19",
+    "bg_raised": "#222520",
+    "bg_input": "#2A2F28",
+    "header_bg": "#0F110E",
+    "card_bg": "#1D201B",
+    "sidebar_bg": "#131512",
+    "border": "#373B35",
+    "border_hi": "#4B5049",
+    "text_hi": "#EDEEEC",
+    "text_mid": "#D8DAD7",
+    "text_lo": "#8B9089",
+    "text_dim": "#5E605C",
+    "accent": "#6FD439",
+    "accent_hi": "#8DDD63",
+    "accent_lo": "#2A3B21",
+    "danger": "#e05555",
+    "danger_hi": "#eb6868",
+    "danger_lo": "#2a1515",
+    "success": "#3dba6e",
+    "warning": "#e07800"
+  },
+  "typography": {
+    "font_family": "Segoe UI",
+    "font_mono": "Consolas",
+    "font_xs": 10,
+    "font_sm": 11,
+    "font_base": 12,
+    "font_lg": 13,
+    "font_xl": 15,
+    "font_2xl": 18,
+    "font_3xl": 22
+  },
+  "shape": {
+    "radius_xs": 3,
+    "radius_sm": 4,
+    "radius_base": 6,
+    "radius_lg": 8,
+    "radius_xl": 12
+  }
+}

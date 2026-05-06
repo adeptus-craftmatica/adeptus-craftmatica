@@ -1,0 +1,25 @@
+{
+  "name": "Model Tracker",
+  "id": "model_tracker",
+  "version": "0.1.0",
+  "description": "Track Warhammer, Gundam, D&D, and all your hobby models with status, faction, and paint links",
+  "author": "The Fabricator",
+  "entry": "plugin",
+
+  "ui": true,
+  "category": "hobby",
+
+  "dependencies": [],
+
+  "events": {
+    "emits": [
+      "model_added",
+      "model_removed",
+      "model_updated",
+      "model_status_changed"
+    ],
+    "listens": [
+      "paint_removed"
+    ]
+  }
+}

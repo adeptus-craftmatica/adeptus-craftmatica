@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "id": "dark_warm",
+    "name": "Forge Dark",
+    "author": "System",
+    "builtin": true,
+    "generated_from": null
+  },
+  "colors": {
+    "bg_deep":    "#141210",
+    "bg_base":    "#1d1a17",
+    "bg_raised":  "#23201c",
+    "bg_input":   "#2c2822",
+    "header_bg":  "#110f0d",
+    "card_bg":    "#201d19",
+    "sidebar_bg": "#181512",
+    "border":     "#3a3530",
+    "border_hi":  "#504a42",
+    "text_hi":    "#f2ede8",
+    "text_mid":   "#d9d0c5",
+    "text_lo":    "#958880",
+    "text_dim":   "#635850",
+    "accent":     "#e07820",
+    "accent_hi":  "#f08c35",
+    "accent_lo":  "#3a2010",
+    "danger":     "#e05555",
+    "danger_hi":  "#eb6868",
+    "danger_lo":  "#2a1515",
+    "success":    "#3dba6e",
+    "warning":    "#e07800"
+  },
+  "typography": {
+    "font_family": "Segoe UI",
+    "font_mono":   "Consolas",
+    "font_xs":   10,
+    "font_sm":   11,
+    "font_base": 12,
+    "font_lg":   13,
+    "font_xl":   15,
+    "font_2xl":  18,
+    "font_3xl":  22
+  },
+  "shape": {
+    "radius_xs":   3,
+    "radius_sm":   4,
+    "radius_base": 6,
+    "radius_lg":   8,
+    "radius_xl":   12
+  }
+}

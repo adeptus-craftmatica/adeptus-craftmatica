@@ -1,0 +1,23 @@
+{
+  "name": "Campaign Tracker",
+  "id": "campaign_tracker",
+  "version": "0.1.0",
+  "description": "Track campaigns, sessions, characters, and battles for any tabletop game or RPG",
+  "author": "The Fabricator",
+  "entry": "plugin",
+  "ui": true,
+  "category": "hobby",
+  "dependencies": [],
+  "events": {
+    "emits": [
+      "campaign_created",
+      "campaign_updated",
+      "campaign_deleted",
+      "battle_logged",
+      "character_added"
+    ],
+    "listens": [
+      "model_removed"
+    ]
+  }
+}

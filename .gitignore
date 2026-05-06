@@ -1,0 +1,58 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# PyCharm / IDE
+.idea/
+.vscode/
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# Local environment and secrets
+.env
+.env.*
+*.pem
+*.key
+secrets.json
+token.txt
+
+# Local application state
+app.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Build artifacts
+dist/
+build/
+
+# Dev-only plugin/tools
+plugins/dev_tools/
+
+# Generated exports and archives
+project_exports/
+project_export_*.txt
+project_export_*.zip
+*.zip
+
+# Runtime/user-generated media
+gallery/
+
+# Local scratch files
+temp/
+*.tmp
+
+# Qt cache / compiled UI
+*.qmlc

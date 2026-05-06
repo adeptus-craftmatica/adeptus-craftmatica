@@ -1,0 +1,521 @@
+{
+  "army": "Sylvanth",
+  "units": [
+    {
+      "name": "Alarielle the Everqueen",
+      "size": "160 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Branchwraith",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Branchwych",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Drycha Hamadreth",
+      "size": "105 x 70 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Kurnoth Hunters",
+      "size": "50 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Spirit of Durthu",
+      "size": "105 x 70 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Spite-Revenants",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Sylvaneth Dryads",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Sylvaneth Wyldwood",
+      "size": "Use model mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Tree-Revenants",
+      "size": "32 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Treelord",
+      "size": "105 x 70 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    },
+    {
+      "name": "Treelord Ancient",
+      "size": "105 x 70 mm",
+      "move": "",
+      "save": "",
+      "bravery": "",
+      "wounds": "",
+      "missile_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "melee_weapon": [
+        {
+          "name": "",
+          "range": "",
+          "attacks": "",
+          "to_hit": "",
+          "to_wound": "",
+          "rend": "",
+          "damage": ""
+        }
+      ],
+      "abilites": [
+        {
+          "name": "",
+          "desc": ""
+        },
+        {
+          "name": "",
+          "desc": ""
+        }
+      ],
+      "keywords": [
+        ""
+      ]
+    }
+  ]
+}

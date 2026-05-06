@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "id": "dark_emerald",
+    "name": "Emerald Depths",
+    "author": "System",
+    "builtin": true,
+    "generated_from": null
+  },
+  "colors": {
+    "bg_deep":    "#0d1410",
+    "bg_base":    "#131d16",
+    "bg_raised":  "#18241b",
+    "bg_input":   "#1f2e22",
+    "header_bg":  "#0a100c",
+    "card_bg":    "#151f17",
+    "sidebar_bg": "#0f1811",
+    "border":     "#243328",
+    "border_hi":  "#354b3a",
+    "text_hi":    "#eaf2ec",
+    "text_mid":   "#c5d9c9",
+    "text_lo":    "#6f9877",
+    "text_dim":   "#496050",
+    "accent":     "#2ecc71",
+    "accent_hi":  "#48dB88",
+    "accent_lo":  "#0e3520",
+    "danger":     "#e05555",
+    "danger_hi":  "#eb6868",
+    "danger_lo":  "#2a1515",
+    "success":    "#3dba6e",
+    "warning":    "#e07800"
+  },
+  "typography": {
+    "font_family": "Segoe UI",
+    "font_mono":   "Consolas",
+    "font_xs":   10,
+    "font_sm":   11,
+    "font_base": 12,
+    "font_lg":   13,
+    "font_xl":   15,
+    "font_2xl":  18,
+    "font_3xl":  22
+  },
+  "shape": {
+    "radius_xs":   3,
+    "radius_sm":   4,
+    "radius_base": 6,
+    "radius_lg":   8,
+    "radius_xl":   12
+  }
+}

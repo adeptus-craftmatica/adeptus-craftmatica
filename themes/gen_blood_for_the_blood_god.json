@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "id": "gen_blood_for_the_blood_god",
+    "name": "Blood for the Blood God",
+    "author": "Paint Scheme Generator",
+    "builtin": false,
+    "generated_from": null
+  },
+  "colors": {
+    "bg_deep": "#131011",
+    "bg_base": "#1D1919",
+    "bg_raised": "#252020",
+    "bg_input": "#2F2828",
+    "header_bg": "#110E0E",
+    "card_bg": "#201B1B",
+    "sidebar_bg": "#151213",
+    "border": "#3B3536",
+    "border_hi": "#504949",
+    "text_hi": "#EEECEC",
+    "text_mid": "#DAD7D7",
+    "text_lo": "#908989",
+    "text_dim": "#605C5D",
+    "accent": "#D41320",
+    "accent_hi": "#EC2E3B",
+    "accent_lo": "#3E1E20",
+    "danger": "#e05555",
+    "danger_hi": "#eb6868",
+    "danger_lo": "#2a1515",
+    "success": "#3dba6e",
+    "warning": "#e07800"
+  },
+  "typography": {
+    "font_family": "Segoe UI",
+    "font_mono": "Consolas",
+    "font_xs": 10,
+    "font_sm": 11,
+    "font_base": 12,
+    "font_lg": 13,
+    "font_xl": 15,
+    "font_2xl": 18,
+    "font_3xl": 22
+  },
+  "shape": {
+    "radius_xs": 3,
+    "radius_sm": 4,
+    "radius_base": 6,
+    "radius_lg": 8,
+    "radius_xl": 12
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "id": "project_tracker",
+  "name": "Projects",
+  "version": "1.0.0",
+  "entry": "plugin",
+  "description": "Central project hub — link models, paints, armies, events and sessions to a single hobby project.",
+  "dependencies": []
+}

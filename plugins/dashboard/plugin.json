@@ -1,0 +1,15 @@
+{
+    "name": "Dashboard",
+    "id": "dashboard",
+    "version": "1.0.0",
+    "description": "Command-center dashboard — real-time cross-plugin intelligence, active projects, quick actions, and hobby analytics",
+    "author": "The Fabricator",
+    "entry": "plugin",
+    "ui": true,
+    "category": "core",
+    "dependencies": [],
+    "events": [
+        "dashboard_navigate",
+        "dashboard_refresh_requested"
+    ]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "Army Builder",
+  "id": "army_builder",
+  "version": "0.1.0",
+  "description": "Build and manage army lists for 40K, AoS, Kill Team, D&D, and more with points tracking",
+  "author": "The Fabricator",
+  "entry": "plugin",
+
+  "ui": true,
+  "category": "hobby",
+
+  "dependencies": ["paint_tracker"],
+
+  "events": {
+    "emits": [
+      "army_created",
+      "army_updated",
+      "army_deleted",
+      "army_duplicated"
+    ],
+    "listens": [
+      "model_removed",
+      "model_updated"
+    ]
+  }
+}

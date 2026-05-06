@@ -1,0 +1,15 @@
+{
+  "name": "Paint Schemes",
+  "id": "paint_scheme",
+  "version": "0.1.0",
+  "description": "Build and manage paint recipes and colour schemes for your models",
+  "author": "The Fabricator",
+  "entry": "plugin",
+  "ui": true,
+  "category": "hobby",
+  "dependencies": [],
+  "events": {
+    "emits": ["scheme_added", "scheme_updated", "scheme_deleted"],
+    "listens": ["paint_removed", "model_removed"]
+  }
+}

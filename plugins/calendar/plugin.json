@@ -1,0 +1,8 @@
+{
+  "id": "calendar",
+  "name": "Calendar",
+  "version": "1.0.0",
+  "description": "Hobby Command Center — scheduling, planning, and progress tracking for every plugin",
+  "entry": "plugin.py",
+  "dependencies": []
+}

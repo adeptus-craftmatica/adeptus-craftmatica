@@ -1,0 +1,5 @@
+49 'def _cover_pixmap(pix, w: int, h: int):'
+295 '    def _add_photos(self):'
+393 '    def _add_photos(self):'
+1499 '    def _open_gallery(self):'
+2099 '    def _open_gallery(self, battle: Battle):'
