@@ -42,12 +42,20 @@ class Plugin(PluginBase):
         self._register_events()
         self._initial_load()
 
+        # Self-register dashboard provider so this plugin is independent of
+        # the dashboard plugin's built-in _setup_providers.
+        # 250 ms gives all other plugins time to activate first; v2 fires at
+        # 350 ms so it will still win when both are loaded.
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(250, self._register_dashboard_provider)
+
         print(f"[PLUGIN] {self.display_name} activated")
 
     def deactivate(self):
         print(f"[PLUGIN] {self.display_name} deactivating...")
 
         self._unsubscribe_all()
+        self._cleanup_dashboard_provider()
 
         self._ui = None
         self._service = None
@@ -61,6 +69,42 @@ class Plugin(PluginBase):
     # ============================================================
     # SETUP
     # ============================================================
+
+    # ── Dashboard wiring ──────────────────────────────────────────────────────
+
+    def _register_dashboard_provider(self):
+        """Register paint dashboard provider under the canonical key."""
+        try:
+            import importlib
+            mod = importlib.import_module(
+                "plugins.dashboard.providers.paint_provider"
+            )
+            cls = getattr(mod, "PaintDashboardProvider")
+            reg = self.context.services.try_get("dashboard_registry")
+            if reg and self._service:
+                provider = cls(self._service)
+                provider._owner = "paint_tracker"   # ownership marker
+                reg.register_provider("paint_tracker", provider)
+                # Signal the dashboard to re-render with our provider
+                try:
+                    self.context.event_bus.emit("dashboard_provider_updated", {})
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"[PAINT TRACKER] Dashboard provider failed: {e}")
+
+    def _cleanup_dashboard_provider(self):
+        """Only remove our registration if we still own the key."""
+        try:
+            reg = self.context.services.try_get("dashboard_registry")
+            if reg:
+                current = reg.get_provider("paint_tracker")
+                if getattr(current, "_owner", None) == "paint_tracker":
+                    reg.unregister_provider("paint_tracker")
+        except Exception:
+            pass
+
+    # ── Services ──────────────────────────────────────────────────────────────
 
     def _resolve_services(self):
         self._service = self.context.services.get("paint_service")

@@ -8,10 +8,74 @@ from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QWidget
 
 from core.plugin_base import PluginBase
+from core.contracts.dashboard_dto import DashboardSectionDef
 from plugins.dashboard.ui import DashboardUI
 
 
-# Events that should trigger a dashboard refresh
+# ── Dashboard section catalogue ───────────────────────────────────────────────
+# Each entry describes one toggleable section.  The order here matches the
+# dialog display order.  Section IDs must match the keys used in
+# DashboardUI._section_widgets (set by _wrap_section / sidebar builder).
+
+_DASHBOARD_SECTIONS: list[DashboardSectionDef] = [
+    DashboardSectionDef(
+        id="command_overview",
+        label="Command Overview",
+        description="Stats at a glance — total paints, active projects, "
+                    "sessions this week, hobby streak and monthly hours",
+        tab="overview",
+    ),
+    DashboardSectionDef(
+        id="active_projects",
+        label="Active Projects",
+        description="Your top in-progress projects with live completion "
+                    "progress bars",
+        tab="overview",
+    ),
+    DashboardSectionDef(
+        id="calendar_agenda",
+        label="Today's Agenda",
+        description="Today's calendar events, upcoming milestones and "
+                    "overdue items",
+        tab="overview",
+    ),
+    DashboardSectionDef(
+        id="recommendations",
+        label="Recommended Actions",
+        description="Smart next-step suggestions powered by your active "
+                    "plugins — restocks, priming reminders and more",
+        tab="overview",
+    ),
+    DashboardSectionDef(
+        id="quick_actions",
+        label="Quick Actions (sidebar)",
+        description="One-click shortcuts to add paints, start projects, "
+                    "log models and more",
+        tab="overview",
+    ),
+    DashboardSectionDef(
+        id="alerts_mini",
+        label="Alerts (sidebar)",
+        description="Critical alerts preview shown in the overview sidebar",
+        tab="overview",
+    ),
+    DashboardSectionDef(
+        id="recent_activity",
+        label="Recent Activity",
+        description="Chronological log of everything you've done across "
+                    "all your hobby plugins",
+        tab="activity",
+    ),
+    DashboardSectionDef(
+        id="notifications",
+        label="Notifications Panel",
+        description="Full alerts and notifications from all installed "
+                    "plugins",
+        tab="alerts",
+    ),
+]
+
+# ── Events that should trigger a dashboard refresh
 _REFRESH_EVENTS = [
     # Paint tracker
     "paint_added", "paint_removed", "paint_updated",
@@ -30,6 +94,8 @@ _REFRESH_EVENTS = [
     # Calendar — refresh dashboard when events change
     "calendar_event_added", "calendar_event_updated", "calendar_event_deleted",
     "calendar_settings_changed",
+    # Plugin lifecycle — refresh when a provider re-registers
+    "dashboard_provider_updated",
     # Project tracker
     "project_create", "project_updated", "project_delete", "project_milestone_add",
     "project_milestone_toggle", "project_milestone_quantity_step",
@@ -83,6 +149,7 @@ class Plugin(PluginBase):
         self._ui: DashboardUI | None = None
         self._refresh_timer: QTimer | None = None
         self._streak = 0
+        self._last_stats: list = []   # full unfiltered stat list, refreshed each cycle
         # Track which provider IDs we successfully registered so deactivate()
         # can clean up exactly those — no hardcoded list (M-15).
         self._registered_provider_ids: list[str] = []
@@ -102,6 +169,8 @@ class Plugin(PluginBase):
         self._refresh_timer = QTimer()
         self._refresh_timer.setSingleShot(True)
         self._refresh_timer.timeout.connect(self._do_refresh)
+
+        self._ui.customize_clicked.connect(self._open_customize_dialog)
 
         self._register_events()
         self._connect_theme()
@@ -168,6 +237,43 @@ class Plugin(PluginBase):
         if registry:
             from plugins.dashboard.settings_page import ProfileSettingsPage
             registry.register_page("Profile", lambda ctx: ProfileSettingsPage(ctx))
+
+    # ── Dashboard customization ────────────────────────────────────────────────
+
+    def _open_customize_dialog(self):
+        """Open the section + card visibility dialog."""
+        from plugins.dashboard.customize_dialog import DashboardCustomizeDialog
+        settings = self.context.services.get("settings")
+        hidden_sections = self._load_json_list("dashboard.hidden_sections")
+        hidden_cards    = self._load_json_list("dashboard.hidden_cards")
+
+        dlg = DashboardCustomizeDialog(
+            sections        = _DASHBOARD_SECTIONS,
+            hidden_sections = hidden_sections,
+            cards           = self._last_stats,
+            hidden_cards    = hidden_cards,
+            context         = self.context,
+            parent          = self._ui,
+        )
+        if dlg.exec():
+            new_hidden_sections = dlg.get_hidden_sections()
+            new_hidden_cards    = dlg.get_hidden_cards()
+            if settings:
+                settings.set("dashboard.hidden_sections",
+                             json.dumps(new_hidden_sections))
+                settings.set("dashboard.hidden_cards",
+                             json.dumps(new_hidden_cards))
+            self._apply_section_visibility()
+            # Re-render cards with the new filter applied
+            self._schedule_refresh(50)
+
+    def _apply_section_visibility(self):
+        """Read saved hidden-section prefs and show/hide each section widget."""
+        if not self._ui:
+            return
+        hidden = set(self._load_json_list("dashboard.hidden_sections"))
+        for sec in _DASHBOARD_SECTIONS:
+            self._ui.set_section_visible(sec.id, sec.id not in hidden)
 
     def _connect_theme(self):
         tm = self.context.services.try_get("theme_manager")
@@ -263,8 +369,12 @@ class Plugin(PluginBase):
             return
 
         try:
-            stats = self._get_self_stats() + registry.get_all_command_stats()
-            self._ui.refresh_command_stats(stats)
+            all_stats = self._get_self_stats() + registry.get_all_command_stats()
+            # Cache for the customize dialog (always the full unfiltered list)
+            self._last_stats = all_stats
+            hidden_cards = set(self._load_json_list("dashboard.hidden_cards"))
+            visible_stats = [s for s in all_stats if s.card_id not in hidden_cards]
+            self._ui.refresh_command_stats(visible_stats)
         except Exception as e:
             print(f"[DASHBOARD] refresh command stats: {e}")
 
@@ -322,6 +432,9 @@ class Plugin(PluginBase):
         except Exception as e:
             print(f"[DASHBOARD] refresh calendar intelligence: {e}")
 
+        # Apply user's section visibility preferences last, after all data is loaded
+        self._apply_section_visibility()
+
     def _refresh_paint_intel(self, registry):
         provider = registry.get_provider("paint_tracker")
         if not provider:
@@ -377,6 +490,7 @@ class Plugin(PluginBase):
                 subtitle = sub,
                 color    = "success" if self._streak >= 3 else "accent",
                 icon     = "🔥",
+                card_id  = "dashboard.hobby_streak",
             ))
 
         # Sessions this week
@@ -387,6 +501,7 @@ class Plugin(PluginBase):
             subtitle = f"session{'s' if sessions != 1 else ''} so far",
             color    = "success" if sessions >= 4 else ("warning" if sessions == 0 else "accent"),
             icon     = "📅",
+            card_id  = "dashboard.this_week",
         ))
 
         # Monthly hobby hours (from project tracker sessions)
@@ -398,6 +513,7 @@ class Plugin(PluginBase):
                 subtitle = "hobby time logged",
                 color    = "success" if hours >= 10 else "accent",
                 icon     = "⏱",
+                card_id  = "dashboard.this_month",
             ))
 
         return stats

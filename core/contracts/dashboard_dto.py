@@ -33,6 +33,9 @@ class CommandStat:
     subtitle: str  = ""    # Helper text rendered below the value
     color:    str  = "accent"   # severity key
     icon:     str  = ""    # emoji shown beside the value
+    card_id:  str  = ""    # Stable identifier for hide/show — auto-assigned
+                           # by DashboardRegistry if left empty.
+                           # Format: "<plugin_id>.<label_slug>"
 
 
 # ── Active-projects feed ──────────────────────────────────────────────────────
@@ -139,3 +142,22 @@ class NavigationTarget:
         if self.item_id is not None:
             d["item_id"] = self.item_id
         return d
+
+
+# ── Dashboard section definitions ─────────────────────────────────────────────
+
+@dataclass
+class DashboardSectionDef:
+    """Metadata for one toggleable section of the dashboard.
+
+    Used by DashboardCustomizeDialog to build the checklist and by the
+    dashboard plugin to apply visibility from saved settings.
+
+    Plugin providers can optionally return a list of these from
+    ``get_section_defs()`` to advertise their own dashboard sections.
+    """
+    id:              str
+    label:           str
+    description:     str  = ""
+    tab:             str  = "overview"    # "overview" | "activity" | "alerts"
+    default_visible: bool = True

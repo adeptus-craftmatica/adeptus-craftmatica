@@ -1297,6 +1297,17 @@ QLabel#dashEditName {{
 QLabel#dashEditName:hover {{
     color: {text_mid};
 }}
+QLabel#dashCustomizeBtn {{
+    font-size: {font_xs}px;
+    color: {text_lo};
+    background: transparent;
+    padding: 2px 6px;
+    border-radius: 4px;
+}}
+QLabel#dashCustomizeBtn:hover {{
+    color: {accent};
+    background: {bg_input};
+}}
 
 /* Section caps labels (COMMAND OVERVIEW, ACTIVE PROJECTS, etc.) */
 QLabel#dashSectionLabel {{

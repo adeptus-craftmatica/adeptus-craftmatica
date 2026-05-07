@@ -293,13 +293,25 @@ class MainWindow(QMainWindow):
 
     # ── Navigation helpers ─────────────────────────────────────────────────────
 
+    # Fallback aliases: if a plugin isn't loaded, try its sibling version.
+    _PLUGIN_ALIASES: dict[str, list[str]] = {
+        "paint_tracker":    ["paint_tracker_v2"],
+        "paint_tracker_v2": ["paint_tracker"],
+    }
+
     def _navigate_to_plugin(self, plugin_id: str) -> None:
-        """Switch to the tab for the given plugin_id."""
-        for i in range(self.tabs.count()):
-            w = self.tabs.widget(i)
-            if w and w.property("plugin_id") == plugin_id:
-                self.tabs.setCurrentIndex(i)
-                return
+        """Switch to the tab for the given plugin_id.
+
+        If the primary plugin is not loaded, tries registered aliases so that
+        commands like "Go to Paint Tracker" work whether v1 or v2 is active.
+        """
+        candidates = [plugin_id] + self._PLUGIN_ALIASES.get(plugin_id, [])
+        for pid in candidates:
+            for i in range(self.tabs.count()):
+                w = self.tabs.widget(i)
+                if w and w.property("plugin_id") == pid:
+                    self.tabs.setCurrentIndex(i)
+                    return
 
     def _go_to_tab(self, idx: int) -> None:
         if 0 <= idx < self.tabs.count():
@@ -324,20 +336,28 @@ class MainWindow(QMainWindow):
         self._quick_create_in(plugin_id or "project_tracker")
 
     def _quick_create_in(self, plugin_id: str) -> None:
-        """Navigate to plugin and fire its handle_quick_create method if available."""
+        """Navigate to plugin and fire its handle_quick_create method if available.
+
+        Tries the primary plugin_id first, then any registered aliases, so
+        'Add Paint' works whether paint_tracker v1 or v2 is active.
+        """
         self._navigate_to_plugin(plugin_id)
+
+        # Resolve the actual tab that is now current — it may be an alias
         w = self.tabs.currentWidget()
+        active_pid = w.property("plugin_id") if w else plugin_id
+
         if w and hasattr(w, "handle_quick_create"):
             try:
                 w.handle_quick_create()
             except Exception as e:
-                print(f"[MainWindow] quick_create error in {plugin_id}: {e}")
+                print(f"[MainWindow] quick_create error in {active_pid}: {e}")
         else:
             # Fallback: emit event so the plugin can intercept it
             bus = getattr(self.context, "event_bus", None)
             if bus:
                 try:
-                    bus.emit("quick_create", {"plugin_id": plugin_id})
+                    bus.emit("quick_create", {"plugin_id": active_pid})
                 except Exception:
                     pass
 
@@ -785,11 +805,8 @@ class MainWindow(QMainWindow):
         target_id = category_to_plugin_id.get(category)
         if not target_id:
             return
-        for i in range(self.tabs.count()):
-            w = self.tabs.widget(i)
-            if w and w.property("plugin_id") == target_id:
-                self.tabs.setCurrentIndex(i)
-                break
+        # Use _navigate_to_plugin so alias fallbacks (e.g. paint_tracker_v2) work
+        self._navigate_to_plugin(target_id)
 
         # For Projects: deep-link directly to the specific project
         if category == "Projects" and payload.get("id") and self.context:

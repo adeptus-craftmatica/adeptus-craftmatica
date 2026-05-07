@@ -2705,8 +2705,22 @@ class PaintTrackerV2UI(QWidget):
         self._update_views()
 
     def apply_preset(self, preset: str):
+        if preset == "add":
+            self.handle_quick_create()
+            return
         self._presets.set_active(preset)
         self._on_preset_changed(preset)
+
+    def handle_quick_create(self) -> None:
+        """Open the add-paint form ready for input.
+
+        Called by the main window's Ctrl+N / 'Add Paint' command palette entry,
+        and by the dashboard 'Add Paint' quick action.
+        """
+        # Ensure Collection tab is visible
+        self._main_tabs.setCurrentIndex(0)
+        # Expand (or re-focus) the quick-add bar
+        self._quick_add.expand()
 
     # ── View mode ─────────────────────────────────────────────────────────────
 

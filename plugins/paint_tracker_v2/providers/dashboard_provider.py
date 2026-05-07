@@ -77,7 +77,7 @@ class PaintDashboardProvider:
                 QuickAction(
                     "Add Paint", "🎨",
                     "dashboard_navigate",
-                    {"plugin_id": "paint_tracker_v2", "preset": "all"},
+                    {"plugin_id": "paint_tracker_v2", "preset": "add"},
                     "accent",
                 ),
                 QuickAction(

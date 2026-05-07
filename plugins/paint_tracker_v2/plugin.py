@@ -66,12 +66,32 @@ class Plugin(PluginBase):
                 pass
         self._subs.clear()
 
-        reg = self.context.services.try_get("dashboard_registry")
-        if reg:
-            try:
-                reg.unregister_provider(self._dashboard_provider_id)
-            except Exception:
-                pass
+        # Dashboard cleanup — only act if we are the current owner.
+        # If paint_tracker (v1) is still loaded, restore its provider so the
+        # dashboard keeps working after v2 is disabled.
+        try:
+            reg = self.context.services.try_get("dashboard_registry")
+            if reg:
+                current = reg.get_provider(self._dashboard_provider_id)
+                if getattr(current, "_owner", None) == "paint_tracker_v2":
+                    svc = self.context.services.try_get("paint_service")
+                    restored = False
+                    if svc:
+                        try:
+                            import importlib
+                            mod = importlib.import_module(
+                                "plugins.dashboard.providers.paint_provider"
+                            )
+                            legacy = getattr(mod, "PaintDashboardProvider")(svc)
+                            legacy._owner = "paint_tracker"
+                            reg.register_provider(self._dashboard_provider_id, legacy)
+                            restored = True
+                        except Exception:
+                            pass
+                    if not restored:
+                        reg.unregister_provider(self._dashboard_provider_id)
+        except Exception:
+            pass
         self._ui_widget = None
         self._service = None
 
@@ -83,10 +103,15 @@ class Plugin(PluginBase):
             from .providers.dashboard_provider import PaintDashboardProvider
             reg = self.context.services.try_get("dashboard_registry")
             if reg and self._service:
-                reg.register_provider(
-                    self._dashboard_provider_id,
-                    PaintDashboardProvider(self._service),
-                )
+                provider = PaintDashboardProvider(self._service)
+                provider._owner = "paint_tracker_v2"   # ownership marker
+                reg.register_provider(self._dashboard_provider_id, provider)
+                # Signal the dashboard to re-render quick actions / stats now
+                # that our provider has taken over the "paint_tracker" slot.
+                try:
+                    self.context.event_bus.emit("dashboard_provider_updated", {})
+                except Exception:
+                    pass
         except Exception as e:
             print(f"[PAINT V2] Dashboard provider failed: {e}")
 

@@ -31,11 +31,15 @@ class DashboardUI(QWidget):
 
     action_requested = Signal(str, dict)
     name_changed     = Signal(str)
+    customize_clicked = Signal()   # emitted when the ⚙ Customize button is pressed
 
     def __init__(self, context, parent=None):
         super().__init__(parent)
         self._ctx = context
         self.setMinimumSize(0, 0)
+
+        # section_id → container QWidget (used by set_section_visible)
+        self._section_widgets: dict[str, QWidget] = {}
 
         root = QVBoxLayout(self)
         root.setContentsMargins(16, 12, 16, 16)
@@ -48,7 +52,7 @@ class DashboardUI(QWidget):
         # ── Tab widget ────────────────────────────────────────────────────────
         self._tab_widget = QTabWidget()
         self._tab_widget.setObjectName("dashTabWidget")
-        self._tab_widget.setDocumentMode(False)   # False so pane styling works
+        self._tab_widget.setDocumentMode(False)
         self._tab_widget.setMinimumSize(0, 0)
         root.addWidget(self._tab_widget, stretch=1)
 
@@ -93,7 +97,68 @@ class DashboardUI(QWidget):
         self._streak_lbl.setObjectName("dashStreak")
         lay.addWidget(self._streak_lbl)
 
+        # ── Customize button ──────────────────────────────────────────────────
+        lay.addSpacing(8)
+
+        sep = QFrame()
+        sep.setFrameShape(QFrame.VLine)
+        sep.setFixedHeight(20)
+        lay.addWidget(sep, alignment=Qt.AlignVCenter)
+
+        lay.addSpacing(4)
+
+        self._customize_btn = QLabel("⚙  Customize")
+        self._customize_btn.setObjectName("dashCustomizeBtn")
+        self._customize_btn.setCursor(Qt.PointingHandCursor)
+        self._customize_btn.setToolTip("Show / hide dashboard sections")
+        self._customize_btn.mousePressEvent = lambda _: self.customize_clicked.emit()
+        lay.addWidget(self._customize_btn)
+
         return frame
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # Section wrapper helper
+    # ══════════════════════════════════════════════════════════════════════════
+
+    def _wrap_section(
+        self,
+        section_id: str,
+        title: str,
+        content: QWidget,
+        *,
+        leading_divider: bool = True,
+        stretch_content: bool = False,
+    ) -> QWidget:
+        """
+        Wraps a section label + content widget in a container QWidget.
+
+        The container is stored in self._section_widgets[section_id] so
+        set_section_visible() can show/hide it as a unit (label + divider +
+        content all disappear together).
+        """
+        container = QWidget()
+        container.setObjectName("dashSectionContainer")
+        lay = QVBoxLayout(container)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(8)
+
+        if leading_divider:
+            line = QFrame()
+            line.setFrameShape(QFrame.HLine)
+            line.setFixedHeight(1)
+            lay.addWidget(line)
+
+        lbl = QLabel(title)
+        lbl.setObjectName("dashSectionLabel")
+        lay.addWidget(lbl)
+
+        if stretch_content:
+            lay.addWidget(content, stretch=1)
+        else:
+            lay.addWidget(content)
+
+        self._section_widgets[section_id] = container
+        return container
 
     # ══════════════════════════════════════════════════════════════════════════
     # Tab builders
@@ -102,11 +167,8 @@ class DashboardUI(QWidget):
     def _build_overview_tab(self) -> QWidget:
         """
         Two-column layout:
-          Left (flex)  — Calendar Intelligence + Command stats + Recommendations
-          Right (fixed 220 px) — Quick Actions sidebar card
-
-        SmartRecommendationsWidget owns its own internal scroll, so there is no
-        outer QScrollArea — that would create a nested-scroll conflict.
+          Left (flex)  — Command stats + Active Projects + Calendar + Recommendations
+          Right (fixed 220 px) — Quick Actions + Alerts sidebar card
         """
         page = QWidget()
         page.setMinimumSize(0, 0)
@@ -120,111 +182,123 @@ class DashboardUI(QWidget):
         main.setMinimumSize(0, 0)
         main_lay = QVBoxLayout(main)
         main_lay.setContentsMargins(0, 0, 0, 0)
-        main_lay.setSpacing(14)
+        main_lay.setSpacing(6)
 
-        # 1. Command Overview stats — always at the top
-        self._section_lbl("COMMAND OVERVIEW", main_lay)
+        # 1. Command Overview
         self._cmd_cards = CommandCardsWidget(self._ctx)
-        main_lay.addWidget(self._cmd_cards)
+        main_lay.addWidget(self._wrap_section(
+            "command_overview", "COMMAND OVERVIEW", self._cmd_cards,
+            leading_divider=False,
+        ))
 
-        main_lay.addWidget(self._hline())
-
-        # 2. Active Projects strip — top 3 projects with progress bars
-        self._section_lbl("ACTIVE PROJECTS", main_lay)
+        # 2. Active Projects
         self._projects_strip = ActiveProjectsStripWidget(self._ctx)
         self._projects_strip.action_requested.connect(self.action_requested)
-        main_lay.addWidget(self._projects_strip)
+        main_lay.addWidget(self._wrap_section(
+            "active_projects", "ACTIVE PROJECTS", self._projects_strip,
+        ))
 
-        main_lay.addWidget(self._hline())
-
-        # 3. Today's Agenda — calendar events + milestones + overdue
-        self._section_lbl("TODAY'S AGENDA", main_lay)
+        # 3. Today's Agenda
         self._cal_intelligence = CalendarIntelligenceWidget(self._ctx)
         self._cal_intelligence.action_requested.connect(self.action_requested)
-        main_lay.addWidget(self._cal_intelligence)
+        main_lay.addWidget(self._wrap_section(
+            "calendar_agenda", "TODAY'S AGENDA", self._cal_intelligence,
+        ))
 
-        main_lay.addWidget(self._hline())
-
-        # 4. Recommended Next Actions — stretch=1, its own internal scroll
-        self._section_lbl("RECOMMENDED NEXT ACTIONS", main_lay)
+        # 4. Recommended Next Actions — stretch=1, owns its own internal scroll
         self._recommendations = SmartRecommendationsWidget(self._ctx)
         self._recommendations.action_requested.connect(self.action_requested)
-        main_lay.addWidget(self._recommendations, stretch=1)
+        main_lay.addWidget(
+            self._wrap_section(
+                "recommendations", "RECOMMENDED NEXT ACTIONS",
+                self._recommendations, stretch_content=True,
+            ),
+            stretch=1,
+        )
 
         h_lay.addWidget(main, stretch=1)
 
-        # ── Right: Quick Actions sidebar card ─────────────────────────────────
-        h_lay.addWidget(self._build_actions_sidebar())
+        # ── Right: Quick Actions + Alerts sidebar ─────────────────────────────
+        self._sidebar = self._build_actions_sidebar()
+        h_lay.addWidget(self._sidebar)
 
         return page
 
     def _build_actions_sidebar(self) -> QFrame:
-        """220 px fixed-width card holding compact Quick Action buttons."""
+        """220 px fixed-width card holding Quick Actions and Alerts mini."""
         sidebar = QFrame()
         sidebar.setObjectName("dashActionSidebar")
         sidebar.setFixedWidth(220)
+        self._sidebar = sidebar  # keep ref for collapse logic
 
-        lay = QVBoxLayout(sidebar)
-        lay.setContentsMargins(12, 12, 12, 12)
-        lay.setSpacing(6)
+        outer = QVBoxLayout(sidebar)
+        outer.setContentsMargins(12, 12, 12, 12)
+        outer.setSpacing(0)
 
-        # Header row: accent dot + section label
+        # ── Quick Actions section ─────────────────────────────────────────────
+        qa_container = QWidget()
+        qa_lay = QVBoxLayout(qa_container)
+        qa_lay.setContentsMargins(0, 0, 0, 0)
+        qa_lay.setSpacing(6)
+
         hdr_row = QHBoxLayout()
         hdr_row.setContentsMargins(0, 0, 0, 0)
         hdr_row.setSpacing(6)
-
         dot = QFrame()
         dot.setObjectName("accentDot")
         dot.setFixedSize(6, 6)
         hdr_row.addWidget(dot)
-
         hdr = QLabel("QUICK ACTIONS")
         hdr.setObjectName("dashSectionLabel")
         hdr_row.addWidget(hdr, stretch=1)
-        lay.addLayout(hdr_row)
+        qa_lay.addLayout(hdr_row)
 
-        # Thin divider
         sep = QFrame()
         sep.setFrameShape(QFrame.HLine)
         sep.setFixedHeight(1)
-        lay.addWidget(sep)
+        qa_lay.addWidget(sep)
 
-        # Quick Actions (single-column compact mode)
         self._overview_quick_actions = QuickActionsWidget(self._ctx, columns=1)
         self._overview_quick_actions.action_requested.connect(self.action_requested)
-        lay.addWidget(self._overview_quick_actions)
+        qa_lay.addWidget(self._overview_quick_actions)
+        qa_lay.addSpacing(6)
 
-        lay.addSpacing(6)
+        self._section_widgets["quick_actions"] = qa_container
+        outer.addWidget(qa_container)
 
-        # Thin divider between Quick Actions and Alerts
+        # ── Alerts mini section ───────────────────────────────────────────────
+        alerts_container = QWidget()
+        alerts_lay = QVBoxLayout(alerts_container)
+        alerts_lay.setContentsMargins(0, 0, 0, 0)
+        alerts_lay.setSpacing(6)
+
         sep2 = QFrame()
         sep2.setFrameShape(QFrame.HLine)
         sep2.setFixedHeight(1)
-        lay.addWidget(sep2)
+        alerts_lay.addWidget(sep2)
 
-        # Alerts section header
         hdr2_row = QHBoxLayout()
         hdr2_row.setContentsMargins(0, 4, 0, 0)
         hdr2_row.setSpacing(6)
-
         dot2 = QFrame()
         dot2.setObjectName("accentDot")
         dot2.setFixedSize(6, 6)
         hdr2_row.addWidget(dot2)
-
         hdr2 = QLabel("ALERTS")
         hdr2.setObjectName("dashSectionLabel")
         hdr2_row.addWidget(hdr2, stretch=1)
-        lay.addLayout(hdr2_row)
+        alerts_lay.addLayout(hdr2_row)
 
-        # Alerts mini — top-3 critical/warning rows + "View all" link
         self._alerts_mini = AlertsMiniWidget(self._ctx)
         self._alerts_mini.navigate_alerts.connect(
             lambda: self._tab_widget.setCurrentIndex(2)
         )
-        lay.addWidget(self._alerts_mini)
+        alerts_lay.addWidget(self._alerts_mini)
 
-        lay.addStretch()
+        self._section_widgets["alerts_mini"] = alerts_container
+        outer.addWidget(alerts_container)
+        outer.addStretch()
+
         return sidebar
 
     def _build_activity_tab(self) -> QWidget:
@@ -233,18 +307,27 @@ class DashboardUI(QWidget):
         page.setMinimumSize(0, 0)
         lay = QVBoxLayout(page)
         lay.setContentsMargins(12, 12, 12, 12)
-        lay.setSpacing(8)
+        lay.setSpacing(0)
 
-        self._section_lbl("RECENT ACTIVITY", lay)
-
+        self._activity = RecentActivityWidget(self._ctx)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self._activity = RecentActivityWidget(self._ctx)
         scroll.setWidget(self._activity)
-        lay.addWidget(scroll, stretch=1)
 
+        # Wrap in a section container so it can be hidden
+        activity_sec = QWidget()
+        sec_lay = QVBoxLayout(activity_sec)
+        sec_lay.setContentsMargins(0, 0, 0, 0)
+        sec_lay.setSpacing(8)
+        lbl = QLabel("RECENT ACTIVITY")
+        lbl.setObjectName("dashSectionLabel")
+        sec_lay.addWidget(lbl)
+        sec_lay.addWidget(scroll, stretch=1)
+        self._section_widgets["recent_activity"] = activity_sec
+
+        lay.addWidget(activity_sec, stretch=1)
         return page
 
     def _build_alerts_tab(self) -> QWidget:
@@ -253,14 +336,45 @@ class DashboardUI(QWidget):
         page.setMinimumSize(0, 0)
         lay = QVBoxLayout(page)
         lay.setContentsMargins(12, 12, 12, 12)
-        lay.setSpacing(8)
+        lay.setSpacing(0)
 
-        self._section_lbl("ALERTS", lay)
         self._notifications = NotificationsPanelWidget(self._ctx)
         self._notifications.action_requested.connect(self.action_requested)
-        lay.addWidget(self._notifications, stretch=1)
 
+        notif_sec = QWidget()
+        sec_lay = QVBoxLayout(notif_sec)
+        sec_lay.setContentsMargins(0, 0, 0, 0)
+        sec_lay.setSpacing(8)
+        lbl = QLabel("ALERTS")
+        lbl.setObjectName("dashSectionLabel")
+        sec_lay.addWidget(lbl)
+        sec_lay.addWidget(self._notifications, stretch=1)
+        self._section_widgets["notifications"] = notif_sec
+
+        lay.addWidget(notif_sec, stretch=1)
         return page
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # Section visibility  (called by plugin.py after settings change)
+    # ══════════════════════════════════════════════════════════════════════════
+
+    def set_section_visible(self, section_id: str, visible: bool) -> None:
+        """Show or hide a named dashboard section (label + content together)."""
+        container = self._section_widgets.get(section_id)
+        if container is not None:
+            container.setVisible(visible)
+
+        # Collapse the sidebar entirely when both its sections are hidden
+        if section_id in ("quick_actions", "alerts_mini"):
+            self._update_sidebar_visibility()
+
+    def _update_sidebar_visibility(self) -> None:
+        qa  = self._section_widgets.get("quick_actions")
+        alm = self._section_widgets.get("alerts_mini")
+        qa_vis  = qa.isVisible()  if qa  else True
+        alm_vis = alm.isVisible() if alm else True
+        if hasattr(self, "_sidebar") and self._sidebar:
+            self._sidebar.setVisible(qa_vis or alm_vis)
 
     # ══════════════════════════════════════════════════════════════════════════
     # Name editing
@@ -311,7 +425,6 @@ class DashboardUI(QWidget):
     # ══════════════════════════════════════════════════════════════════════════
 
     def _on_theme_changed(self, _theme_id: str = ""):
-        # Structural styling is handled by the QSS template via object names.
         pass
 
     # ══════════════════════════════════════════════════════════════════════════
@@ -319,14 +432,13 @@ class DashboardUI(QWidget):
     # ══════════════════════════════════════════════════════════════════════════
 
     def _section_lbl(self, text: str, layout) -> QLabel:
-        """Small-caps section header — styled via QSS (#dashSectionLabel)."""
+        """Small-caps section header — kept for any external callers."""
         lbl = QLabel(text)
         lbl.setObjectName("dashSectionLabel")
         layout.addWidget(lbl)
         return lbl
 
     def _hline(self) -> QFrame:
-        """Thin horizontal divider — styled via global QSS (QFrame[frameShape=4])."""
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
         line.setFixedHeight(1)
@@ -350,9 +462,7 @@ class DashboardUI(QWidget):
         self._cmd_cards.refresh(stats)
 
     def refresh_projects(self, cards: list) -> None:
-        # Projects tab was removed; _project_feed no longer exists.
-        # The active-projects strip is refreshed separately via
-        # refresh_active_projects_strip() — nothing to do here.
+        # Active-projects strip is refreshed via refresh_active_projects_strip()
         pass
 
     def refresh_quick_actions(self, actions: list) -> None:
@@ -374,14 +484,12 @@ class DashboardUI(QWidget):
         self._recommendations.refresh(recs)
 
     def refresh_active_projects_strip(self, cards: list) -> None:
-        """Push fresh project cards to the Overview active-projects strip."""
         try:
             self._projects_strip.refresh(cards)
         except Exception:
             pass
 
     def refresh_alerts_mini(self, notes: list) -> None:
-        """Push fresh notifications to the Overview sidebar alerts panel."""
         try:
             self._alerts_mini.refresh(notes)
         except Exception:
@@ -394,7 +502,6 @@ class DashboardUI(QWidget):
         milestones: list,
         overdue: list | None = None,
     ) -> None:
-        """Push fresh calendar data to the Overview intelligence card."""
         try:
             self._cal_intelligence.refresh(today, week, milestones, overdue)
         except Exception as e:

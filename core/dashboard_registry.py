@@ -58,6 +58,20 @@ class DashboardRegistry:
             try:
                 items = provider.get_command_stats()
                 if items:
+                    for stat in items:
+                        # Auto-assign a stable card_id if the provider didn't set one.
+                        # Format: "<plugin_id>.<label_slug>" — unique across all providers
+                        # even when two plugins use the same label (e.g. "This Week").
+                        if not stat.card_id:
+                            slug = (
+                                stat.label.lower()
+                                .replace(" ", "_")
+                                .replace("/", "_")
+                                .replace("%", "pct")
+                                .replace("(", "")
+                                .replace(")", "")
+                            )
+                            stat.card_id = f"{pid}.{slug}"
                     results.extend(items)
             except Exception as e:
                 print(f"[DASHBOARD REGISTRY] get_command_stats failed [{pid}]: {e}")
