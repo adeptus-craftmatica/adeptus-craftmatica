@@ -1,135 +1,213 @@
-brand,name,type,color
-The Army Painter,Absolution Green,Speedpaint 2.0,#2C4A2D
-The Army Painter,Aged Hide,Speedpaint 2.0,#CD7559
-The Army Painter,Algae Green,Speedpaint 2.0,#A1AE64
-The Army Painter,Ancient Honey,Speedpaint 2.0,#ECC54A
-The Army Painter,Ashen Stone,Speedpaint 2.0,#B8BFC1
-The Army Painter,Aztec Gold,Speedpaint 2.0,#6A763D
-The Army Painter,Battleship Grey,Speedpaint 2.0,#BECCD5
-The Army Painter,Beowulf Blue,Speedpaint 2.0,#204181
-The Army Painter,Blinding Light,Speedpaint 2.0,#FFFFFF
-The Army Painter,Blood Red,Speedpaint 2.0,#D2472C
-The Army Painter,Bony Matter,Speedpaint 2.0,#B39A7A
-The Army Painter,Brazen Copper,Speedpaint 2.0,#603F37
-The Army Painter,Bright Red,Speedpaint 2.0,#D8674C
-The Army Painter,Broadsword Silver,Speedpaint 2.0,#595958
-The Army Painter,Brownish Decay,Speedpaint 2.0,#7B703E
-The Army Painter,Burnished Red,Speedpaint 2.0,#64413A
-The Army Painter,Burnt Moss,Speedpaint 2.0,#515D54
-The Army Painter,Camo Cloak,Speedpaint 2.0,#637545
-The Army Painter,Caribbean Ocean,Speedpaint 2.0,#4EA8BB
-The Army Painter,Carmine Dragon,Speedpaint 2.0,#D14760
-The Army Painter,Charming Chartreuse,Speedpaint 2.0,#CED863
-The Army Painter,Cloudburst Blue,Speedpaint 2.0,#41445E
-The Army Painter,Crusader Skin,Speedpaint 2.0,#E8A26D
-The Army Painter,Dark Wood,Speedpaint 2.0,#493423
-The Army Painter,Desolate Brown,Speedpaint 2.0,#797446
-The Army Painter,Dusk Red,Speedpaint 2.0,#5C4240
-The Army Painter,Enchanted Steel,Speedpaint 2.0,#52595D
-The Army Painter,Familiar Pink,Speedpaint 2.0,#CD4486
-The Army Painter,Fire Drake,Speedpaint 2.0,#CD9977
-The Army Painter,Fire Giant Orange,Speedpaint 2.0,#DF833E
-The Army Painter,Forest Sprite,Speedpaint 2.0,#7FA457
-The Army Painter,Ghillie Dew,Speedpaint 2.0,#99B142
-The Army Painter,Ghoul Green,Speedpaint 2.0,#68AD6E
-The Army Painter,Glittering Loot,Speedpaint 2.0,#816D25
-The Army Painter,Goddess Glow,Speedpaint 2.0,#935F5A
-The Army Painter,Golden Armour,Speedpaint 2.0,#64461A
-The Army Painter,Gravelord Grey,Speedpaint 2.0,#45484D
-The Army Painter,Grim Black,Speedpaint 2.0,#000000
-The Army Painter,Gunner Camo,Speedpaint 2.0,#3E5546
-The Army Painter,Hardened Leather,Speedpaint 2.0,#87582C
-The Army Painter,Highlord Blue,Speedpaint 2.0,#2E5885
-The Army Painter,Hive Dweller Purple,Speedpaint 2.0,#563E72
-The Army Painter,Hoard Bronze,Speedpaint 2.0,#81714A
-The Army Painter,Holy White,Speedpaint 2.0,#ECEDEC
-The Army Painter,Hoplite Gold,Speedpaint 2.0,#9C8032
-The Army Painter,Howling Sand,Speedpaint 2.0,#D4D6BB
-The Army Painter,Lizardfolk Cyan,Speedpaint 2.0,#5B9CA6
-The Army Painter,Maggot Skin,Speedpaint 2.0,#D0CE73
-The Army Painter,Magic Blue,Speedpaint 2.0,#3A7BB2
-The Army Painter,Maize Yellow,Speedpaint 2.0,#F7DE4D
-The Army Painter,Malignant Green,Speedpaint 2.0,#C7D35B
-The Army Painter,Moody Mauve,Speedpaint 2.0,#99557E
-The Army Painter,Moonlake Coral,Speedpaint 2.0,#9A426E
-The Army Painter,Mummified Grime,Speedpaint 2.0,#686A4F
-The Army Painter,Murder Scene,Speedpaint 2.0,#69323E
-The Army Painter,Noble Skin,Speedpaint 2.0,#504941
-The Army Painter,Nuclear Sunrise,Speedpaint 2.0,#DA7A3D
-The Army Painter,Occultist Cloak,Speedpaint 2.0,#343541
-The Army Painter,Ochre Clay,Speedpaint 2.0,#BAAD4F
-The Army Painter,Orc Skin,Speedpaint 2.0,#488239
-The Army Painter,Pallid Bone,Speedpaint 2.0,#E6D5A1
-The Army Painter,Pastel Indigo,Speedpaint 2.0,#A7C0E3
-The Army Painter,Pastel Lavender,Speedpaint 2.0,#DCCAE4
-The Army Painter,Pastel Salmon,Speedpaint 2.0,#F4D0A5
-The Army Painter,Pastel Seafoam,Speedpaint 2.0,#C3DFD4
-The Army Painter,Pastel Yellow,Speedpaint 2.0,#FBEC8F
-The Army Painter,Peachy Flesh,Speedpaint 2.0,#EBAC77
-The Army Painter,Periwinkle Purple,Speedpaint 2.0,#5B599A
-The Army Painter,Plasmatic Bolt,Speedpaint 2.0,#499E91
-The Army Painter,Polished Silver,Speedpaint 2.0,#828281
-The Army Painter,Poppy Red,Speedpaint 2.0,#BB5243
-The Army Painter,Princess Pink,Speedpaint 2.0,#DCA6B8
-The Army Painter,Purple Alchemy,Speedpaint 2.0,#9F4A6D
-The Army Painter,Purple Swarm,Speedpaint 2.0,#603A84
-The Army Painter,Raging Sea,Speedpaint 2.0,#4997A9
-The Army Painter,Rigor Mortis,Speedpaint 2.0,#B4B57D
-The Army Painter,Royal Robes,Speedpaint 2.0,#5A69A3
-The Army Painter,Ruddy Fur,Speedpaint 2.0,#935032
-The Army Painter,Runic Grey,Speedpaint 2.0,#627D8F
-The Army Painter,Sand Golem,Speedpaint 2.0,#CA9D39
-The Army Painter,Satchel Brown,Speedpaint 2.0,#574236
-The Army Painter,Shamrock Green,Speedpaint 2.0,#77AD44
-The Army Painter,Slaughter Red,Speedpaint 2.0,#902A2F
-The Army Painter,Speedpaint Medium,Speedpaint 2.0,#FFFFFF
-The Army Painter,Strong Tone,Warpaints Fanatic - Wash,#252623
-The Army Painter,Talos Bronze,Speedpaint 2.0,#764835
-The Army Painter,Thunderbird Blue,Speedpaint 2.0,#7EBCA0
-The Army Painter,Tidal Wave,Speedpaint 2.0,#3A7CBB
-The Army Painter,Tyrian Navy,Speedpaint 2.0,#324352
-The Army Painter,Warrior Skin,Speedpaint 2.0,#A0785D
-The Army Painter,Zealot Yellow,Speedpaint 2.0,#F6DB4A
-Citadel,Abaddon Black,Base,#000000
-Citadel,Agrax Earthshade,Shade,#71725F
-Citadel,Armageddon Dust,Technical,#E3D374
-Citadel,Astrogranite,Technical,#8D8D8D
-Citadel,Balthasar Gold,Base,#B99362
-Citadel,Bugman's Glow,Base,#7C4B44
-Citadel,Corax White,Base,#FFFFFF
-Citadel,Guilliman Flesh,Contrast,#DC9E91
-Citadel,Kantor Blue,Base,#09134E
-Citadel,Khorne Red,Base,#5F0004
-Citadel,Leadbelcher,Base,#959595
-Citadel,Macragge Blue,Base,#1F3D7B
-Citadel,Magos Purple,Contrast,#BCA5C1
-Citadel,Mephiston Red,Base,#8E020F
-Citadel,Naggaroth Night,Base,#3B2B50
-Citadel,Nuln Oil,Shade,#696971
-Citadel,Rakarth Flesh,Base,#9B998D
-Citadel,Retribution Armor,Base,#B5A071
-Citadel,Skeleton Horde,Contrast,#EDE0C0
-Citadel,Snakebite Leather,Contrast,#BC7837
-Citadel,Steel Legion Drab,Base,#574E2F
-Citadel,Stirland Mud,Technical,#62441F
-Citadel,Thunderhawk Blue,Layer,#436A71
-Citadel,Wraithbone,Base,#DAD0B4
-Citadel,Wyldwood,Contrast,#766261
-Golden,Titan Buff,High Flow Acrylics,#C9C5AB
-Vallejo,Basic Skin Tone,Model Color,#E9AC8D
-Vallejo,Brassy Brass,Game Color,#C28A69
-Vallejo,Bronze Fleshtone,Game Color,#AC6520
-Vallejo,Brown Rose,Model Color,#97625D
-Vallejo,Chainmail Silver,Game Color,#C9CBCE
-Vallejo,Dark Flesh,Model Color,#D3933B
-Vallejo,Flat Flesh,Model Color,#DF9A59
-Vallejo,Glorious Gold,Game Color,#E7CCA8
-Vallejo,Gunmetal,Game Color,#8F9094
-Vallejo,Hammered Copper,Game Color,#94735E
-Vallejo,Light Flesh,Model Color,#F3D4B8
-Vallejo,Medium Fleshtone,Model Color,#AF7940
-Vallejo,Polished Gold,Game Color,#F7E3AA
-Vallejo,Salmon Rose,Model Color,#CB8070
-Vallejo,Silver,Game Color,#E2E4E6
-Vallejo,Sunny Skin Tone,Model Color,#ED9646
-Vallejo,Tinny Tin,Game Color,#745746
+﻿brand,name,type,color,id,source,swatch
+The Army Painter,Absolution Green,Speedpaint 2.0,#2C4A2D,the-army-painter-absolution-green,master,
+The Army Painter,Aged Hide,Speedpaint 2.0,#CD7559,the-army-painter-aged-hide,master,
+The Army Painter,Algae Green,Speedpaint 2.0,#A1AE64,the-army-painter-algae-green,master,
+The Army Painter,Ancient Honey,Speedpaint 2.0,#ECC54A,the-army-painter-ancient-honey,master,
+The Army Painter,Ashen Stone,Speedpaint 2.0,#B8BFC1,the-army-painter-ashen-stone,master,
+The Army Painter,Aztec Gold,Speedpaint 2.0,#6A763D,the-army-painter-aztec-gold,master,
+The Army Painter,Battleship Grey,Speedpaint 2.0,#BECCD5,the-army-painter-battleship-grey,master,
+The Army Painter,Beowulf Blue,Speedpaint 2.0,#204181,the-army-painter-beowulf-blue,master,
+The Army Painter,Blinding Light,Speedpaint 2.0,#FFFFFF,the-army-painter-blinding-light,master,
+The Army Painter,Blood Red,Speedpaint 2.0,#D2472C,the-army-painter-blood-red,master,
+The Army Painter,Bony Matter,Speedpaint 2.0,#B39A7A,the-army-painter-bony-matter,master,
+The Army Painter,Brazen Copper,Speedpaint 2.0,#603F37,the-army-painter-brazen-copper,master,
+The Army Painter,Bright Red,Speedpaint 2.0,#D8674C,the-army-painter-bright-red,master,
+The Army Painter,Broadsword Silver,Speedpaint 2.0,#595958,the-army-painter-broadsword-silver,master,
+The Army Painter,Brownish Decay,Speedpaint 2.0,#7B703E,the-army-painter-brownish-decay,master,
+The Army Painter,Burnished Red,Speedpaint 2.0,#64413A,the-army-painter-burnished-red,master,
+The Army Painter,Burnt Moss,Speedpaint 2.0,#515D54,the-army-painter-burnt-moss,master,
+The Army Painter,Camo Cloak,Speedpaint 2.0,#637545,the-army-painter-camo-cloak,master,
+The Army Painter,Caribbean Ocean,Speedpaint 2.0,#4EA8BB,the-army-painter-caribbean-ocean,master,
+The Army Painter,Carmine Dragon,Speedpaint 2.0,#D14760,the-army-painter-carmine-dragon,master,
+The Army Painter,Charming Chartreuse,Speedpaint 2.0,#CED863,the-army-painter-charming-chartreuse,master,
+The Army Painter,Cloudburst Blue,Speedpaint 2.0,#41445E,the-army-painter-cloudburst-blue,master,
+The Army Painter,Crusader Skin,Speedpaint 2.0,#E8A26D,the-army-painter-crusader-skin,master,
+The Army Painter,Dark Wood,Speedpaint 2.0,#493423,the-army-painter-dark-wood,master,
+The Army Painter,Desolate Brown,Speedpaint 2.0,#797446,the-army-painter-desolate-brown,master,
+The Army Painter,Dusk Red,Speedpaint 2.0,#5C4240,the-army-painter-dusk-red,master,
+The Army Painter,Enchanted Steel,Speedpaint 2.0,#52595D,the-army-painter-enchanted-steel,master,
+The Army Painter,Familiar Pink,Speedpaint 2.0,#CD4486,the-army-painter-familiar-pink,master,
+The Army Painter,Fire Drake,Speedpaint 2.0,#CD9977,the-army-painter-fire-drake,master,
+The Army Painter,Fire Giant Orange,Speedpaint 2.0,#DF833E,the-army-painter-fire-giant-orange,master,
+The Army Painter,Forest Sprite,Speedpaint 2.0,#7FA457,the-army-painter-forest-sprite,master,
+The Army Painter,Ghillie Dew,Speedpaint 2.0,#99B142,the-army-painter-ghillie-dew,master,
+The Army Painter,Ghoul Green,Speedpaint 2.0,#68AD6E,the-army-painter-ghoul-green,master,
+The Army Painter,Glittering Loot,Speedpaint 2.0,#816D25,the-army-painter-glittering-loot,master,
+The Army Painter,Goddess Glow,Speedpaint 2.0,#935F5A,the-army-painter-goddess-glow,master,
+The Army Painter,Golden Armour,Speedpaint 2.0,#64461A,the-army-painter-golden-armour,master,
+The Army Painter,Gravelord Grey,Speedpaint 2.0,#45484D,the-army-painter-gravelord-grey,master,
+The Army Painter,Grim Black,Speedpaint 2.0,#000000,the-army-painter-grim-black,master,
+The Army Painter,Gunner Camo,Speedpaint 2.0,#3E5546,the-army-painter-gunner-camo,master,
+The Army Painter,Hardened Leather,Speedpaint 2.0,#87582C,the-army-painter-hardened-leather,master,
+The Army Painter,Highlord Blue,Speedpaint 2.0,#2E5885,the-army-painter-highlord-blue,master,
+The Army Painter,Hive Dweller Purple,Speedpaint 2.0,#563E72,the-army-painter-hive-dweller-purple,master,
+The Army Painter,Hoard Bronze,Speedpaint 2.0,#81714A,the-army-painter-hoard-bronze,master,
+The Army Painter,Holy White,Speedpaint 2.0,#ECEDEC,the-army-painter-holy-white,master,
+The Army Painter,Hoplite Gold,Speedpaint 2.0,#9C8032,the-army-painter-hoplite-gold,master,
+The Army Painter,Howling Sand,Speedpaint 2.0,#D4D6BB,the-army-painter-howling-sand,master,
+The Army Painter,Lizardfolk Cyan,Speedpaint 2.0,#5B9CA6,the-army-painter-lizardfolk-cyan,master,
+The Army Painter,Maggot Skin,Speedpaint 2.0,#D0CE73,the-army-painter-maggot-skin,master,
+The Army Painter,Magic Blue,Speedpaint 2.0,#3A7BB2,the-army-painter-magic-blue,master,
+The Army Painter,Maize Yellow,Speedpaint 2.0,#F7DE4D,the-army-painter-maize-yellow,master,
+The Army Painter,Malignant Green,Speedpaint 2.0,#C7D35B,the-army-painter-malignant-green,master,
+The Army Painter,Moody Mauve,Speedpaint 2.0,#99557E,the-army-painter-moody-mauve,master,
+The Army Painter,Moonlake Coral,Speedpaint 2.0,#9A426E,the-army-painter-moonlake-coral,master,
+The Army Painter,Mummified Grime,Speedpaint 2.0,#686A4F,the-army-painter-mummified-grime,master,
+The Army Painter,Murder Scene,Speedpaint 2.0,#69323E,the-army-painter-murder-scene,master,
+The Army Painter,Noble Skin,Speedpaint 2.0,#504941,the-army-painter-noble-skin,master,
+The Army Painter,Nuclear Sunrise,Speedpaint 2.0,#DA7A3D,the-army-painter-nuclear-sunrise,master,
+The Army Painter,Occultist Cloak,Speedpaint 2.0,#343541,the-army-painter-occultist-cloak,master,
+The Army Painter,Ochre Clay,Speedpaint 2.0,#BAAD4F,the-army-painter-ochre-clay,master,
+The Army Painter,Orc Skin,Speedpaint 2.0,#488239,the-army-painter-orc-skin,master,
+The Army Painter,Pallid Bone,Speedpaint 2.0,#E6D5A1,the-army-painter-pallid-bone,master,
+The Army Painter,Pastel Indigo,Speedpaint 2.0,#A7C0E3,the-army-painter-pastel-indigo,master,
+The Army Painter,Pastel Lavender,Speedpaint 2.0,#DCCAE4,the-army-painter-pastel-lavender,master,
+The Army Painter,Pastel Salmon,Speedpaint 2.0,#F4D0A5,the-army-painter-pastel-salmon,master,
+The Army Painter,Pastel Seafoam,Speedpaint 2.0,#C3DFD4,the-army-painter-pastel-seafoam,master,
+The Army Painter,Pastel Yellow,Speedpaint 2.0,#FBEC8F,the-army-painter-pastel-yellow,master,
+The Army Painter,Peachy Flesh,Speedpaint 2.0,#EBAC77,the-army-painter-peachy-flesh,master,
+The Army Painter,Periwinkle Purple,Speedpaint 2.0,#5B599A,the-army-painter-periwinkle-purple,master,
+The Army Painter,Plasmatic Bolt,Speedpaint 2.0,#499E91,the-army-painter-plasmatic-bolt,master,
+The Army Painter,Polished Silver,Speedpaint 2.0,#828281,the-army-painter-polished-silver,master,
+The Army Painter,Poppy Red,Speedpaint 2.0,#BB5243,the-army-painter-poppy-red,master,
+The Army Painter,Princess Pink,Speedpaint 2.0,#DCA6B8,the-army-painter-princess-pink,master,
+The Army Painter,Purple Alchemy,Speedpaint 2.0,#9F4A6D,the-army-painter-purple-alchemy,master,
+The Army Painter,Purple Swarm,Speedpaint 2.0,#603A84,the-army-painter-purple-swarm,master,
+The Army Painter,Raging Sea,Speedpaint 2.0,#4997A9,the-army-painter-raging-sea,master,
+The Army Painter,Rigor Mortis,Speedpaint 2.0,#B4B57D,the-army-painter-rigor-mortis,master,
+The Army Painter,Royal Robes,Speedpaint 2.0,#5A69A3,the-army-painter-royal-robes,master,
+The Army Painter,Ruddy Fur,Speedpaint 2.0,#935032,the-army-painter-ruddy-fur,master,
+The Army Painter,Runic Grey,Speedpaint 2.0,#627D8F,the-army-painter-runic-grey,master,
+The Army Painter,Sand Golem,Speedpaint 2.0,#CA9D39,the-army-painter-sand-golem,master,
+The Army Painter,Satchel Brown,Speedpaint 2.0,#574236,the-army-painter-satchel-brown,master,
+The Army Painter,Shamrock Green,Speedpaint 2.0,#77AD44,the-army-painter-shamrock-green,master,
+The Army Painter,Slaughter Red,Speedpaint 2.0,#902A2F,the-army-painter-slaughter-red,master,
+The Army Painter,Speedpaint Medium,Speedpaint 2.0,#FFFFFF,the-army-painter-speedpaint-medium,master,
+The Army Painter,Strong Tone,Warpaints Fanatic - Wash,#252623,the-army-painter-strong-tone,master,
+The Army Painter,Talos Bronze,Speedpaint 2.0,#764835,the-army-painter-talos-bronze,master,
+The Army Painter,Thunderbird Blue,Speedpaint 2.0,#7EBCA0,the-army-painter-thunderbird-blue,master,
+The Army Painter,Tidal Wave,Speedpaint 2.0,#3A7CBB,the-army-painter-tidal-wave,master,
+The Army Painter,Tyrian Navy,Speedpaint 2.0,#324352,the-army-painter-tyrian-navy,master,
+The Army Painter,Warrior Skin,Speedpaint 2.0,#A0785D,the-army-painter-warrior-skin,master,
+The Army Painter,Zealot Yellow,Speedpaint 2.0,#F6DB4A,the-army-painter-zealot-yellow,master,
+Citadel,Abaddon Black,Base,#000000,citadel-abaddon-black,master,
+Citadel,Agrax Earthshade,Shade,#71725F,citadel-agrax-earthshade,master,
+Citadel,Armageddon Dust,Technical,#E3D374,citadel-armageddon-dust,master,
+Citadel,Astrogranite,Technical,#8D8D8D,citadel-astrogranite,master,
+Citadel,Balthasar Gold,Base,#B99362,citadel-balthasar-gold,master,
+Citadel,Bugman's Glow,Base,#7C4B44,citadel-bugmans-glow,master,
+Citadel,Corax White,Base,#FFFFFF,citadel-corax-white,master,
+Citadel,Guilliman Flesh,Contrast,#DC9E91,citadel-guilliman-flesh,master,
+Citadel,Kantor Blue,Base,#09134E,citadel-kantor-blue,master,
+Citadel,Khorne Red,Base,#5F0004,citadel-khorne-red,master,
+Citadel,Leadbelcher,Base,#959595,citadel-leadbelcher,master,
+Citadel,Macragge Blue,Base,#1F3D7B,citadel-macragge-blue,master,
+Citadel,Magos Purple,Contrast,#BCA5C1,citadel-magos-purple,master,
+Citadel,Mephiston Red,Base,#8E020F,citadel-mephiston-red,master,
+Citadel,Naggaroth Night,Base,#3B2B50,citadel-naggaroth-night,master,
+Citadel,Nuln Oil,Shade,#696971,citadel-nuln-oil,master,
+Citadel,Rakarth Flesh,Base,#9B998D,citadel-rakarth-flesh,master,
+Citadel,Retribution Armor,Base,#B5A071,citadel-retribution-armor,master,
+Citadel,Skeleton Horde,Contrast,#EDE0C0,citadel-skeleton-horde,master,
+Citadel,Snakebite Leather,Contrast,#BC7837,citadel-snakebite-leather,master,
+Citadel,Steel Legion Drab,Base,#574E2F,citadel-steel-legion-drab,master,
+Citadel,Stirland Mud,Technical,#62441F,citadel-stirland-mud,master,
+Citadel,Thunderhawk Blue,Layer,#436A71,citadel-thunderhawk-blue,master,
+Citadel,Wraithbone,Base,#DAD0B4,citadel-wraithbone,master,
+Citadel,Wyldwood,Contrast,#766261,citadel-wyldwood,master,
+Golden,Titan Buff,High Flow Acrylics,#C9C5AB,golden-titan-buff,master,
+Vallejo,Basic Skin Tone,Model Color,#E9AC8D,vallejo-basic-skin-tone,master,
+Vallejo,Brassy Brass,Game Color,#C28A69,vallejo-brassy-brass,master,
+Vallejo,Bronze Fleshtone,Game Color,#AC6520,vallejo-bronze-fleshtone,master,
+Vallejo,Brown Rose,Model Color,#97625D,vallejo-brown-rose,master,
+Vallejo,Chainmail Silver,Game Color,#C9CBCE,vallejo-chainmail-silver,master,
+Vallejo,Dark Flesh,Model Color,#D3933B,vallejo-dark-flesh,master,
+Vallejo,Flat Flesh,Model Color,#DF9A59,vallejo-flat-flesh,master,
+Vallejo,Glorious Gold,Game Color,#E7CCA8,vallejo-glorious-gold,master,
+Vallejo,Gunmetal,Game Color,#8F9094,vallejo-gunmetal,master,
+Vallejo,Hammered Copper,Game Color,#94735E,vallejo-hammered-copper,master,
+Vallejo,Light Flesh,Model Color,#F3D4B8,vallejo-light-flesh,master,
+Vallejo,Medium Fleshtone,Model Color,#AF7940,vallejo-medium-fleshtone,master,
+Vallejo,Polished Gold,Game Color,#F7E3AA,vallejo-polished-gold,master,
+Vallejo,Salmon Rose,Model Color,#CB8070,vallejo-salmon-rose,master,
+Vallejo,Silver,Game Color,#E2E4E6,vallejo-silver,master,
+Vallejo,Sunny Skin Tone,Model Color,#ED9646,vallejo-sunny-skin-tone,master,
+Vallejo,Tinny Tin,Game Color,#745746,vallejo-tinny-tin,master,
+Monument Hobbies,Bold Titanium White,Pro Acryl,#FFFFFF,monument-hobbies-bold-titanium-white,incoming,https://monumenthobbies.com/cdn/shop/files/001-BoldTitaniuamWhite.png
+Monument Hobbies,Coal Black,Pro Acryl,#252525,monument-hobbies-coal-black,incoming,https://monumenthobbies.com/cdn/shop/files/002-CoalBlack.png
+Monument Hobbies,Bold Pyrrole Red,Pro Acryl,#D02031,monument-hobbies-bold-pyrrole-red,incoming,https://monumenthobbies.com/cdn/shop/files/003-BoldPyrroleRed.png
+Monument Hobbies,Green,Pro Acryl,#078248,monument-hobbies-green,incoming,https://monumenthobbies.com/cdn/shop/files/004-Green.png
+Monument Hobbies,Blue,Pro Acryl,#155FAD,monument-hobbies-blue,incoming,https://monumenthobbies.com/cdn/shop/files/005-Blue.png
+Monument Hobbies,Golden Yellow,Pro Acryl,#FBD805,monument-hobbies-golden-yellow,incoming,https://monumenthobbies.com/cdn/shop/files/006-GoldenYellow.png
+Monument Hobbies,Orange,Pro Acryl,#F4792A,monument-hobbies-orange,incoming,https://monumenthobbies.com/cdn/shop/files/007-Orange.png
+Monument Hobbies,Burnt Red,Pro Acryl,#803536,monument-hobbies-burnt-red,incoming,https://monumenthobbies.com/cdn/shop/files/008-BurntRed.png
+Monument Hobbies,Mahogany,Pro Acryl,#4E3B38,monument-hobbies-mahogany,incoming,https://monumenthobbies.com/cdn/shop/files/009-Mahogany.png
+Monument Hobbies,Purple,Pro Acryl,#7F4F7E,monument-hobbies-purple,incoming,https://monumenthobbies.com/cdn/shop/files/010-Purple.png
+Monument Hobbies,Magenta,Pro Acryl,#BF4A73,monument-hobbies-magenta,incoming,https://monumenthobbies.com/cdn/shop/files/011-Magenta.png
+Monument Hobbies,Sky Blue,Pro Acryl,#2BA0DA,monument-hobbies-sky-blue,incoming,https://monumenthobbies.com/cdn/shop/files/012-SkyBlue.png
+Monument Hobbies,Faded Ultramarine,Pro Acryl,#6389C6,monument-hobbies-faded-ultramarine,incoming,https://monumenthobbies.com/cdn/shop/files/013-FadedUltramarine.png
+Monument Hobbies,Dark Grey Blue,Pro Acryl,#143B60,monument-hobbies-dark-grey-blue,incoming,https://monumenthobbies.com/cdn/shop/files/014-DarkGreyBlue.png
+Monument Hobbies,Bright Warm Grey,Pro Acryl,#ADB5A3,monument-hobbies-bright-warm-grey,incoming,https://monumenthobbies.com/cdn/shop/files/015-BrightWarmGrey.png
+Monument Hobbies,Dark Warm Grey,Pro Acryl,#4B4E51,monument-hobbies-dark-warm-grey,incoming,https://monumenthobbies.com/cdn/shop/files/016-DarkWarmGrey.png
+Monument Hobbies,Golden Brown,Pro Acryl,#D6AF6D,monument-hobbies-golden-brown,incoming,https://monumenthobbies.com/cdn/shop/files/017-GoldenBrown.png
+Monument Hobbies,Light Umber,Pro Acryl,#6F5649,monument-hobbies-light-umber,incoming,https://monumenthobbies.com/cdn/shop/files/018-LightUmber.png
+Monument Hobbies,Dark Umber,Pro Acryl,#52413C,monument-hobbies-dark-umber,incoming,https://monumenthobbies.com/cdn/shop/files/019-DarkUmber.png
+Monument Hobbies,Camo Green,Pro Acryl,#51604B,monument-hobbies-camo-green,incoming,https://monumenthobbies.com/cdn/shop/files/020-CamoGreen.png
+Monument Hobbies,Jade,Pro Acryl,#0C6161,monument-hobbies-jade,incoming,https://monumenthobbies.com/cdn/shop/files/021-Jade.png
+Monument Hobbies,Bright Ivory,Pro Acryl,#FBF9E2,monument-hobbies-bright-ivory,incoming,https://monumenthobbies.com/cdn/shop/files/022-BrightIvory.png
+Monument Hobbies,Ivory,Pro Acryl,#E6DCCB,monument-hobbies-ivory,incoming,https://monumenthobbies.com/cdn/shop/files/023-Ivory.png
+Monument Hobbies,Tan Flesh,Pro Acryl,#E1B6A5,monument-hobbies-tan-flesh,incoming,https://monumenthobbies.com/cdn/shop/files/024-TanFlesh.png
+Monument Hobbies,Silver,Pro Acryl,#C3C4C4,monument-hobbies-silver,incoming,https://monumenthobbies.com/cdn/shop/files/025-Silver.png
+Monument Hobbies,Light Bronze,Pro Acryl,#CAC0AE,monument-hobbies-light-bronze,incoming,https://monumenthobbies.com/cdn/shop/files/026-LightBronze.png
+Monument Hobbies,Copper,Pro Acryl,#C09D85,monument-hobbies-copper,incoming,https://monumenthobbies.com/cdn/shop/files/027-Copper.png
+Monument Hobbies,Rich Gold,Pro Acryl,#D2B18A,monument-hobbies-rich-gold,incoming,https://monumenthobbies.com/cdn/shop/files/028-RichGold.png
+Monument Hobbies,White Gold,Pro Acryl,#CAC3B8,monument-hobbies-white-gold,incoming,https://monumenthobbies.com/cdn/shop/files/029-WhiteGold.png
+Monument Hobbies,Dark Silver,Pro Acryl,#949191,monument-hobbies-dark-silver,incoming,https://monumenthobbies.com/cdn/shop/files/030-DarkSilver.png
+Monument Hobbies,Bright Gold,Pro Acryl,#E1C8A9,monument-hobbies-bright-gold,incoming,https://monumenthobbies.com/cdn/shop/files/031-BrightGold.png
+Monument Hobbies,Bronze,Pro Acryl,#A08F81,monument-hobbies-bronze,incoming,https://monumenthobbies.com/cdn/shop/files/032-Bronze.png
+Monument Hobbies,Metallic Medium,Pro Acryl,#CACDCA,monument-hobbies-metallic-medium,incoming,https://monumenthobbies.com/cdn/shop/files/033-MetallicMedium.png
+Monument Hobbies,Dark Blue,Pro Acryl,#131F47,monument-hobbies-dark-blue,incoming,https://monumenthobbies.com/cdn/shop/files/034-DarkBlue.png
+Monument Hobbies,Dark Purple,Pro Acryl,#231D4A,monument-hobbies-dark-purple,incoming,https://monumenthobbies.com/cdn/shop/files/035-DarkPurple.png
+Monument Hobbies,Dark Camo Green,Pro Acryl,#4F5448,monument-hobbies-dark-camo-green,incoming,https://monumenthobbies.com/cdn/shop/files/036-DarkCamoGreen.png
+Monument Hobbies,Burnt Orange,Pro Acryl,#9C463B,monument-hobbies-burnt-orange,incoming,https://monumenthobbies.com/cdn/shop/files/037-BurntOrange.png
+Monument Hobbies,Yellow Ochre,Pro Acryl,#D09C4A,monument-hobbies-yellow-ochre,incoming,https://monumenthobbies.com/cdn/shop/files/038-YellowOchre.png
+Monument Hobbies,Bright Yellow Green,Pro Acryl,#97BC3C,monument-hobbies-bright-yellow-green,incoming,https://monumenthobbies.com/cdn/shop/files/039-BrightYellowGreen.png
+Monument Hobbies,Black Brown,Pro Acryl,#484341,monument-hobbies-black-brown,incoming,https://monumenthobbies.com/cdn/shop/files/040-BlackBrown.png
+Monument Hobbies,Olive Flesh,Pro Acryl,#C6B49D,monument-hobbies-olive-flesh,incoming,https://monumenthobbies.com/cdn/shop/files/041-OliveFlesh.png
+Monument Hobbies,Shadow Flesh,Pro Acryl,#A06259,monument-hobbies-shadow-flesh,incoming,https://monumenthobbies.com/cdn/shop/files/042-ShadowFlesh.png
+Monument Hobbies,Pale Pink,Pro Acryl,#FAD8D5,monument-hobbies-pale-pink,incoming,https://monumenthobbies.com/cdn/shop/files/043-PalePink.png
+Monument Hobbies,Dark Neutral Grey,Pro Acryl,#424549,monument-hobbies-dark-neutral-grey,incoming,https://monumenthobbies.com/cdn/shop/files/044-DarkNeutralGrey.png
+Monument Hobbies,Bright Neutral Grey,Pro Acryl,#D9D9D9,monument-hobbies-bright-neutral-grey,incoming,https://monumenthobbies.com/cdn/shop/files/045-BrightNeutralGrey.png
+Monument Hobbies,Transparent Blue,Pro Acryl,#2D3973,monument-hobbies-transparent-blue,incoming,https://monumenthobbies.com/cdn/shop/files/046-TransparentBlue.png
+Monument Hobbies,Transparent Red,Pro Acryl,#952E27,monument-hobbies-transparent-red,incoming,https://monumenthobbies.com/cdn/shop/files/047-TransparentRed.png
+Monument Hobbies,Transparent Green,Pro Acryl,#144B35,monument-hobbies-transparent-green,incoming,https://monumenthobbies.com/cdn/shop/files/048-TransparentGreen.png
+Monument Hobbies,Transparent Yellow,Pro Acryl,#9E9832,monument-hobbies-transparent-yellow,incoming,https://monumenthobbies.com/cdn/shop/files/049-TransparentYellow.png
+Monument Hobbies,Transparent Orange,Pro Acryl,#A67333,monument-hobbies-transparent-orange,incoming,https://monumenthobbies.com/cdn/shop/files/050-TransparentOrange.png
+Monument Hobbies,Transparent Purple,Pro Acryl,#382A51,monument-hobbies-transparent-purple,incoming,https://monumenthobbies.com/cdn/shop/files/051-TransparentPurple.png
+Monument Hobbies,Transparent Brown,Pro Acryl,#42352C,monument-hobbies-transparent-brown,incoming,https://monumenthobbies.com/cdn/shop/files/052-TransparentBrown.png
+Monument Hobbies,Transparent Black,Pro Acryl,#0D0E0E,monument-hobbies-transparent-black,incoming,https://monumenthobbies.com/cdn/shop/files/053-TransparentBlack.png
+Monument Hobbies,Turquoise,Pro Acryl,#14A2B3,monument-hobbies-turquoise,incoming,https://monumenthobbies.com/cdn/shop/files/054-Turquoise.png
+Monument Hobbies,Grey Blue,Pro Acryl,#7FA2C0,monument-hobbies-grey-blue,incoming,https://monumenthobbies.com/cdn/shop/files/055-GreyBlue.png
+Monument Hobbies,Blue Black,Pro Acryl,#40474F,monument-hobbies-blue-black,incoming,https://monumenthobbies.com/cdn/shop/files/056-BlueBlack.png
+Monument Hobbies,Black Green,Pro Acryl,#38423B,monument-hobbies-black-green,incoming,https://monumenthobbies.com/cdn/shop/files/057-BlackGreen.png
+Monument Hobbies,Bright Pale Green,Pro Acryl,#BBDECE,monument-hobbies-bright-pale-green,incoming,https://monumenthobbies.com/cdn/shop/files/058-BrightPaleGreen.png
+Monument Hobbies,Burnt Sienna,Pro Acryl,#753324,monument-hobbies-burnt-sienna,incoming,https://monumenthobbies.com/cdn/shop/files/059-BurntSienna.png
+Monument Hobbies,Pale Yellow,Pro Acryl,#FDF1B1,monument-hobbies-pale-yellow,incoming,https://monumenthobbies.com/cdn/shop/files/060-PaleYellow.png
+Monument Hobbies,Khaki,Pro Acryl,#D2C69C,monument-hobbies-khaki,incoming,https://monumenthobbies.com/cdn/shop/files/061-Khaki.png
+Monument Hobbies,Dark Golden Brown,Pro Acryl,#5F481B,monument-hobbies-dark-golden-brown,incoming,https://monumenthobbies.com/cdn/shop/files/062-DarkGoldenBrown.png
+Monument Hobbies,Faded Plum,Pro Acryl,#A08CB6,monument-hobbies-faded-plum,incoming,https://monumenthobbies.com/cdn/shop/files/063-FadedPlum.png
+Monument Hobbies,Transparent White,Pro Acryl,#D2CFCE,monument-hobbies-transparent-white,incoming,https://monumenthobbies.com/cdn/shop/files/064-TransparentWhite.png
+Monument Hobbies,Yellow Green,Pro Acryl,#6D7746,monument-hobbies-yellow-green,incoming,https://monumenthobbies.com/cdn/shop/files/065-YellowGreen.png
+Monument Hobbies,Faded Green,Pro Acryl,#98A990,monument-hobbies-faded-green,incoming,https://monumenthobbies.com/cdn/shop/files/066-FadedGreen.png
+Monument Hobbies,Bright Jade,Pro Acryl,#3AA08C,monument-hobbies-bright-jade,incoming,https://monumenthobbies.com/cdn/shop/files/067-BrightJade.png
+Monument Hobbies,Dark Flesh,Pro Acryl,#613D39,monument-hobbies-dark-flesh,incoming,https://monumenthobbies.com/cdn/shop/files/068-DarkFlesh.png
+Monument Hobbies,Burgundy,Pro Acryl,#76303B,monument-hobbies-burgundy,incoming,https://monumenthobbies.com/cdn/shop/files/069-Burgundy.png
+Monument Hobbies,Plum,Pro Acryl,#8B508D,monument-hobbies-plum,incoming,https://monumenthobbies.com/cdn/shop/files/070-Plum.png
+Monument Hobbies,Pink,Pro Acryl,#F2A0AD,monument-hobbies-pink,incoming,https://monumenthobbies.com/cdn/shop/files/071-Pink.png
+Monument Hobbies,Warm Yellow,Pro Acryl,#FEC10F,monument-hobbies-warm-yellow,incoming,https://monumenthobbies.com/cdn/shop/files/072-WarmYellow.png
+Monument Hobbies,Warm Flesh,Pro Acryl,#FECB84,monument-hobbies-warm-flesh,incoming,https://monumenthobbies.com/cdn/shop/files/073-WarmFlesh.png
+Monument Hobbies,Warm Grey,Pro Acryl,#616769,monument-hobbies-warm-grey,incoming,https://monumenthobbies.com/cdn/shop/files/074-WarmGrey.png
+Monument Hobbies,Neutral Grey,Pro Acryl,#595F66,monument-hobbies-neutral-grey,incoming,https://monumenthobbies.com/cdn/shop/files/075-NeutrealGrey.png
+Monument Hobbies,Black Wash,Pro Acryl,#6B6767,monument-hobbies-black-wash,incoming,https://monumenthobbies.com/cdn/shop/files/200-BlackWash.png
+Monument Hobbies,Brown Wash,Pro Acryl,#7F6E67,monument-hobbies-brown-wash,incoming,https://monumenthobbies.com/cdn/shop/files/201-BrownWash.png
+Monument Hobbies,Flesh Wash,Pro Acryl,#AE8C82,monument-hobbies-flesh-wash,incoming,https://monumenthobbies.com/cdn/shop/files/202-FleshWash.png
