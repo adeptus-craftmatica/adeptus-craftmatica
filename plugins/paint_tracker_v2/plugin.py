@@ -39,9 +39,14 @@ class Plugin(PluginBase):
         self._register_dashboard_provider()
         QTimer.singleShot(350, self._register_dashboard_provider)
 
-        # Subscribe to paint events to refresh UI
+        # Subscribe to paint events to refresh UI.
+        # "paints_filter_changed" is emitted by the Forge (community import) and v1
+        # "paint_imported"        is emitted by our own CSV import flow
         bus = self.context.event_bus
-        for event in ("paint_added", "paint_updated", "paint_removed"):
+        for event in (
+            "paint_added", "paint_updated", "paint_removed",
+            "paints_filter_changed", "paint_imported",
+        ):
             handler = self._make_refresh_handler()
             bus.subscribe(event, handler)
             self._subs.append((event, handler))

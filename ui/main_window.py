@@ -295,8 +295,12 @@ class MainWindow(QMainWindow):
 
     # Fallback aliases: if a plugin isn't loaded, try its sibling version.
     _PLUGIN_ALIASES: dict[str, list[str]] = {
-        "paint_tracker":    ["paint_tracker_v2"],
-        "paint_tracker_v2": ["paint_tracker"],
+        "paint_tracker":         ["paint_tracker_v2"],
+        "paint_tracker_v2":      ["paint_tracker"],
+        "materials_tracker":     ["materials_tracker_v2"],
+        "materials_tracker_v2":  ["materials_tracker"],
+        "army_builder":          ["army_builder_v2"],
+        "army_builder_v2":       ["army_builder"],
     }
 
     def _navigate_to_plugin(self, plugin_id: str) -> None:

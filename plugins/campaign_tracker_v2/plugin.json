@@ -1,0 +1,16 @@
+{
+  "id": "campaign_tracker_v2",
+  "name": "Campaign Command 2.0",
+  "display_name": "Campaign Command 2.0",
+  "version": "2.0.0",
+  "description": "Professional command centre for tabletop RPG and wargame campaigns. Supports D&D 5e, Pathfinder 2e, Warhammer 40K, AoS, Necromunda, Kill Team and custom systems.",
+  "author": "Adeptus Craftmatica",
+  "entry": "plugin",
+  "ui": true,
+  "category": "hobby",
+  "dependencies": [],
+  "events": {
+    "emits": [],
+    "listens": []
+  }
+}

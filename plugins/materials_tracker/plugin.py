@@ -6,6 +6,7 @@ Track basing materials, mediums, and scenic supplies.
 from __future__ import annotations
 
 from core.plugin_base import PluginBase
+from PySide6.QtCore import QTimer
 from .ui import MaterialUI
 from .models import ValidationError, MaterialFilter
 
@@ -30,12 +31,17 @@ class Plugin(PluginBase):
         self._register_events()
         self._initial_load()
 
+        # Register dashboard provider with ownership marker so v2 can take
+        # over cleanly and restore v1's provider on deactivate.
+        QTimer.singleShot(250, self._register_dashboard_provider)
+
         print(f"[PLUGIN] {self.display_name} activated")
 
     def deactivate(self):
         print(f"[PLUGIN] {self.display_name} deactivating...")
 
         self._unsubscribe_all()
+        self._cleanup_dashboard_provider()
 
         self._ui      = None
         self._service = None
@@ -200,3 +206,34 @@ class Plugin(PluginBase):
             })
         except Exception as e:
             print(f"[PLUGIN ERROR] Refresh failed: {e}")
+
+    # ============================================================
+    # DASHBOARD PROVIDER (ownership-aware)
+    # ============================================================
+
+    def _register_dashboard_provider(self):
+        """Register under the canonical key with an _owner marker."""
+        try:
+            from plugins.dashboard.providers.materials_provider import MaterialsDashboardProvider
+            reg = self.context.services.try_get("dashboard_registry")
+            if reg and self._service:
+                provider        = MaterialsDashboardProvider(self._service)
+                provider._owner = "materials_tracker"
+                reg.register_provider("materials_tracker", provider)
+                try:
+                    self.context.event_bus.emit("dashboard_provider_updated", {})
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"[MATERIALS V1] Dashboard provider failed: {e}")
+
+    def _cleanup_dashboard_provider(self):
+        """Only unregister if we still own the provider slot."""
+        try:
+            reg = self.context.services.try_get("dashboard_registry")
+            if reg:
+                current = reg.get_provider("materials_tracker")
+                if getattr(current, "_owner", None) == "materials_tracker":
+                    reg.unregister_provider("materials_tracker")
+        except Exception:
+            pass

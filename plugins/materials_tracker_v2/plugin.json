@@ -1,0 +1,12 @@
+{
+    "name": "Materials Tracker 2.0",
+    "id": "materials_tracker_v2",
+    "version": "1.0.0",
+    "description": "Redesigned materials and basing supplies manager with card grid, stock tracking, and smart restocking recommendations.",
+    "author": "The Fabricator",
+    "entry": "plugin",
+    "ui": true,
+    "category": "hobby",
+    "dependencies": [],
+    "events": ["material_added", "material_updated", "material_removed"]
+}

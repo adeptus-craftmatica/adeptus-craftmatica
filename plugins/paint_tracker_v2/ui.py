@@ -1033,6 +1033,8 @@ class _CardGrid(QWidget):
         grid.setContentsMargins(4, 4, 4, 4)
         for c in range(cols):
             grid.setColumnStretch(c, 0)
+        # Absorb all extra horizontal space into a dummy column so cards stay left-aligned
+        grid.setColumnStretch(cols, 1)
 
         if not self._paints:
             lbl = QLabel(self._empty_message)
@@ -1080,6 +1082,9 @@ class _CardGrid(QWidget):
                 if col != 0:
                     row += 1
                     col = 0
+
+            # Absorb all extra vertical space so cards pin to top
+            grid.setRowStretch(row, 1)
 
         self._scroll.setWidget(inner)
 

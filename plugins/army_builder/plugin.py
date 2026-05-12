@@ -45,11 +45,17 @@ class Plugin(PluginBase):
         self._register_events()
         self._initial_load()
 
+        # Register dashboard provider with ownership marker so v2 can take
+        # over cleanly and restore v1's provider on deactivate.
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(250, self._register_dashboard_provider)
+
         print(f"[PLUGIN] {self.display_name} activated")
 
     def deactivate(self):
         print(f"[PLUGIN] {self.display_name} deactivating...")
         self._unsubscribe_all()
+        self._cleanup_dashboard_provider()
         self._ui = None
         self._service = None
         self._settings = None
@@ -524,3 +530,34 @@ class Plugin(PluginBase):
 
         except Exception as e:
             print(f"[PLUGIN ERROR] {self.display_name} refresh paint tab: {e}")
+
+    # ============================================================
+    # DASHBOARD PROVIDER (ownership-aware)
+    # ============================================================
+
+    def _register_dashboard_provider(self):
+        """Register under canonical key with an _owner marker."""
+        try:
+            from plugins.dashboard.providers.army_provider import ArmyDashboardProvider
+            reg = self.context.services.try_get("dashboard_registry")
+            if reg and self._service:
+                provider        = ArmyDashboardProvider(self._service)
+                provider._owner = "army_builder"
+                reg.register_provider("army_builder", provider)
+                try:
+                    self.context.event_bus.emit("dashboard_provider_updated", {})
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"[ARMY V1] Dashboard provider failed: {e}")
+
+    def _cleanup_dashboard_provider(self):
+        """Only unregister if we still own the provider slot."""
+        try:
+            reg = self.context.services.try_get("dashboard_registry")
+            if reg:
+                current = reg.get_provider("army_builder")
+                if getattr(current, "_owner", None) == "army_builder":
+                    reg.unregister_provider("army_builder")
+        except Exception:
+            pass

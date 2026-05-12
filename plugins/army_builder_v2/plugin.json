@@ -1,0 +1,12 @@
+{
+    "name": "Army Builder 2.0",
+    "id": "army_builder_v2",
+    "version": "1.0.0",
+    "description": "Redesigned army list manager with card grid, inline builder, and smart points tracking.",
+    "author": "The Fabricator",
+    "entry": "plugin",
+    "ui": true,
+    "category": "hobby",
+    "dependencies": [],
+    "events": ["army_created", "army_updated", "army_deleted"]
+}
