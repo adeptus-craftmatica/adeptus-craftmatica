@@ -295,12 +295,14 @@ class MainWindow(QMainWindow):
 
     # Fallback aliases: if a plugin isn't loaded, try its sibling version.
     _PLUGIN_ALIASES: dict[str, list[str]] = {
-        "paint_tracker":         ["paint_tracker_v2"],
-        "paint_tracker_v2":      ["paint_tracker"],
-        "materials_tracker":     ["materials_tracker_v2"],
-        "materials_tracker_v2":  ["materials_tracker"],
-        "army_builder":          ["army_builder_v2"],
-        "army_builder_v2":       ["army_builder"],
+        "paint_tracker":          ["paint_tracker_v2"],
+        "paint_tracker_v2":       ["paint_tracker"],
+        "materials_tracker":      ["materials_tracker_v2"],
+        "materials_tracker_v2":   ["materials_tracker"],
+        "army_builder":           ["army_builder_v2"],
+        "army_builder_v2":        ["army_builder"],
+        "campaign_tracker":       ["campaign_tracker_v2"],
+        "campaign_tracker_v2":    ["campaign_tracker"],
     }
 
     def _navigate_to_plugin(self, plugin_id: str) -> None:
@@ -649,23 +651,31 @@ class MainWindow(QMainWindow):
 
     def _on_dashboard_navigate(self, payload: dict | None = None):
         """Switch to the tab whose plugin_id property matches payload['plugin_id'].
-        Uses the tagged property rather than the display label so navigation
-        still works after a tab is renamed.
+        Uses _navigate_to_plugin so alias mappings (v1↔v2) are respected and
+        navigation still works after a tab is renamed.
         If payload also contains 'project_id', emits project_selected after switching."""
         if not payload:
             return
         target_id = payload.get("plugin_id", "")
         if not target_id:
             return
-        for i in range(self.tabs.count()):
-            w = self.tabs.widget(i)
-            if w and w.property("plugin_id") == target_id:
-                self.tabs.setCurrentIndex(i)
-                break
+
+        # Use the alias-aware helper — handles campaign_tracker↔v2, army_builder↔v2, etc.
+        self._navigate_to_plugin(target_id)
 
         # Select a specific project if the payload carries one
         project_id = payload.get("project_id")
-        if project_id is not None and target_id == "project_tracker":
+        # Resolve the canonical id of whichever tab actually got focused
+        resolved_id = target_id
+        candidates = [target_id] + self._PLUGIN_ALIASES.get(target_id, [])
+        for pid in candidates:
+            for i in range(self.tabs.count()):
+                w = self.tabs.widget(i)
+                if w and w.property("plugin_id") == pid:
+                    resolved_id = pid
+                    break
+
+        if project_id is not None and resolved_id == "project_tracker":
             from PySide6.QtCore import QTimer
             bus = getattr(self.context, "event_bus", None)
             if bus:

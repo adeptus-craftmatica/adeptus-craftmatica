@@ -12,11 +12,11 @@ from datetime import date
 from typing import Optional
 
 from PySide6.QtCore import Qt, QTimer, Signal, QUrl
-from PySide6.QtGui import QPixmap, QColor, QDesktopServices
+from PySide6.QtGui import QPixmap, QColor, QDesktopServices, QPainter
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
-    QScrollArea, QLineEdit, QComboBox, QDialog, QDialogButtonBox,
-    QGridLayout, QSpinBox, QTextEdit, QMessageBox,
+    QScrollArea, QLineEdit, QComboBox, QCheckBox, QDialog, QDialogButtonBox,
+    QGridLayout, QSpinBox, QTextEdit, QMessageBox, QMenu,
     QFileDialog, QStackedWidget, QSizePolicy, QFormLayout,
     QListWidget, QListWidgetItem, QSplitter, QTabWidget,
     QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView,
@@ -59,10 +59,12 @@ _SEC_COMPENDIUM = 5
 _SEC_GALLERY    = 6
 _SEC_DICE       = 7
 _SEC_ASSETS     = 8
+_SEC_QUESTS     = 9
 
 _NAV_ITEMS = [
     (_SEC_OVERVIEW,   "🏠", "Overview"),
     (_SEC_SESSIONS,   "📅", "Sessions"),
+    (_SEC_QUESTS,     "🗡", "Quests"),
     (_SEC_CHARACTERS, "🧙", "Characters"),
     (_SEC_ENCOUNTERS, "⚔",  "Encounters"),
     (_SEC_COMPENDIUM, "📖", "Compendium"),
@@ -70,6 +72,31 @@ _NAV_ITEMS = [
     (_SEC_ASSETS,     "📁", "Assets"),
     (_SEC_DICE,       "🎲", "Dice"),
 ]
+
+# ── Quest metadata ──────────────────────────────────────────────────────────────
+_QUEST_STATUSES   = ["Active", "On Hold", "Completed", "Abandoned"]
+_QUEST_PRIORITIES = ["High", "Medium", "Low"]
+_QUEST_CATEGORIES = [
+    "Main Quest", "Side Quest", "Personal Quest", "Faction Quest", "Other"
+]
+_QUEST_STATUS_META: dict[str, tuple[str, str]] = {
+    "Active":    ("🔵", "#4f9eff"),
+    "On Hold":   ("⏸",  "#e08c55"),
+    "Completed": ("✅", "#3dba6e"),
+    "Abandoned": ("💀", "#606060"),
+}
+_QUEST_PRIORITY_COLORS = {
+    "High":   "#e05555",
+    "Medium": "#e08c55",
+    "Low":    "#4f9eff",
+}
+_QUEST_CAT_ICONS = {
+    "Main Quest":     "⚔",
+    "Side Quest":     "📜",
+    "Personal Quest": "🧙",
+    "Faction Quest":  "🏛",
+    "Other":          "❓",
+}
 
 # ── Asset categories ────────────────────────────────────────────────────────────
 _ASSET_CATS = [
@@ -419,17 +446,20 @@ class _EditCampaignDialog(QDialog):
 
         c = self._campaign
         form = QFormLayout()
-        form.setSpacing(8)
+        form.setSpacing(10)
+        form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
         self._name   = QLineEdit(c.name)
         self._status = QComboBox()
         self._status.addItems(["Active", "Paused", "Completed", "Archived"])
         self._status.setCurrentText(getattr(c, "status", "Active") or "Active")
         self._start  = QLineEdit(getattr(c, "start_date", "") or "")
+        self._start.setPlaceholderText("YYYY-MM-DD")
         self._desc   = QTextEdit(getattr(c, "description", "") or "")
         self._desc.setFixedHeight(80)
         self._notes  = QTextEdit(getattr(c, "notes", "") or "")
         self._notes.setFixedHeight(80)
-        form.addRow("Name *",       self._name)
+        form.addRow("Name",         self._name)
         form.addRow("Status",       self._status)
         form.addRow("Start Date",   self._start)
         form.addRow("Description",  self._desc)
@@ -957,6 +987,11 @@ class CampaignV2UI(QWidget):
         # Assets state
         self._asset_cat_filter: str = "all"
 
+        # Quest state
+        self._quest_status_filter: str = "all"
+        self._quest_id: Optional[int] = None
+        self._quest_search_active: bool = False
+
         _ensure_custom_presets_in_systems()  # load any saved custom presets into SYSTEMS
         self._build()
         self._apply_theme()
@@ -1046,6 +1081,7 @@ class CampaignV2UI(QWidget):
         self._stack.addWidget(self._build_gallery_page())     # 6
         self._stack.addWidget(self._build_dice_page())        # 7
         self._stack.addWidget(self._build_assets_page())      # 8
+        self._stack.addWidget(self._build_quests_page())      # 9
 
         root.addWidget(content, 1)
 
@@ -1415,31 +1451,48 @@ class CampaignV2UI(QWidget):
         self._enc_enemy_section_lbl.setObjectName("sectionLabel")
         enemies_hdr.addWidget(self._enc_enemy_section_lbl)
         enemies_hdr.addStretch()
+        if _GAME_DATA_AVAILABLE:
+            _browse_books_btn = QPushButton("📚  Browse Books…")
+            _browse_books_btn.setObjectName("ghostBtn")
+            _browse_books_btn.clicked.connect(self._on_browse_monsters_for_encounter)
+            enemies_hdr.addWidget(_browse_books_btn)
+            enemies_hdr.addSpacing(4)
+        _custom_mon_btn = QPushButton("🧟  Custom…")
+        _custom_mon_btn.setObjectName("ghostBtn")
+        _custom_mon_btn.clicked.connect(self._on_open_custom_monsters)
+        enemies_hdr.addWidget(_custom_mon_btn)
         detail_lay.addLayout(enemies_hdr)
 
         self._enc_monster_list = QListWidget()
         self._enc_monster_list.setObjectName("monsterList")
-        self._enc_monster_list.setMaximumHeight(200)
+        self._enc_monster_list.setMinimumHeight(160)
+        self._enc_monster_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self._enc_monster_list.customContextMenuRequested.connect(
+            self._enc_monster_context_menu)
+        self._enc_monster_list.itemDoubleClicked.connect(
+            self._on_edit_monster_dblclick)
         detail_lay.addWidget(self._enc_monster_list)
 
-        # Add enemy row
+        # Quick-add enemy row
         add_enemy_row = QHBoxLayout()
         add_enemy_row.setSpacing(6)
         self._enc_enemy_name = QLineEdit()
-        self._enc_enemy_name.setPlaceholderText("Name…")
+        self._enc_enemy_name.setPlaceholderText("Quick-add name…")
         self._enc_enemy_cr = QLineEdit()
-        self._enc_enemy_cr.setPlaceholderText("CR / Lvl")
-        self._enc_enemy_cr.setFixedWidth(64)
+        self._enc_enemy_cr.setPlaceholderText("CR")
+        self._enc_enemy_cr.setFixedWidth(56)
         self._enc_enemy_count = QSpinBox()
         self._enc_enemy_count.setRange(1, 99)
         self._enc_enemy_count.setValue(1)
         self._enc_enemy_count.setFixedWidth(56)
         add_enemy_btn = QPushButton("Add")
         add_enemy_btn.setObjectName("accentBtn")
-        add_enemy_btn.setFixedWidth(56)
+        add_enemy_btn.setFixedWidth(52)
         add_enemy_btn.clicked.connect(self._on_add_monster)
-        self._enc_remove_enemy_btn = QPushButton("Remove")
-        self._enc_remove_enemy_btn.setObjectName("ghostBtn")
+        self._enc_remove_enemy_btn = QPushButton("✕")
+        self._enc_remove_enemy_btn.setObjectName("dangerBtn")
+        self._enc_remove_enemy_btn.setFixedWidth(32)
+        self._enc_remove_enemy_btn.setToolTip("Remove selected")
         self._enc_remove_enemy_btn.setEnabled(False)
         self._enc_remove_enemy_btn.clicked.connect(self._on_remove_monster)
         self._enc_monster_list.currentRowChanged.connect(
@@ -1657,6 +1710,130 @@ class CampaignV2UI(QWidget):
         lay.addWidget(self._gallery_scroll, 1)
         return page
 
+    # ── 9 · Quests ────────────────────────────────────────────────────────────
+
+    def _build_quests_page(self) -> QWidget:
+        w = QWidget()
+        root = QHBoxLayout(w)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
+
+        # ── Left panel ────────────────────────────────────────────────────
+        left = QFrame()
+        left.setObjectName("questLeftPanel")
+        left.setFixedWidth(220)
+        llay = QVBoxLayout(left)
+        llay.setContentsMargins(0, 0, 0, 0)
+        llay.setSpacing(0)
+
+        # ── Top: title + add button ───────────────────────────────────────
+        lhdr = QFrame()
+        lhdr.setObjectName("questLeftHdr")
+        lhdr_lay = QHBoxLayout(lhdr)
+        lhdr_lay.setContentsMargins(14, 12, 10, 12)
+        lhdr_lay.setSpacing(8)
+        qlbl = QLabel("Quests")
+        qlbl.setObjectName("questPanelTitle")
+        new_q_btn = QPushButton("+ New")
+        new_q_btn.setObjectName("questAddBtn")
+        new_q_btn.setFixedHeight(28)
+        new_q_btn.clicked.connect(self._add_quest_dialog)
+        lhdr_lay.addWidget(qlbl)
+        lhdr_lay.addStretch()
+        lhdr_lay.addWidget(new_q_btn)
+        llay.addWidget(lhdr)
+
+        # ── Search box ────────────────────────────────────────────────────
+        search_frame = QFrame()
+        search_frame.setObjectName("questSearchFrame")
+        sf_lay = QHBoxLayout(search_frame)
+        sf_lay.setContentsMargins(10, 6, 10, 6)
+        sf_lay.setSpacing(0)
+        self._quest_search_edit = QLineEdit()
+        self._quest_search_edit.setObjectName("questSearch")
+        self._quest_search_edit.setPlaceholderText("Search quests…")
+        self._quest_search_edit.setClearButtonEnabled(True)
+        self._quest_search_edit.textChanged.connect(self._on_quest_search_changed)
+        sf_lay.addWidget(self._quest_search_edit)
+        llay.addWidget(search_frame)
+
+        # ── Stats label ───────────────────────────────────────────────────
+        self._quest_stats_lbl = QLabel("")
+        self._quest_stats_lbl.setObjectName("questStatsLbl")
+        self._quest_stats_lbl.setContentsMargins(14, 4, 10, 4)
+        llay.addWidget(self._quest_stats_lbl)
+
+        # ── Status nav (vertical, sidebar style) ──────────────────────────
+        status_nav = QFrame()
+        status_nav.setObjectName("questStatusNav")
+        sn_lay = QVBoxLayout(status_nav)
+        sn_lay.setContentsMargins(8, 6, 8, 6)
+        sn_lay.setSpacing(2)
+
+        self._quest_filter_btns: dict[str, QPushButton] = {}
+        _filters = [
+            ("all",       "📋", "All Quests"),
+            ("Active",    "🔵", "Active"),
+            ("On Hold",   "⏸",  "On Hold"),
+            ("Completed", "✅", "Completed"),
+            ("Abandoned", "💀", "Abandoned"),
+        ]
+        for fid, ficon, flbl in _filters:
+            fb = QPushButton(f"{ficon}  {flbl}")
+            fb.setCheckable(True)
+            fb.setObjectName("questNavBtn")
+            fb.clicked.connect(lambda _, f=fid: self._set_quest_filter(f))
+            self._quest_filter_btns[fid] = fb
+            sn_lay.addWidget(fb)
+
+        div = QFrame()
+        div.setObjectName("questDivider")
+        div.setFixedHeight(1)
+        sn_lay.addSpacing(4)
+        sn_lay.addWidget(div)
+        llay.addWidget(status_nav)
+
+        # ── Quest list ────────────────────────────────────────────────────
+        self._quest_list = QListWidget()
+        self._quest_list.setObjectName("questList")
+        self._quest_list.setSelectionMode(QAbstractItemView.SingleSelection)
+        self._quest_list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._quest_list.itemClicked.connect(self._on_quest_list_click)
+        self._quest_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self._quest_list.customContextMenuRequested.connect(
+            self._quest_list_context_menu
+        )
+        llay.addWidget(self._quest_list, 1)
+        root.addWidget(left)
+
+        # ── Right panel ───────────────────────────────────────────────────
+        self._quest_right_stack = QStackedWidget()
+
+        # Index 0 — placeholder
+        ph = QWidget()
+        ph_lay = QVBoxLayout(ph)
+        ph_lbl = QLabel("Select a quest or click  + New  to get started")
+        ph_lbl.setObjectName("dimHint")
+        ph_lbl.setAlignment(Qt.AlignCenter)
+        ph_lay.addWidget(ph_lbl)
+        self._quest_right_stack.addWidget(ph)
+
+        # Index 1 — scrollable detail view
+        detail_scroll = QScrollArea()
+        detail_scroll.setWidgetResizable(True)
+        detail_scroll.setObjectName("questDetailScroll")
+        detail_scroll.setFrameShape(QFrame.NoFrame)
+        self._quest_detail_widget = QWidget()
+        self._quest_detail_widget.setObjectName("questDetailWidget")
+        self._quest_detail_layout = QVBoxLayout(self._quest_detail_widget)
+        self._quest_detail_layout.setContentsMargins(28, 22, 28, 28)
+        self._quest_detail_layout.setSpacing(0)
+        detail_scroll.setWidget(self._quest_detail_widget)
+        self._quest_right_stack.addWidget(detail_scroll)
+
+        root.addWidget(self._quest_right_stack, 1)
+        return w
+
     # ── 8 · Assets ────────────────────────────────────────────────────────────
 
     def _build_assets_page(self) -> QWidget:
@@ -1866,6 +2043,7 @@ class CampaignV2UI(QWidget):
             _SEC_GALLERY:     self._load_gallery,
             _SEC_DICE:        self._load_dice_page,
             _SEC_ASSETS:      self._load_assets,
+            _SEC_QUESTS:      self._load_quests,
         }
         if sec in loaders:
             loaders[sec]()
@@ -2256,6 +2434,17 @@ class CampaignV2UI(QWidget):
     def _filter_campaigns(self, text: str):
         self._load_campaigns(text)
 
+    # ── Dashboard event bus helper ─────────────────────────────────────────────
+
+    def _fire(self, event: str, payload: dict | None = None):
+        """Emit an event to the app event bus (silently ignores errors)."""
+        try:
+            self._ctx.event_bus.emit(event, payload or {})
+        except Exception:
+            pass
+
+    # ── Campaign CRUD ─────────────────────────────────────────────────────────
+
     def _on_new_campaign(self):
         dlg = _NewCampaignDialog(self)
         if dlg.exec() != QDialog.Accepted:
@@ -2265,6 +2454,7 @@ class CampaignV2UI(QWidget):
             self._svc.create_campaign(**data)
             self._load_campaigns()
             self._show_toast("Campaign created.")
+            self._fire("campaign_created", {"name": data.get("name", "")})
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
@@ -2280,6 +2470,7 @@ class CampaignV2UI(QWidget):
             self._camp = self._svc.get_campaign(self._camp_id)
             self._load_overview()
             self._show_toast("Campaign updated.")
+            self._fire("campaign_updated", {"name": self._camp.name if self._camp else ""})
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
@@ -2302,6 +2493,7 @@ class CampaignV2UI(QWidget):
             self._svc.delete_campaign(self._camp_id)
             self._close_campaign()
             self._show_toast(f"Campaign \"{name}\" deleted.")
+            self._fire("campaign_deleted", {"name": name})
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
@@ -2317,6 +2509,7 @@ class CampaignV2UI(QWidget):
             self._svc.update_campaign(campaign_id, **dlg.result_data())
             self._load_campaigns()
             self._show_toast("Campaign updated.")
+            self._fire("campaign_updated", {"name": camp.name})
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
@@ -2343,6 +2536,7 @@ class CampaignV2UI(QWidget):
                 self._close_campaign()
             self._load_campaigns()
             self._show_toast(f"Campaign \"{name}\" deleted.")
+            self._fire("campaign_deleted", {"name": name})
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
@@ -2362,6 +2556,11 @@ class CampaignV2UI(QWidget):
             self._svc.create_session(self._camp_id, **dlg.result_data())
             self._load_sessions()
             self._show_toast(f"{label} logged.")
+            title = dlg.result_data().get("title", "")
+            self._fire("battle_logged", {
+                "name": title,
+                "campaign_name": self._camp.name if self._camp else "",
+            })
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
@@ -2378,6 +2577,7 @@ class CampaignV2UI(QWidget):
             self._svc.update_session(session_id, **dlg.result_data())
             self._load_sessions()
             self._show_toast(f"{label} updated.")
+            self._fire("dashboard_provider_updated")
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
@@ -2392,6 +2592,7 @@ class CampaignV2UI(QWidget):
             self._ses_detail.clear()
             self._load_sessions()
             self._show_toast("Session deleted.")
+            self._fire("dashboard_provider_updated")
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
@@ -2513,16 +2714,16 @@ class CampaignV2UI(QWidget):
         monsters = self._svc.get_monsters(self._enc_id)
         self._enc_monster_list.clear()
         for m in monsters:
-            cr   = m.cr or "—"
-            cnt  = m.count or 1
-            xp   = DND5E_CR_XP.get(cr, 0) * cnt if self._sys_id == "dnd5e" else 0
-            xp_s = f"  [{xp:,} xp]" if xp else ""
-            self._enc_monster_list.addItem(
-                f"{m.monster_name}  ×{cnt}  CR {cr}{xp_s}"
-            )
-            item = self._enc_monster_list.item(self._enc_monster_list.count() - 1)
-            if item:
-                item.setData(Qt.UserRole, m.id)
+            cr    = m.cr or "—"
+            cnt   = m.count or 1
+            xp    = DND5E_CR_XP.get(cr, 0) * cnt if self._sys_id == "dnd5e" else 0
+            xp_s  = f"  [{xp:,} xp]" if xp else ""
+            hp_s  = f"  HP:{m.hp_override}" if m.hp_override else ""
+            note_s = "  📝" if (m.notes and m.notes.strip()) else ""
+            label = f"{m.monster_name}  ×{cnt}  CR {cr}{hp_s}{xp_s}{note_s}"
+            item = QListWidgetItem(label)
+            item.setData(Qt.UserRole, m.id)
+            self._enc_monster_list.addItem(item)
         self._recalc_encounter()
 
     def _recalc_encounter(self):
@@ -2748,6 +2949,105 @@ class CampaignV2UI(QWidget):
             self._refresh_enc_monsters()
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
+
+    def _on_edit_monster_dblclick(self, item: QListWidgetItem):
+        """Double-click a monster row to edit it."""
+        self._edit_monster_by_id(item.data(Qt.UserRole))
+
+    def _enc_monster_context_menu(self, pos):
+        item = self._enc_monster_list.itemAt(pos)
+        if not item:
+            return
+        monster_id = item.data(Qt.UserRole)
+        menu = QMenu(self)
+        menu.setStyleSheet(self.styleSheet())
+        edit_act = menu.addAction("✏  Edit…")
+        dup_act  = menu.addAction("⧉  Duplicate")
+        menu.addSeparator()
+        del_act  = menu.addAction("✕  Remove")
+        act = menu.exec(self._enc_monster_list.mapToGlobal(pos))
+        if act == edit_act:
+            self._edit_monster_by_id(monster_id)
+        elif act == dup_act:
+            self._duplicate_monster(monster_id)
+        elif act == del_act:
+            try:
+                self._svc.remove_monster(monster_id)
+                self._refresh_enc_monsters()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
+
+    def _edit_monster_by_id(self, monster_id):
+        if not monster_id or not self._enc_id:
+            return
+        # Fetch the monster from the list by scanning
+        monsters = self._svc.get_monsters(self._enc_id)
+        m = next((x for x in monsters if x.id == monster_id), None)
+        if not m:
+            return
+        dlg = _MonsterEditDialog(m, parent=self)
+        dlg.setStyleSheet(self.styleSheet())
+        if dlg.exec() != QDialog.Accepted:
+            return
+        vals = dlg.get_values()
+        self._svc.update_monster(
+            monster_id,
+            name=vals["name"],
+            count=vals["count"],
+            cr=vals["cr"],
+            hp_override=vals["hp_override"],
+            notes=vals["notes"],
+        )
+        self._refresh_enc_monsters()
+
+    def _duplicate_monster(self, monster_id):
+        if not self._enc_id:
+            return
+        monsters = self._svc.get_monsters(self._enc_id)
+        m = next((x for x in monsters if x.id == monster_id), None)
+        if not m:
+            return
+        try:
+            self._svc.add_monster(
+                self._enc_id,
+                name=m.monster_name,
+                count=m.count,
+                cr=m.cr or "0",
+                hp_override=m.hp_override or 0,
+                notes=m.notes or "",
+            )
+            self._refresh_enc_monsters()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
+
+    def _on_browse_monsters_for_encounter(self):
+        if not self._enc_id or not self._camp_id:
+            return
+        dlg = _MonsterFromBookDialog(
+            service=self._svc,
+            campaign_id=self._camp_id,
+            encounter_id=self._enc_id,
+            system_id=self._sys_id,
+            disabled_books=self._disabled_books,
+            parent=self,
+        )
+        dlg.setStyleSheet(self.styleSheet())
+        dlg.exec()
+        self._refresh_enc_monsters()
+
+    def _on_open_custom_monsters(self):
+        if not self._camp_id:
+            return
+        dlg = _CustomMonsterManagerDialog(
+            service=self._svc,
+            campaign_id=self._camp_id,
+            encounter_id=self._enc_id,
+            parent=self,
+        )
+        dlg.setStyleSheet(self.styleSheet())
+        dlg.exec()
+        if self._enc_id:
+            self._refresh_enc_monsters()
 
     # ── Compendium ────────────────────────────────────────────────────────────
 
@@ -3150,6 +3450,678 @@ class CampaignV2UI(QWidget):
             self._reload_saved_chips()
         except Exception as e:
             self._show_toast(f"Could not delete: {e}")
+
+    # ══════════════════════════════════════════════════════════════════════════
+    #  Quests
+    # ══════════════════════════════════════════════════════════════════════════
+
+    def _load_quests(self):
+        self._set_quest_filter(self._quest_status_filter)
+
+    def _set_quest_filter(self, filter_id: str):
+        self._quest_status_filter = filter_id
+        for fid, btn in self._quest_filter_btns.items():
+            btn.setChecked(fid == filter_id)
+        if not self._camp_id:
+            return
+
+        # Search overrides status filter
+        search_q = ""
+        if hasattr(self, "_quest_search_edit"):
+            search_q = self._quest_search_edit.text().strip()
+
+        if search_q:
+            quests = self._svc.search_quests(self._camp_id, search_q)
+        else:
+            status_param = None if filter_id == "all" else filter_id
+            quests = self._svc.get_quests(self._camp_id, status_param)
+
+        # Update nav button labels with live counts
+        counts = self._svc.get_quest_status_counts(self._camp_id)
+        total  = sum(counts.values())
+        _filters = [
+            ("all",       "📋", "All Quests",  total),
+            ("Active",    "🔵", "Active",      counts.get("Active",    0)),
+            ("On Hold",   "⏸",  "On Hold",     counts.get("On Hold",   0)),
+            ("Completed", "✅", "Completed",   counts.get("Completed", 0)),
+            ("Abandoned", "💀", "Abandoned",   counts.get("Abandoned", 0)),
+        ]
+        for fid, ficon, flbl, cnt in _filters:
+            btn = self._quest_filter_btns.get(fid)
+            if not btn:
+                continue
+            count_str = f"  {cnt}" if cnt else ""
+            btn.setText(f"{ficon}  {flbl}{count_str}")
+
+        # Stats summary line
+        if hasattr(self, "_quest_stats_lbl"):
+            parts = []
+            if counts.get("Active"):    parts.append(f"{counts['Active']} Active")
+            if counts.get("On Hold"):   parts.append(f"{counts['On Hold']} On Hold")
+            if counts.get("Completed"): parts.append(f"{counts['Completed']} Done")
+            self._quest_stats_lbl.setText(
+                " · ".join(parts) if parts else ("No quests yet" if not total else "")
+            )
+
+        self._quest_list.clear()
+        for quest in quests:
+            objs = self._svc.get_objectives(quest.id)
+            done = sum(1 for o in objs if o.completed)
+            item = QListWidgetItem()
+            item.setData(Qt.UserRole, quest.id)
+            widget = _QuestListItem(quest, len(objs), done)
+            item.setSizeHint(widget.sizeHint())
+            self._quest_list.addItem(item)
+            self._quest_list.setItemWidget(item, widget)
+
+        # Restore selection
+        if self._quest_id:
+            for i in range(self._quest_list.count()):
+                it = self._quest_list.item(i)
+                if it and it.data(Qt.UserRole) == self._quest_id:
+                    self._quest_list.setCurrentItem(it)
+                    break
+
+    def _on_quest_search_changed(self, text: str):
+        self._set_quest_filter(self._quest_status_filter)
+
+    def _on_quest_list_click(self, item: QListWidgetItem):
+        qid = item.data(Qt.UserRole)
+        if qid:
+            quest = self._svc.get_quest(qid)
+            if quest:
+                self._quest_id = qid
+                self._show_quest_detail(quest)
+
+    def _show_quest_detail(self, quest):
+        """Rebuild the right-panel detail view for quest."""
+        self._quest_right_stack.setCurrentIndex(1)
+
+        # Clear previous content
+        while self._quest_detail_layout.count():
+            item = self._quest_detail_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        status_icon, status_color = _QUEST_STATUS_META.get(
+            quest.status, ("?", "#a0a0a0")
+        )
+
+        # ── Title row: pin + title + Edit / Delete ────────────────────────
+        hdr_row = QHBoxLayout()
+        hdr_row.setSpacing(8)
+        hdr_row.setContentsMargins(0, 0, 0, 0)
+
+        # Pin toggle button
+        pin_btn = QPushButton("★" if quest.pinned else "☆")
+        pin_btn.setObjectName("questPinBtn")
+        pin_btn.setFixedSize(30, 30)
+        pin_btn.setToolTip("Unpin quest" if quest.pinned else "Pin quest to top")
+        pin_btn.clicked.connect(lambda: self._toggle_quest_pin(quest.id))
+        if quest.pinned:
+            pin_btn.setStyleSheet(
+                f"QPushButton {{ color:#f0c040; background:rgba(240,192,64,0.12);"
+                f"border:1px solid rgba(240,192,64,0.35); border-radius:6px;"
+                f"font-size:16px; }}"
+                f"QPushButton:hover {{ background:rgba(240,192,64,0.22); }}"
+            )
+        else:
+            pin_btn.setStyleSheet(
+                f"QPushButton {{ color:{_FG_DIM}; background:transparent;"
+                f"border:1px solid {_BORDER}; border-radius:6px; font-size:16px; }}"
+                f"QPushButton:hover {{ color:{_FG_MID}; background:{_BG3}; }}"
+            )
+
+        title_lbl = QLabel(quest.title)
+        title_lbl.setObjectName("questDetailTitle")
+        title_lbl.setWordWrap(True)
+
+        edit_btn = QPushButton("Edit")
+        edit_btn.setObjectName("ghostBtn")
+        edit_btn.setFixedHeight(30)
+        edit_btn.clicked.connect(lambda: self._edit_quest_dialog(quest))
+        del_btn = QPushButton("Delete")
+        del_btn.setObjectName("dangerBtn")
+        del_btn.setFixedHeight(30)
+        del_btn.clicked.connect(lambda: self._delete_quest(quest.id))
+
+        hdr_row.addWidget(pin_btn)
+        hdr_row.addWidget(title_lbl, 1)
+        hdr_row.addWidget(edit_btn)
+        hdr_row.addWidget(del_btn)
+        hdr_w = QWidget()
+        hdr_w.setLayout(hdr_row)
+        self._quest_detail_layout.addWidget(hdr_w)
+        self._quest_detail_layout.addSpacing(10)
+
+        # ── Status / priority / category pills ───────────────────────────
+        meta_row = QHBoxLayout()
+        meta_row.setSpacing(8)
+        meta_row.setContentsMargins(0, 0, 0, 0)
+        meta_row.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+
+        # Status pill — click to change
+        s_btn = QPushButton(f"{status_icon}  {quest.status}  ▾")
+        s_btn.setFixedHeight(26)
+        s_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        s_btn.setStyleSheet(
+            f"QPushButton {{ background:{status_color}1a; color:{status_color};"
+            f"border:1px solid {status_color}55; border-radius:13px;"
+            f"padding:0 12px; font-size:12px; font-weight:600; }}"
+            f"QPushButton:hover {{ background:{status_color}30; }}"
+            f"QPushButton:pressed {{ background:{status_color}40; }}"
+        )
+        def _open_status_menu(qid=quest.id, btn=s_btn):
+            from PySide6.QtWidgets import QMenu
+            menu = QMenu(self)
+            menu.setStyleSheet(self.styleSheet())
+            for s in _QUEST_STATUSES:
+                ico, _ = _QUEST_STATUS_META.get(s, ("", ""))
+                act = menu.addAction(f"{ico}  {s}" if ico else s)
+                act.triggered.connect(
+                    lambda _, st=s, qid=qid: self._quick_status_change(qid, st)
+                )
+            menu.exec(btn.mapToGlobal(btn.rect().bottomLeft()))
+        s_btn.clicked.connect(_open_status_menu)
+
+        # Priority pill
+        pcolor = _QUEST_PRIORITY_COLORS.get(quest.priority, "#a0a0a0")
+        p_btn = QPushButton(f"● {quest.priority}")
+        p_btn.setFixedHeight(26)
+        p_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        p_btn.setStyleSheet(
+            f"QPushButton {{ background:{pcolor}15; color:{pcolor};"
+            f"border:1px solid {pcolor}44; border-radius:13px;"
+            f"padding:0 12px; font-size:12px; }}"
+            f"QPushButton:hover {{ background:{pcolor}25; }}"
+        )
+        def _open_priority_menu(qid=quest.id, btn=p_btn):
+            from PySide6.QtWidgets import QMenu
+            menu = QMenu(self)
+            menu.setStyleSheet(self.styleSheet())
+            for pri in _QUEST_PRIORITIES:
+                act = menu.addAction(f"● {pri}")
+                act.triggered.connect(
+                    lambda _, p=pri, qid=qid: self._quick_field_change(qid, priority=p)
+                )
+            menu.exec(btn.mapToGlobal(btn.rect().bottomLeft()))
+        p_btn.clicked.connect(_open_priority_menu)
+
+        # Category pill
+        c_btn = QPushButton(quest.category)
+        c_btn.setFixedHeight(26)
+        c_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        c_btn.setStyleSheet(
+            f"QPushButton {{ background:{_BG3}; color:{_FG_MID};"
+            f"border:1px solid {_BORDER}; border-radius:13px;"
+            f"padding:0 12px; font-size:12px; }}"
+            f"QPushButton:hover {{ color:{_FG}; border-color:#444; }}"
+        )
+        def _open_category_menu(qid=quest.id, btn=c_btn):
+            from PySide6.QtWidgets import QMenu
+            menu = QMenu(self)
+            menu.setStyleSheet(self.styleSheet())
+            for cat in _QUEST_CATEGORIES:
+                act = menu.addAction(cat)
+                act.triggered.connect(
+                    lambda _, c=cat, qid=qid: self._quick_field_change(qid, category=c)
+                )
+            menu.exec(btn.mapToGlobal(btn.rect().bottomLeft()))
+        c_btn.clicked.connect(_open_category_menu)
+
+        meta_row.addWidget(s_btn)
+        meta_row.addWidget(p_btn)
+        meta_row.addWidget(c_btn)
+        meta_row.addStretch()
+        meta_w = QWidget()
+        meta_w.setFixedHeight(36)
+        meta_w.setLayout(meta_row)
+        self._quest_detail_layout.addWidget(meta_w)
+        self._quest_detail_layout.addSpacing(14)
+
+        # ── Info grid: giver / location / dates ───────────────────────────
+        _info = [
+            ("Quest Giver", quest.quest_giver, "Location", quest.location),
+            ("Date Started", quest.date_started, "Completed", quest.date_completed),
+        ]
+        has_info = any(
+            quest.quest_giver or quest.location or
+            quest.date_started or quest.date_completed
+        )
+        if has_info:
+            info_w = QWidget()
+            info_g = QGridLayout(info_w)
+            info_g.setContentsMargins(0, 0, 0, 0)
+            info_g.setHorizontalSpacing(18)
+            info_g.setVerticalSpacing(6)
+            gr = 0
+            for lbl1, val1, lbl2, val2 in _info:
+                if not (val1 or val2):
+                    continue
+                if val1:
+                    kl = QLabel(lbl1)
+                    kl.setObjectName("questInfoKey")
+                    vl = QLabel(val1)
+                    vl.setObjectName("questInfoVal")
+                    info_g.addWidget(kl, gr, 0)
+                    info_g.addWidget(vl, gr, 1)
+                if val2:
+                    kl2 = QLabel(lbl2)
+                    kl2.setObjectName("questInfoKey")
+                    vl2 = QLabel(val2)
+                    vl2.setObjectName("questInfoVal")
+                    info_g.addWidget(kl2, gr, 2)
+                    info_g.addWidget(vl2, gr, 3)
+                gr += 1
+            info_g.setColumnStretch(1, 1)
+            info_g.setColumnStretch(3, 1)
+            self._quest_detail_layout.addWidget(info_w)
+            self._quest_detail_layout.addSpacing(10)
+
+        # ── Tags ─────────────────────────────────────────────────────────
+        if quest.tags:
+            tags_w = QWidget()
+            tags_lay = QHBoxLayout(tags_w)
+            tags_lay.setContentsMargins(0, 0, 0, 0)
+            tags_lay.setSpacing(6)
+            for tag in quest.tags.split(","):
+                tag = tag.strip()
+                if not tag:
+                    continue
+                chip = QLabel(tag)
+                chip.setObjectName("questTagChip")
+                tags_lay.addWidget(chip)
+            tags_lay.addStretch()
+            self._quest_detail_layout.addWidget(tags_w)
+            self._quest_detail_layout.addSpacing(10)
+
+        # ── Linked session ────────────────────────────────────────────────
+        if quest.linked_session_id:
+            sess = self._svc.get_session(quest.linked_session_id)
+            if sess:
+                sess_row = QHBoxLayout()
+                sess_row.setContentsMargins(0, 0, 0, 0)
+                sess_row.setSpacing(8)
+                sess_lbl_key = QLabel("Session")
+                sess_lbl_key.setObjectName("questInfoKey")
+                sess_title = getattr(sess, "title", "") or f"Session {quest.linked_session_id}"
+                sess_lbl_val = QLabel(sess_title)
+                sess_lbl_val.setObjectName("questInfoVal")
+                sess_row.addWidget(sess_lbl_key)
+                sess_row.addWidget(sess_lbl_val)
+                sess_row.addStretch()
+                sess_w = QWidget()
+                sess_w.setLayout(sess_row)
+                self._quest_detail_layout.addWidget(sess_w)
+                self._quest_detail_layout.addSpacing(10)
+
+        # Spacer before sections
+        if has_info or quest.tags or quest.linked_session_id:
+            sep = QFrame()
+            sep.setObjectName("questDivider")
+            sep.setFixedHeight(1)
+            self._quest_detail_layout.addWidget(sep)
+            self._quest_detail_layout.addSpacing(16)
+
+        # ── Description ───────────────────────────────────────────────────
+        self._add_quest_section(
+            "Description",
+            quest.description or "No description yet.",
+            dim=(not quest.description),
+        )
+        self._quest_detail_layout.addSpacing(20)
+
+        # ── Objectives ────────────────────────────────────────────────────
+        self._quest_obj_section = self._build_objectives_section(quest)
+        self._quest_detail_layout.addWidget(self._quest_obj_section)
+        self._quest_detail_layout.addSpacing(20)
+
+        # ── Reward ────────────────────────────────────────────────────────
+        if quest.reward:
+            self._add_quest_section("Reward", quest.reward)
+            self._quest_detail_layout.addSpacing(20)
+
+        # ── DM Notes ──────────────────────────────────────────────────────
+        if quest.notes:
+            self._add_quest_section("DM Notes", quest.notes)
+            self._quest_detail_layout.addSpacing(20)
+
+        self._quest_detail_layout.addStretch()
+
+    def _add_quest_section(self, label: str, body: str, dim: bool = False):
+        """Append a read-only labelled section to the detail layout."""
+        sec = QWidget()
+        sl = QVBoxLayout(sec)
+        sl.setContentsMargins(0, 0, 0, 0)
+        sl.setSpacing(6)
+        lbl = QLabel(label)
+        lbl.setObjectName("questSectionLabel")
+        div = QFrame()
+        div.setObjectName("questDivider")
+        div.setFixedHeight(1)
+        body_lbl = QLabel(body)
+        body_lbl.setObjectName("questBodyDim" if dim else "questBodyText")
+        body_lbl.setWordWrap(True)
+        sl.addWidget(lbl)
+        sl.addWidget(div)
+        sl.addWidget(body_lbl)
+        self._quest_detail_layout.addWidget(sec)
+
+    def _build_objectives_section(self, quest) -> QWidget:
+        """Build the interactive objectives checklist widget."""
+        objs = self._svc.get_objectives(quest.id)
+        done = sum(1 for o in objs if o.completed)
+        total = len(objs)
+
+        sec = QWidget()
+        sl = QVBoxLayout(sec)
+        sl.setContentsMargins(0, 0, 0, 0)
+        sl.setSpacing(6)
+
+        # Header row: label + progress fraction + add button
+        hrow = QHBoxLayout()
+        hrow.setSpacing(8)
+        prog = f"  ({done}/{total})" if total else ""
+        hdr_lbl = QLabel(f"Objectives{prog}")
+        hdr_lbl.setObjectName("questSectionLabel")
+        add_obj_btn = QPushButton("+ Add")
+        add_obj_btn.setObjectName("dimBtn")
+        add_obj_btn.setFixedHeight(22)
+        add_obj_btn.clicked.connect(lambda: self._add_objective_prompt(quest.id))
+        hrow.addWidget(hdr_lbl)
+        hrow.addStretch()
+        hrow.addWidget(add_obj_btn)
+        sl.addLayout(hrow)
+
+        div = QFrame()
+        div.setObjectName("questDivider")
+        div.setFixedHeight(1)
+        sl.addWidget(div)
+
+        # Progress bar (only shown when objectives exist)
+        if total > 0:
+            bar = _TinyProgressBar(done, total)
+            sl.addWidget(bar)
+            sl.addSpacing(4)
+
+        if not objs:
+            hint = QLabel("No objectives yet — click  + Add  to track your steps.")
+            hint.setObjectName("dimHint")
+            hint.setWordWrap(True)
+            sl.addWidget(hint)
+        else:
+            for obj in objs:
+                row_w = QWidget()
+                row_l = QHBoxLayout(row_w)
+                row_l.setContentsMargins(0, 2, 0, 2)
+                row_l.setSpacing(8)
+
+                cb = QCheckBox(obj.text)
+                cb.setObjectName("questObjCheck")
+                cb.setChecked(obj.completed)
+                self._apply_obj_style(cb, obj.completed)
+
+                # Live style + DB save on toggle
+                def _make_toggle(checkbox, obj_id, qid):
+                    def handler(checked):
+                        self._apply_obj_style(checkbox, checked)
+                        self._svc.set_objective_completed(obj_id, checked)
+                        self._update_quest_list_progress(qid)
+                        self._refresh_obj_header(sec, qid)
+                    return handler
+
+                cb.toggled.connect(_make_toggle(cb, obj.id, quest.id))
+
+                del_obj = QPushButton("×")
+                del_obj.setObjectName("chipDelBtn")
+                del_obj.setFixedSize(20, 20)
+                del_obj.clicked.connect(
+                    lambda _, oid=obj.id, qid=quest.id:
+                    self._delete_objective_item(oid, qid)
+                )
+                row_l.addWidget(cb, 1)
+                row_l.addWidget(del_obj)
+                sl.addWidget(row_w)
+
+        return sec
+
+    @staticmethod
+    def _apply_obj_style(cb: "QCheckBox", completed: bool):
+        if completed:
+            cb.setStyleSheet(f"color:{_FG_DIM};text-decoration:line-through;")
+        else:
+            cb.setStyleSheet("")
+
+    def _refresh_obj_header(self, sec_widget: QWidget, quest_id: int):
+        """Update the 'Objectives (X/Y)' label after a toggle."""
+        objs = self._svc.get_objectives(quest_id)
+        done = sum(1 for o in objs if o.completed)
+        prog = f"  ({done}/{len(objs)})" if objs else ""
+        # Walk the sec_widget layout looking for the header QLabel
+        lay = sec_widget.layout()
+        if not lay:
+            return
+        for i in range(lay.count()):
+            item = lay.itemAt(i)
+            hrow = item.layout() if item else None
+            if not isinstance(hrow, QHBoxLayout):
+                continue
+            for j in range(hrow.count()):
+                child = hrow.itemAt(j)
+                w = child.widget() if child else None
+                if isinstance(w, QLabel) and w.objectName() == "questSectionLabel":
+                    w.setText(f"Objectives{prog}")
+                    return
+
+    def _update_quest_list_progress(self, quest_id: int):
+        """Refresh only the progress counter on the list item."""
+        objs = self._svc.get_objectives(quest_id)
+        done = sum(1 for o in objs if o.completed)
+        for i in range(self._quest_list.count()):
+            it = self._quest_list.item(i)
+            if it and it.data(Qt.UserRole) == quest_id:
+                widget = self._quest_list.itemWidget(it)
+                if isinstance(widget, _QuestListItem):
+                    widget.update_progress(len(objs), done)
+                break
+
+    def _add_objective_prompt(self, quest_id: int):
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Add Objective")
+        dlg.setMinimumWidth(380)
+        dlg.setStyleSheet(self.styleSheet())
+        lay = QVBoxLayout(dlg)
+        lay.setContentsMargins(18, 16, 18, 16)
+        lay.setSpacing(10)
+        lay.addWidget(QLabel("Objective text:"))
+        edit = QLineEdit()
+        edit.setPlaceholderText("e.g. Speak with the Oracle")
+        edit.returnPressed.connect(dlg.accept)
+        lay.addWidget(edit)
+        btns = QHBoxLayout()
+        ok = QPushButton("Add")
+        ok.setObjectName("accentBtn")
+        ok.clicked.connect(dlg.accept)
+        cancel = QPushButton("Cancel")
+        cancel.clicked.connect(dlg.reject)
+        btns.addStretch()
+        btns.addWidget(cancel)
+        btns.addWidget(ok)
+        lay.addLayout(btns)
+        edit.setFocus()
+        if dlg.exec() != QDialog.Accepted or not edit.text().strip():
+            return
+        self._svc.add_objective(quest_id, edit.text().strip())
+        # Rebuild objectives section in-place
+        quest = self._svc.get_quest(quest_id)
+        if quest:
+            self._refresh_objectives_widget(quest)
+            self._update_quest_list_progress(quest_id)
+
+    def _delete_objective_item(self, obj_id: int, quest_id: int):
+        self._svc.delete_objective(obj_id)
+        quest = self._svc.get_quest(quest_id)
+        if quest:
+            self._refresh_objectives_widget(quest)
+            self._update_quest_list_progress(quest_id)
+
+    def _refresh_objectives_widget(self, quest):
+        """Replace only the objectives section widget without rebuilding all of detail."""
+        new_sec = self._build_objectives_section(quest)
+        # Swap out the old section widget
+        old = self._quest_obj_section
+        idx = self._quest_detail_layout.indexOf(old)
+        if idx >= 0:
+            self._quest_detail_layout.takeAt(idx)
+            old.deleteLater()
+            self._quest_detail_layout.insertWidget(idx, new_sec)
+            self._quest_obj_section = new_sec
+
+    def _quick_status_change(self, quest_id: int, status: str):
+        self._svc.update_quest_status(quest_id, status)
+        self._refresh_quest_after_change(quest_id)
+
+    def _quick_field_change(self, quest_id: int, **fields):
+        """Update arbitrary quest fields and refresh the view."""
+        quest = self._svc.get_quest(quest_id)
+        if not quest:
+            return
+        self._svc.update_quest(
+            quest_id,
+            title=quest.title,
+            status=fields.get("status", quest.status),
+            priority=fields.get("priority", quest.priority),
+            category=fields.get("category", quest.category),
+            description=quest.description,
+            notes=quest.notes,
+            reward=quest.reward,
+            quest_giver=quest.quest_giver,
+            location=quest.location,
+            date_started=quest.date_started,
+            date_completed=quest.date_completed,
+            linked_session_id=quest.linked_session_id,
+            tags=quest.tags,
+        )
+        self._refresh_quest_after_change(quest_id)
+
+    def _refresh_quest_after_change(self, quest_id: int):
+        """Reload list counts and rebuild the detail panel for quest_id."""
+        # Refresh sidebar counts
+        self._set_quest_filter(self._quest_status_filter)
+        # Rebuild detail
+        updated = self._svc.get_quest(quest_id)
+        if updated:
+            self._show_quest_detail(updated)
+
+    def _add_quest_dialog(self):
+        if not self._camp_id:
+            return
+        sessions = self._svc.get_sessions(self._camp_id)
+        dlg = _QuestEditDialog(sessions=sessions, parent=self)
+        dlg.setStyleSheet(self.styleSheet())
+        if dlg.exec() != QDialog.Accepted:
+            return
+        d = dlg.result_data()
+        new_id = self._svc.add_quest(
+            self._camp_id, d["title"],
+            status=d["status"], priority=d["priority"],
+            category=d["category"], description=d["description"],
+            notes=d["notes"], reward=d["reward"],
+            quest_giver=d.get("quest_giver", ""),
+            location=d.get("location", ""),
+            date_started=d.get("date_started", ""),
+            date_completed=d.get("date_completed", ""),
+            linked_session_id=d.get("linked_session_id"),
+            tags=d.get("tags", ""),
+        )
+        self._set_quest_filter(self._quest_status_filter)
+        if new_id and new_id > 0:
+            self._quest_id = new_id
+            quest = self._svc.get_quest(new_id)
+            if quest:
+                self._show_quest_detail(quest)
+        self._show_toast(f"Quest created: {d['title']}")
+
+    def _edit_quest_dialog(self, quest):
+        sessions = self._svc.get_sessions(self._camp_id) if self._camp_id else []
+        dlg = _QuestEditDialog(quest=quest, sessions=sessions, parent=self)
+        dlg.setStyleSheet(self.styleSheet())
+        if dlg.exec() != QDialog.Accepted:
+            return
+        d = dlg.result_data()
+        self._svc.update_quest(
+            quest.id, d["title"], d["status"], d["priority"],
+            d["category"], d["description"], d["notes"], d["reward"],
+            quest_giver=d.get("quest_giver", ""),
+            location=d.get("location", ""),
+            date_started=d.get("date_started", ""),
+            date_completed=d.get("date_completed", ""),
+            linked_session_id=d.get("linked_session_id"),
+            tags=d.get("tags", ""),
+        )
+        self._set_quest_filter(self._quest_status_filter)
+        updated = self._svc.get_quest(quest.id)
+        if updated:
+            self._show_quest_detail(updated)
+        self._show_toast("Quest updated.")
+
+    def _delete_quest(self, quest_id: int):
+        resp = QMessageBox.question(
+            self, "Delete Quest",
+            "Delete this quest and all its objectives?\nThis cannot be undone.",
+            QMessageBox.Yes | QMessageBox.Cancel,
+        )
+        if resp != QMessageBox.Yes:
+            return
+        self._svc.delete_quest(quest_id)
+        self._quest_id = None
+        self._quest_right_stack.setCurrentIndex(0)
+        self._set_quest_filter(self._quest_status_filter)
+        self._show_toast("Quest deleted.")
+
+    def _toggle_quest_pin(self, quest_id: int):
+        """Pin or unpin a quest and refresh the view."""
+        is_pinned = self._svc.toggle_quest_pin(quest_id)
+        self._refresh_quest_after_change(quest_id)
+        self._show_toast("Quest pinned." if is_pinned else "Quest unpinned.")
+
+    def _quest_list_context_menu(self, pos):
+        """Right-click context menu on quest list items."""
+        item = self._quest_list.itemAt(pos)
+        if not item:
+            return
+        qid = item.data(Qt.UserRole)
+        quest = self._svc.get_quest(qid)
+        if not quest:
+            return
+        from PySide6.QtWidgets import QMenu
+        menu = QMenu(self)
+        menu.setStyleSheet(self.styleSheet())
+
+        pin_lbl = "Unpin Quest" if quest.pinned else "Pin Quest"
+        pin_act = menu.addAction(pin_lbl)
+        pin_act.triggered.connect(lambda: self._toggle_quest_pin(qid))
+
+        menu.addSeparator()
+
+        status_menu = menu.addMenu("Change Status")
+        status_menu.setStyleSheet(self.styleSheet())
+        for s in _QUEST_STATUSES:
+            ico, _ = _QUEST_STATUS_META.get(s, ("", ""))
+            act = status_menu.addAction(f"{ico}  {s}" if ico else s)
+            act.triggered.connect(
+                lambda _, st=s, q=qid: self._quick_status_change(q, st)
+            )
+
+        menu.addSeparator()
+
+        edit_act = menu.addAction("Edit Quest…")
+        edit_act.triggered.connect(lambda: self._edit_quest_dialog(quest))
+
+        del_act = menu.addAction("Delete Quest")
+        del_act.triggered.connect(lambda: self._delete_quest(qid))
+
+        menu.exec(self._quest_list.mapToGlobal(pos))
 
     # ══════════════════════════════════════════════════════════════════════════
     #  Assets
@@ -3629,6 +4601,96 @@ QListWidget#bookList::item {{
 }}
 QListWidget#bookList::item:hover {{ background: rgba(255,255,255,0.04); }}
 
+/* ── Quest page ──────────────────────────────────────────────────────── */
+QFrame#questLeftPanel {{ background: {_BG2}; border-right: 1px solid {_BORDER}; }}
+QFrame#questLeftHdr   {{ background: {_BG2}; border-bottom: 1px solid {_BORDER}; }}
+QFrame#questStatusNav {{ background: {_BG2}; }}
+QFrame#questSearchFrame {{ background: {_BG2}; border-bottom: 1px solid {_BORDER}; }}
+QScrollArea#questDetailScroll {{ background: {_BG}; border: none; }}
+QWidget#questDetailWidget     {{ background: {_BG}; }}
+
+QLabel#questPanelTitle {{
+    font-size: 15px; font-weight: 700; color: {_FG};
+}}
+QLabel#questStatsLbl {{
+    font-size: 10px; color: {_FG_DIM}; background: transparent;
+}}
+QPushButton#questAddBtn {{
+    background: {_ACCENT}; border: none; border-radius: 5px;
+    color: #fff; font-size: 11px; font-weight: 600; padding: 0 10px;
+}}
+QPushButton#questAddBtn:hover   {{ background: #3d8de0; }}
+QPushButton#questAddBtn:pressed {{ background: #2d7dc8; }}
+
+/* Search bar */
+QLineEdit#questSearch {{
+    background: {_BG3}; border: 1px solid {_BORDER};
+    border-radius: 12px; padding: 4px 10px;
+    font-size: 12px; color: {_FG};
+}}
+QLineEdit#questSearch:focus {{ border-color: {_ACCENT}; }}
+
+/* Vertical status nav */
+QPushButton#questNavBtn {{
+    background: transparent; border: none;
+    text-align: left; padding: 6px 10px;
+    border-radius: 6px; color: {_FG_MID}; font-size: 13px;
+}}
+QPushButton#questNavBtn:hover   {{ background: rgba(255,255,255,0.05); color: {_FG}; }}
+QPushButton#questNavBtn:checked {{ background: rgba(79,158,255,0.13); color: {_FG}; font-weight: 600; }}
+
+/* Quest list items */
+QListWidget#questList {{
+    background: transparent; border: none; outline: none; padding: 4px;
+}}
+QListWidget#questList::item          {{ border-radius: 6px; }}
+QListWidget#questList::item:selected {{ background: rgba(79,158,255,0.15); }}
+QListWidget#questList::item:hover    {{ background: rgba(255,255,255,0.04); }}
+
+QLabel#questItemTitle {{ font-size: 13px; font-weight: 600; color: {_FG}; background: transparent; }}
+QLabel#questItemMeta  {{ font-size: 11px; color: {_FG_DIM}; background: transparent; }}
+QLabel#questItemProg  {{ font-size: 11px; background: transparent; }}
+
+/* Detail panel */
+QLabel#questDetailTitle {{
+    font-size: 20px; font-weight: 700; color: {_FG};
+}}
+QLabel#questSectionLabel {{
+    font-size: 10px; font-weight: 700; color: {_FG_DIM};
+    text-transform: uppercase; letter-spacing: 1.2px;
+    background: transparent;
+}}
+QFrame#questDivider  {{ background: {_BORDER}; border: none; }}
+QLabel#questBodyText {{ font-size: 13px; color: {_FG_MID}; background: transparent; }}
+QLabel#questBodyDim  {{ font-size: 13px; color: {_FG_DIM};  background: transparent; font-style: italic; }}
+
+/* Info grid labels */
+QLabel#questInfoKey {{
+    font-size: 11px; font-weight: 600; color: {_FG_DIM};
+    background: transparent;
+}}
+QLabel#questInfoVal {{
+    font-size: 12px; color: {_FG_MID}; background: transparent;
+}}
+
+/* Tag chips */
+QLabel#questTagChip {{
+    background: {_BG3}; color: {_FG_MID};
+    border: 1px solid {_BORDER}; border-radius: 10px;
+    padding: 1px 8px; font-size: 11px;
+}}
+
+/* Objective checkboxes */
+QCheckBox#questObjCheck {{ font-size: 13px; color: {_FG}; spacing: 8px; background: transparent; }}
+QCheckBox#questObjCheck::indicator {{
+    width: 16px; height: 16px;
+    border: 2px solid {_BORDER}; border-radius: 4px; background: {_BG3};
+}}
+QCheckBox#questObjCheck::indicator:hover   {{ border-color: {_ACCENT}; }}
+QCheckBox#questObjCheck::indicator:checked {{
+    background: {_ACCENT}; border-color: {_ACCENT};
+}}
+
 /* ── Assets page ─────────────────────────────────────────────────────── */
 QFrame#assetsTopBar  {{ background: {_BG2}; border-bottom: 1px solid {_BORDER}; }}
 QFrame#assetCatPanel {{ background: {_BG2}; border-right: 1px solid {_BORDER}; }}
@@ -3666,9 +4728,42 @@ QLabel#toast {{
 }}
 
 /* ── Dialogs ────────────────────────────────────────────────────────── */
-QDialog {{ background: {_BG}; }}
-QFormLayout QLabel {{ color: {_FG_MID}; font-size: 12px; }}
-QDialogButtonBox QPushButton {{ min-width: 80px; }}
+QDialog {{ background: {_BG}; color: {_FG}; }}
+
+/* Form labels inside dialogs */
+QFormLayout QLabel {{
+    color: {_FG_MID}; font-size: 12px; font-weight: 500;
+    min-width: 90px;
+}}
+
+/* QDialogButtonBox — style as proper themed buttons */
+QDialogButtonBox QPushButton {{
+    min-width: 90px; padding: 7px 20px;
+}}
+QDialogButtonBox QPushButton:default {{
+    background: {_ACCENT}; color: #ffffff;
+    font-weight: 600; border-color: {_ACCENT};
+}}
+QDialogButtonBox QPushButton:default:hover  {{ background: #3d8de0; border-color: #3d8de0; }}
+QDialogButtonBox QPushButton:default:pressed {{ background: #2d7dc8; }}
+
+/* Generic QTabWidget — applies to all tab widgets not specifically named */
+QTabWidget::pane {{
+    border: 1px solid {_BORDER}; border-top: none;
+    background: {_BG}; border-radius: 0 0 6px 6px;
+}}
+QTabBar {{ background: transparent; border: none; }}
+QTabBar::tab {{
+    background: {_BG2}; color: {_FG_MID};
+    border: 1px solid {_BORDER}; border-bottom: none;
+    padding: 7px 18px; font-size: 12px; font-weight: 500;
+    margin-right: 2px; border-radius: 5px 5px 0 0;
+}}
+QTabBar::tab:selected {{
+    background: {_BG}; color: {_FG}; font-weight: 600;
+    border-top: 2px solid {_ACCENT};
+}}
+QTabBar::tab:hover:!selected {{ background: {_BG3}; color: {_FG}; }}
 
 /* ── Gallery ────────────────────────────────────────────────────────── */
 QWidget#galleryToolbar  {{ background: {_BG}; border-bottom: 1px solid {_BORDER}; }}
@@ -3919,23 +5014,28 @@ class _AddSpellDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Add Spell")
-        self.setFixedSize(340, 200)
-        lay = QFormLayout(self)
-        lay.setSpacing(8)
-        lay.setContentsMargins(16, 16, 16, 12)
+        self.setMinimumWidth(380)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(20, 16, 20, 16)
+        lay.setSpacing(12)
+        form = QFormLayout()
+        form.setSpacing(10)
+        form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
         self._name  = QLineEdit()
-        self._name.setPlaceholderText("Spell name…")
+        self._name.setPlaceholderText("e.g. Fireball")
         self._level = QSpinBox()
         self._level.setRange(0, 9)
         self._notes = QLineEdit()
-        self._notes.setPlaceholderText("School, notes…")
-        lay.addRow("Name:", self._name)
-        lay.addRow("Level:", self._level)
-        lay.addRow("Notes:", self._notes)
+        self._notes.setPlaceholderText("School, duration, notes…")
+        form.addRow("Name",  self._name)
+        form.addRow("Level", self._level)
+        form.addRow("Notes", self._notes)
+        lay.addLayout(form)
         btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         btns.accepted.connect(self.accept)
         btns.rejected.connect(self.reject)
-        lay.addRow(btns)
+        lay.addWidget(btns)
 
     def get_data(self) -> dict:
         return {
@@ -3949,10 +5049,14 @@ class _AddInventoryDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Add Item")
-        self.setFixedSize(340, 220)
-        lay = QFormLayout(self)
-        lay.setSpacing(8)
-        lay.setContentsMargins(16, 16, 16, 12)
+        self.setMinimumWidth(380)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(20, 16, 20, 16)
+        lay.setSpacing(12)
+        form = QFormLayout()
+        form.setSpacing(10)
+        form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
         self._name  = QLineEdit()
         self._name.setPlaceholderText("Item name…")
         self._qty   = QSpinBox()
@@ -3963,14 +5067,15 @@ class _AddInventoryDialog(QDialog):
                               "Magic Item", "Treasure", "Other"])
         self._notes = QLineEdit()
         self._notes.setPlaceholderText("Notes…")
-        lay.addRow("Name:", self._name)
-        lay.addRow("Qty:", self._qty)
-        lay.addRow("Type:", self._type)
-        lay.addRow("Notes:", self._notes)
+        form.addRow("Name",  self._name)
+        form.addRow("Qty",   self._qty)
+        form.addRow("Type",  self._type)
+        form.addRow("Notes", self._notes)
+        lay.addLayout(form)
         btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         btns.accepted.connect(self.accept)
         btns.rejected.connect(self.reject)
-        lay.addRow(btns)
+        lay.addWidget(btns)
 
     def get_data(self) -> dict:
         return {
@@ -4304,7 +5409,9 @@ class _SessionDialog(QDialog):
         lay.setSpacing(10)
 
         form = QFormLayout()
-        form.setSpacing(8)
+        form.setSpacing(10)
+        form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
 
         self._title   = QLineEdit()
         self._title.setPlaceholderText(f"e.g. The Dragon's Lair")
@@ -4333,12 +5440,12 @@ class _SessionDialog(QDialog):
             self._chronicle.setPlainText(
                 getattr(self._session, "chronicle_text", "") or "")
 
-        form.addRow(f"{self._label} Title *", self._title)
-        form.addRow(f"{self._label} #",       self._num)
-        form.addRow("Date",                   self._date)
-        form.addRow("Location",               self._loc)
-        form.addRow("Scenario",               self._scen)
-        form.addRow("Outcome",                self._outcome)
+        form.addRow("Title",    self._title)
+        form.addRow("#",        self._num)
+        form.addRow("Date",     self._date)
+        form.addRow("Location", self._loc)
+        form.addRow("Scenario", self._scen)
+        form.addRow("Outcome",  self._outcome)
         lay.addLayout(form)
 
         chron_lbl = QLabel("Chronicle / Session Notes")
@@ -4548,6 +5655,311 @@ class _CharacterDialog(QDialog):
 #  _AssetEditDialog
 # ══════════════════════════════════════════════════════════════════════════════
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  _TinyProgressBar  —  thin painted progress bar used in quest views
+# ══════════════════════════════════════════════════════════════════════════════
+
+class _TinyProgressBar(QWidget):
+    """A 5 px tall filled progress bar drawn with QPainter."""
+
+    def __init__(self, value: int, total: int, parent=None):
+        super().__init__(parent)
+        self._value = max(0, value)
+        self._total = max(1, total)
+        self.setFixedHeight(5)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+    def paintEvent(self, event):          # noqa: N802
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        w, h = self.width(), self.height()
+        r    = h // 2
+
+        # Background track
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor(_BG3))
+        p.drawRoundedRect(0, 0, w, h, r, r)
+
+        # Fill
+        if self._total > 0:
+            fill_w = max(r * 2, int(w * self._value / self._total))
+            color  = QColor(_SUCCESS if self._value >= self._total else _ACCENT)
+            p.setBrush(color)
+            p.drawRoundedRect(0, 0, fill_w, h, r, r)
+
+        p.end()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  _QuestListItem  —  compact widget used inside the quest QListWidget
+# ══════════════════════════════════════════════════════════════════════════════
+
+class _QuestListItem(QWidget):
+    """Compact three-row widget rendered inside the quest QListWidget."""
+
+    def __init__(self, quest, obj_total: int, obj_done: int, parent=None):
+        super().__init__(parent)
+        self._quest     = quest
+        self._obj_total = obj_total
+        self._obj_done  = obj_done
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(10, 7, 10, 7)
+        lay.setSpacing(3)
+
+        pcolor = _QUEST_PRIORITY_COLORS.get(quest.priority, "#a0a0a0")
+
+        # ── Row 1: pin star + priority dot + title ────────────────────────
+        t_row = QHBoxLayout()
+        t_row.setSpacing(5)
+        t_row.setContentsMargins(0, 0, 0, 0)
+
+        if quest.pinned:
+            pin_lbl = QLabel("★")
+            pin_lbl.setFixedSize(14, 16)
+            pin_lbl.setStyleSheet("color:#f0c040; font-size:10px;")
+            pin_lbl.setAlignment(Qt.AlignCenter)
+            t_row.addWidget(pin_lbl)
+
+        dot = QLabel("●")
+        dot.setFixedSize(12, 16)
+        dot.setStyleSheet(f"color:{pcolor}; font-size:9px;")
+        dot.setAlignment(Qt.AlignCenter)
+        t_row.addWidget(dot)
+
+        self._title_lbl = QLabel()
+        self._title_lbl.setObjectName("questItemTitle")
+        self._set_title(quest.title)
+        t_row.addWidget(self._title_lbl, 1)
+
+        lay.addLayout(t_row)
+
+        # ── Row 2: category + giver + progress counter ────────────────────
+        indent = 17 + (14 + 5 if quest.pinned else 0)
+        m_row = QHBoxLayout()
+        m_row.setSpacing(5)
+        m_row.setContentsMargins(indent, 0, 0, 0)
+
+        meta_parts = [quest.category]
+        if quest.quest_giver:
+            meta_parts.append(quest.quest_giver)
+        self._cat_lbl = QLabel("  ·  ".join(meta_parts))
+        self._cat_lbl.setObjectName("questItemMeta")
+
+        self._prog_lbl = QLabel()
+        self._prog_lbl.setObjectName("questItemProg")
+        self._update_prog_lbl(obj_total, obj_done)
+
+        m_row.addWidget(self._cat_lbl, 1)
+        m_row.addWidget(self._prog_lbl)
+        lay.addLayout(m_row)
+
+        # ── Row 3: mini progress bar (only if objectives exist) ───────────
+        if obj_total > 0:
+            bar = _TinyProgressBar(obj_done, obj_total)
+            bar.setContentsMargins(indent, 0, 0, 0)
+            lay.addWidget(bar)
+            lay.addSpacing(1)
+
+    def _set_title(self, text: str):
+        fm = self._title_lbl.fontMetrics()
+        self._title_lbl.setText(fm.elidedText(text, Qt.ElideRight, 164))
+
+    def _update_prog_lbl(self, total: int, done: int):
+        if total == 0:
+            self._prog_lbl.setText("")
+        elif done == total:
+            self._prog_lbl.setText(f"{done}/{total} done")
+            self._prog_lbl.setStyleSheet(f"color:{_SUCCESS}; font-size:11px;")
+        else:
+            self._prog_lbl.setText(f"{done}/{total}")
+            self._prog_lbl.setStyleSheet(f"color:{_FG_DIM}; font-size:11px;")
+
+    def update_progress(self, total: int, done: int):
+        self._update_prog_lbl(total, done)
+
+    def update_status(self, status: str):
+        """No-op — status changes trigger a full list reload."""
+        pass
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  _QuestEditDialog
+# ══════════════════════════════════════════════════════════════════════════════
+
+class _QuestEditDialog(QDialog):
+    def __init__(self, quest=None, sessions=None, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("New Quest" if quest is None else "Edit Quest")
+        self.setMinimumSize(540, 560)
+        self._quest    = quest
+        self._sessions = sessions or []
+        self._build()
+
+    def result_data(self) -> dict:
+        # linked_session_id from combobox
+        sess_idx = self._session_combo.currentIndex()
+        linked_id = None
+        if sess_idx > 0:  # index 0 = "None"
+            linked_id = self._session_combo.currentData()
+        return {
+            "title":             self._title.text().strip(),
+            "status":            self._status.currentText(),
+            "priority":          self._priority.currentText(),
+            "category":          self._category.currentText(),
+            "description":       self._desc.toPlainText().strip(),
+            "reward":            self._reward.text().strip(),
+            "notes":             self._notes.toPlainText().strip(),
+            "quest_giver":       self._giver.text().strip(),
+            "location":          self._location.text().strip(),
+            "date_started":      self._date_started.text().strip(),
+            "date_completed":    self._date_completed.text().strip(),
+            "linked_session_id": linked_id,
+            "tags":              self._tags.text().strip(),
+        }
+
+    def _build(self):
+        q   = self._quest
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(20, 16, 20, 16)
+        lay.setSpacing(12)
+
+        # ── Title (always visible, above tabs) ───────────────────────────
+        title_lbl = QLabel("Quest Title")
+        title_lbl.setStyleSheet(
+            f"color:{_FG_MID}; font-size:11px; font-weight:600; letter-spacing:0.5px;"
+        )
+        lay.addWidget(title_lbl)
+        self._title = QLineEdit(getattr(q, "title", "") if q else "")
+        self._title.setPlaceholderText("e.g. Retrieve the Lost Crown")
+        self._title.setFixedHeight(34)
+        lay.addWidget(self._title)
+
+        # ── Tabs ─────────────────────────────────────────────────────────
+        tabs = QTabWidget()
+        lay.addWidget(tabs, 1)
+
+        # ─ Tab 1: Overview ───────────────────────────────────────────────
+        t1 = QWidget()
+        f1 = QFormLayout(t1)
+        f1.setContentsMargins(16, 16, 16, 16)
+        f1.setSpacing(10)
+        f1.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        f1.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
+
+        # Status + Priority side-by-side
+        sp_row = QHBoxLayout()
+        sp_row.setSpacing(8)
+        self._status = QComboBox()
+        self._status.addItems(_QUEST_STATUSES)
+        self._status.setCurrentText(getattr(q, "status", "Active") if q else "Active")
+        self._priority = QComboBox()
+        self._priority.addItems(_QUEST_PRIORITIES)
+        self._priority.setCurrentText(getattr(q, "priority", "Medium") if q else "Medium")
+        pri_lbl = QLabel("Priority")
+        pri_lbl.setStyleSheet(f"color:{_FG_MID}; font-size:12px; font-weight:500;")
+        sp_row.addWidget(self._status, 1)
+        sp_row.addWidget(pri_lbl)
+        sp_row.addWidget(self._priority, 1)
+        f1.addRow("Status", sp_row)
+
+        self._category = QComboBox()
+        self._category.addItems(_QUEST_CATEGORIES)
+        self._category.setCurrentText(
+            getattr(q, "category", "Main Quest") if q else "Main Quest"
+        )
+        f1.addRow("Category", self._category)
+
+        self._desc = QTextEdit(getattr(q, "description", "") if q else "")
+        self._desc.setPlaceholderText("Quest summary, background, or hook…")
+        self._desc.setFixedHeight(110)
+        f1.addRow("Description", self._desc)
+
+        tabs.addTab(t1, "Overview")
+
+        # ─ Tab 2: Details ─────────────────────────────────────────────────
+        t2 = QWidget()
+        f2 = QFormLayout(t2)
+        f2.setContentsMargins(16, 16, 16, 16)
+        f2.setSpacing(10)
+        f2.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        f2.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
+
+        self._giver = QLineEdit(getattr(q, "quest_giver", "") if q else "")
+        self._giver.setPlaceholderText("e.g. Lord Aldric, the Merchant Guild…")
+        f2.addRow("Quest Giver", self._giver)
+
+        self._location = QLineEdit(getattr(q, "location", "") if q else "")
+        self._location.setPlaceholderText("e.g. The Ancient Ruins, City of Midvale…")
+        f2.addRow("Location", self._location)
+
+        # Dates side-by-side
+        date_row = QHBoxLayout()
+        date_row.setSpacing(8)
+        self._date_started = QLineEdit(getattr(q, "date_started", "") if q else "")
+        self._date_started.setPlaceholderText("YYYY-MM-DD")
+        comp_lbl = QLabel("Completed")
+        comp_lbl.setStyleSheet(f"color:{_FG_MID}; font-size:12px; font-weight:500;")
+        self._date_completed = QLineEdit(getattr(q, "date_completed", "") if q else "")
+        self._date_completed.setPlaceholderText("YYYY-MM-DD")
+        date_row.addWidget(self._date_started, 1)
+        date_row.addWidget(comp_lbl)
+        date_row.addWidget(self._date_completed, 1)
+        f2.addRow("Started", date_row)
+
+        self._tags = QLineEdit(getattr(q, "tags", "") if q else "")
+        self._tags.setPlaceholderText("Comma-separated: main, urgent, dragon…")
+        f2.addRow("Tags", self._tags)
+
+        # Linked session
+        self._session_combo = QComboBox()
+        self._session_combo.addItem("— None —", None)
+        cur_sess_id = getattr(q, "linked_session_id", None) if q else None
+        for sess in self._sessions:
+            num   = getattr(sess, "session_number", "") or ""
+            title = getattr(sess, "title", "") or f"Session {sess.id}"
+            label = f"#{num}  {title}" if num else title
+            self._session_combo.addItem(label, sess.id)
+            if sess.id == cur_sess_id:
+                self._session_combo.setCurrentIndex(
+                    self._session_combo.count() - 1
+                )
+        f2.addRow("Linked Session", self._session_combo)
+
+        tabs.addTab(t2, "Details")
+
+        # ─ Tab 3: Notes ───────────────────────────────────────────────────
+        t3 = QWidget()
+        f3 = QFormLayout(t3)
+        f3.setContentsMargins(16, 16, 16, 16)
+        f3.setSpacing(10)
+        f3.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        f3.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
+
+        self._reward = QLineEdit(getattr(q, "reward", "") if q else "")
+        self._reward.setPlaceholderText("e.g. 5,000 gp + Cloak of Elvenkind")
+        f3.addRow("Reward", self._reward)
+
+        self._notes = QTextEdit(getattr(q, "notes", "") if q else "")
+        self._notes.setPlaceholderText("DM-only notes — secrets, contingencies, clues…")
+        self._notes.setFixedHeight(130)
+        f3.addRow("DM Notes", self._notes)
+
+        tabs.addTab(t3, "Notes")
+
+        # ── Footer buttons ────────────────────────────────────────────────
+        btns = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        btns.accepted.connect(self._try_accept)
+        btns.rejected.connect(self.reject)
+        lay.addWidget(btns)
+
+    def _try_accept(self):
+        if not self._title.text().strip():
+            QMessageBox.warning(self, "Required", "Please enter a quest title.")
+            return
+        self.accept()
+
+
 class _AssetEditDialog(QDialog):
     """Add or edit a campaign asset (file reference)."""
 
@@ -4574,7 +5986,9 @@ class _AssetEditDialog(QDialog):
         lay.setSpacing(10)
 
         form = QFormLayout()
-        form.setSpacing(8)
+        form.setSpacing(10)
+        form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
 
         # File path row
         path_row = QHBoxLayout()
@@ -4666,7 +6080,7 @@ class _CompendiumEntryDialog(QDialog):
                  entry=None, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Add Entry" if entry is None else "Edit Entry")
-        self.setMinimumSize(500, 460)
+        self.setMinimumSize(540, 480)
         self._entry = entry
         self._cats  = categories
         self._default_cat = default_cat
@@ -4688,10 +6102,14 @@ class _CompendiumEntryDialog(QDialog):
 
         e = self._entry
         form = QFormLayout()
-        form.setSpacing(8)
+        form.setSpacing(10)
+        form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
 
         self._cat = QComboBox()
         self._cat.setEditable(True)
+        self._cat.setMinimumWidth(220)
+        self._cat.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         for c in self._cats:
             self._cat.addItem(c)
         if e:
@@ -4739,12 +6157,16 @@ class _AddCombatantDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Add Combatant")
-        self.setFixedSize(340, 220)
-        lay = QFormLayout(self)
-        lay.setSpacing(8)
-        lay.setContentsMargins(16, 16, 16, 12)
+        self.setMinimumWidth(360)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(20, 16, 20, 16)
+        lay.setSpacing(12)
+        form = QFormLayout()
+        form.setSpacing(10)
+        form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
         self._name = QLineEdit()
-        self._name.setPlaceholderText("Name…")
+        self._name.setPlaceholderText("e.g. Goblin Archer")
         self._hp   = QSpinBox()
         self._hp.setRange(0, 9999)
         self._hp.setValue(10)
@@ -4756,15 +6178,20 @@ class _AddCombatantDialog(QDialog):
         self._ac.setValue(10)
         self._kind = QComboBox()
         self._kind.addItems(["Enemy", "NPC", "Summon", "Custom"])
-        lay.addRow("Name:", self._name)
-        lay.addRow("HP:", self._hp)
-        lay.addRow("Max HP:", self._max_hp)
-        lay.addRow("AC:", self._ac)
-        lay.addRow("Type:", self._kind)
+        # Sync max HP when HP changes
+        self._hp.valueChanged.connect(
+            lambda v: self._max_hp.setValue(v) if self._max_hp.value() < v else None
+        )
+        form.addRow("Name",   self._name)
+        form.addRow("HP",     self._hp)
+        form.addRow("Max HP", self._max_hp)
+        form.addRow("AC",     self._ac)
+        form.addRow("Type",   self._kind)
+        lay.addLayout(form)
         btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         btns.accepted.connect(self._accept)
         btns.rejected.connect(self.reject)
-        lay.addRow(btns)
+        lay.addWidget(btns)
 
     def _accept(self):
         if not self._name.text().strip():
@@ -5222,6 +6649,781 @@ class _BookManagerDialog(QDialog):
         )
         enabled = total - disabled
         self._count_lbl.setText(f"{enabled} / {total} enabled")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  _MonsterEditDialog  —  edit a single encounter monster entry
+# ══════════════════════════════════════════════════════════════════════════════
+
+class _MonsterEditDialog(QDialog):
+    """Edit an existing EncounterMonster row (name, count, CR, HP override, notes)."""
+
+    def __init__(self, monster, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Edit Monster")
+        self.setMinimumWidth(400)
+        self._build(monster)
+
+    def _build(self, m):
+        root = QVBoxLayout(self)
+        root.setContentsMargins(20, 16, 20, 16)
+        root.setSpacing(14)
+
+        title = QLabel("Edit Monster Entry")
+        title.setObjectName("sectionLabel")
+        root.addWidget(title)
+
+        form = QFormLayout()
+        form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
+        form.setSpacing(10)
+        form.setContentsMargins(0, 0, 0, 0)
+
+        self._name_edit = QLineEdit(m.monster_name or "")
+        form.addRow("Name:", self._name_edit)
+
+        self._count_spin = QSpinBox()
+        self._count_spin.setRange(1, 999)
+        self._count_spin.setValue(m.count or 1)
+        form.addRow("Count:", self._count_spin)
+
+        self._cr_edit = QLineEdit(m.cr or "")
+        self._cr_edit.setPlaceholderText("e.g. 1/4  2  10")
+        form.addRow("CR / Level:", self._cr_edit)
+
+        self._hp_spin = QSpinBox()
+        self._hp_spin.setRange(0, 9999)
+        self._hp_spin.setSpecialValueText("Default (use stat block)")
+        self._hp_spin.setValue(m.hp_override or 0)
+        form.addRow("HP Override:", self._hp_spin)
+
+        self._notes_edit = QLineEdit(m.notes or "")
+        self._notes_edit.setPlaceholderText("Optional notes…")
+        form.addRow("Notes:", self._notes_edit)
+
+        root.addLayout(form)
+
+        bb = QDialogButtonBox(
+            QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        bb.accepted.connect(self.accept)
+        bb.rejected.connect(self.reject)
+        # Style the default (Save) button with accent colour
+        save_btn = bb.button(QDialogButtonBox.Save)
+        if save_btn:
+            save_btn.setDefault(True)
+            save_btn.setObjectName("accentBtn")
+        root.addWidget(bb)
+
+    def get_values(self) -> dict:
+        hp = self._hp_spin.value()
+        return {
+            "name":        self._name_edit.text().strip(),
+            "count":       self._count_spin.value(),
+            "cr":          self._cr_edit.text().strip() or "0",
+            "hp_override": hp if hp > 0 else None,
+            "notes":       self._notes_edit.text().strip(),
+        }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  _CustomMonsterEditDialog  —  create / edit a custom monster template
+# ══════════════════════════════════════════════════════════════════════════════
+
+_MONSTER_SIZES  = ["Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan", ""]
+_MONSTER_TYPES  = [
+    "Aberration", "Beast", "Celestial", "Construct", "Dragon",
+    "Elemental", "Fey", "Fiend", "Giant", "Humanoid", "Monstrosity",
+    "Ooze", "Plant", "Undead", "Other", ""
+]
+
+
+class _CustomMonsterEditDialog(QDialog):
+    """Create or edit a custom monster template."""
+
+    def __init__(self, monster=None, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Edit Custom Monster" if monster else "New Custom Monster")
+        self.setMinimumWidth(520)
+        self.setMinimumHeight(600)
+        self._build(monster)
+
+    def _build(self, m):
+        root = QVBoxLayout(self)
+        root.setContentsMargins(20, 16, 20, 16)
+        root.setSpacing(12)
+
+        tabs = QTabWidget()
+        root.addWidget(tabs, 1)
+
+        # ── Tab 1: Core stats ─────────────────────────────────────────────────
+        core_w = QWidget()
+        core_lay = QVBoxLayout(core_w)
+        core_lay.setContentsMargins(12, 12, 12, 12)
+        core_lay.setSpacing(10)
+
+        form1 = QFormLayout()
+        form1.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        form1.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
+        form1.setSpacing(9)
+
+        self._name_edit = QLineEdit(m.name if m else "")
+        self._name_edit.setPlaceholderText("Monster name…")
+        form1.addRow("Name:", self._name_edit)
+
+        self._cr_edit = QLineEdit(m.cr if m else "1")
+        self._cr_edit.setPlaceholderText("e.g. 1/4  2  10")
+        form1.addRow("CR / Level:", self._cr_edit)
+
+        self._hp_spin = QSpinBox()
+        self._hp_spin.setRange(1, 9999)
+        self._hp_spin.setValue(m.hp if m else 10)
+        form1.addRow("Hit Points:", self._hp_spin)
+
+        self._ac_spin = QSpinBox()
+        self._ac_spin.setRange(1, 30)
+        self._ac_spin.setValue(m.ac if m else 12)
+        form1.addRow("Armour Class:", self._ac_spin)
+
+        self._init_spin = QSpinBox()
+        self._init_spin.setRange(-10, 20)
+        self._init_spin.setValue(m.initiative_bonus if m else 0)
+        form1.addRow("Initiative Bonus:", self._init_spin)
+
+        self._type_combo = QComboBox()
+        self._type_combo.addItems(_MONSTER_TYPES)
+        self._type_combo.setEditable(True)
+        if m and m.monster_type in _MONSTER_TYPES:
+            self._type_combo.setCurrentText(m.monster_type)
+        elif m:
+            self._type_combo.setEditText(m.monster_type)
+        form1.addRow("Type:", self._type_combo)
+
+        self._size_combo = QComboBox()
+        self._size_combo.addItems(_MONSTER_SIZES)
+        self._size_combo.setEditable(True)
+        if m and m.size:
+            self._size_combo.setCurrentText(m.size)
+        form1.addRow("Size:", self._size_combo)
+
+        self._speed_edit = QLineEdit(m.speed if m else "")
+        self._speed_edit.setPlaceholderText("e.g. 30 ft., fly 60 ft.")
+        form1.addRow("Speed:", self._speed_edit)
+
+        core_lay.addLayout(form1)
+
+        # Ability scores grid
+        ab_lbl = QLabel("Ability Scores")
+        ab_lbl.setObjectName("subLabel")
+        core_lay.addWidget(ab_lbl)
+
+        ab_grid = QGridLayout()
+        ab_grid.setSpacing(8)
+        ab_names   = ["STR", "DEX", "CON", "INT", "WIS", "CHA"]
+        ab_fields  = ["str_", "dex", "con", "int_", "wis", "cha"]
+        ab_vals    = [
+            m.str_ if m else 10, m.dex if m else 10, m.con if m else 10,
+            m.int_ if m else 10, m.wis if m else 10, m.cha if m else 10,
+        ]
+        self._ab_spins = {}
+        for i, (label, field, val) in enumerate(zip(ab_names, ab_fields, ab_vals)):
+            col = i * 2
+            ab_grid.addWidget(QLabel(label), 0, col, Qt.AlignCenter)
+            spin = QSpinBox()
+            spin.setRange(1, 30)
+            spin.setValue(val)
+            spin.setFixedWidth(58)
+            ab_grid.addWidget(spin, 1, col, Qt.AlignCenter)
+            self._ab_spins[field] = spin
+        core_lay.addLayout(ab_grid)
+        core_lay.addStretch()
+
+        tabs.addTab(core_w, "Core Stats")
+
+        # ── Tab 2: Attacks & Traits ───────────────────────────────────────────
+        at_w = QWidget()
+        at_lay = QVBoxLayout(at_w)
+        at_lay.setContentsMargins(12, 12, 12, 12)
+        at_lay.setSpacing(8)
+
+        atk_lbl = QLabel("Attacks / Actions")
+        atk_lbl.setObjectName("subLabel")
+        at_lay.addWidget(atk_lbl)
+        self._attacks_edit = QTextEdit()
+        self._attacks_edit.setObjectName("journalEditor")
+        self._attacks_edit.setPlaceholderText(
+            "Describe attacks and actions — one per line or free text…")
+        self._attacks_edit.setPlainText(m.attacks if m else "")
+        at_lay.addWidget(self._attacks_edit, 1)
+
+        tr_lbl = QLabel("Traits / Special Abilities")
+        tr_lbl.setObjectName("subLabel")
+        at_lay.addWidget(tr_lbl)
+        self._traits_edit = QTextEdit()
+        self._traits_edit.setObjectName("journalEditor")
+        self._traits_edit.setPlaceholderText(
+            "Passive traits, resistances, immunities, legendary actions…")
+        self._traits_edit.setPlainText(m.traits if m else "")
+        at_lay.addWidget(self._traits_edit, 1)
+
+        tabs.addTab(at_w, "Attacks & Traits")
+
+        # ── Tab 3: Notes ──────────────────────────────────────────────────────
+        notes_w = QWidget()
+        notes_lay = QVBoxLayout(notes_w)
+        notes_lay.setContentsMargins(12, 12, 12, 12)
+        self._notes_edit = QTextEdit()
+        self._notes_edit.setObjectName("journalEditor")
+        self._notes_edit.setPlaceholderText("DM notes, lore, tactics…")
+        self._notes_edit.setPlainText(m.notes if m else "")
+        notes_lay.addWidget(self._notes_edit)
+        tabs.addTab(notes_w, "Notes")
+
+        # ── Button box ────────────────────────────────────────────────────────
+        bb = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        bb.accepted.connect(self.accept)
+        bb.rejected.connect(self.reject)
+        save_btn = bb.button(QDialogButtonBox.Save)
+        if save_btn:
+            save_btn.setDefault(True)
+            save_btn.setObjectName("accentBtn")
+        root.addWidget(bb)
+
+    def get_values(self) -> dict:
+        return {
+            "name":             self._name_edit.text().strip(),
+            "cr":               self._cr_edit.text().strip() or "1",
+            "hp":               self._hp_spin.value(),
+            "ac":               self._ac_spin.value(),
+            "initiative_bonus": self._init_spin.value(),
+            "monster_type":     self._type_combo.currentText().strip(),
+            "size":             self._size_combo.currentText().strip(),
+            "speed":            self._speed_edit.text().strip(),
+            "str_":             self._ab_spins["str_"].value(),
+            "dex":              self._ab_spins["dex"].value(),
+            "con":              self._ab_spins["con"].value(),
+            "int_":             self._ab_spins["int_"].value(),
+            "wis":              self._ab_spins["wis"].value(),
+            "cha":              self._ab_spins["cha"].value(),
+            "attacks":          self._attacks_edit.toPlainText().strip(),
+            "traits":           self._traits_edit.toPlainText().strip(),
+            "notes":            self._notes_edit.toPlainText().strip(),
+        }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  _CustomMonsterManagerDialog  —  library of per-campaign custom monsters
+# ══════════════════════════════════════════════════════════════════════════════
+
+class _CustomMonsterManagerDialog(QDialog):
+    """List, create, edit, delete custom monster templates.
+    If encounter_id is provided, also allows adding them to an encounter."""
+
+    def __init__(self, service, campaign_id: int,
+                 encounter_id=None, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Custom Monster Library")
+        self.setMinimumSize(820, 560)
+        self._svc          = service
+        self._campaign_id  = campaign_id
+        self._encounter_id = encounter_id
+        self._monsters: list = []
+        self._build()
+        self._load()
+
+    # ── Build ─────────────────────────────────────────────────────────────────
+
+    def _build(self):
+        root = QVBoxLayout(self)
+        root.setContentsMargins(16, 14, 16, 14)
+        root.setSpacing(10)
+
+        # Header
+        hdr = QHBoxLayout()
+        title = QLabel("Custom Monster Library")
+        title.setObjectName("pageTitle")
+        hdr.addWidget(title)
+        hdr.addStretch()
+        new_btn = QPushButton("＋  New Monster")
+        new_btn.setObjectName("accentBtn")
+        new_btn.clicked.connect(self._on_new)
+        hdr.addWidget(new_btn)
+        root.addLayout(hdr)
+
+        # Search
+        self._search = QLineEdit()
+        self._search.setPlaceholderText("🔍  Search by name, type…")
+        self._search.setClearButtonEnabled(True)
+        self._search.textChanged.connect(self._load)
+        root.addWidget(self._search)
+
+        # Splitter
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.setChildrenCollapsible(False)
+
+        # Left — list
+        left = QFrame()
+        left.setObjectName("panelFrame")
+        ll = QVBoxLayout(left)
+        ll.setContentsMargins(0, 0, 0, 0)
+        ll.setSpacing(0)
+        self._list = QListWidget()
+        self._list.setObjectName("encList")
+        self._list.currentRowChanged.connect(self._on_select)
+        self._list.itemDoubleClicked.connect(lambda _: self._on_edit())
+        ll.addWidget(self._list)
+        splitter.addWidget(left)
+
+        # Right — detail
+        right = QFrame()
+        right.setObjectName("panelFrame")
+        rl = QVBoxLayout(right)
+        rl.setContentsMargins(14, 12, 14, 12)
+        rl.setSpacing(6)
+
+        self._detail_name = QLabel()
+        self._detail_name.setObjectName("cardName")
+        self._detail_name.setWordWrap(True)
+        rl.addWidget(self._detail_name)
+
+        self._detail_meta = QLabel()
+        self._detail_meta.setObjectName("dimLabel")
+        self._detail_meta.setWordWrap(True)
+        rl.addWidget(self._detail_meta)
+
+        self._detail_body = QTextEdit()
+        self._detail_body.setReadOnly(True)
+        self._detail_body.setObjectName("journalEditor")
+        rl.addWidget(self._detail_body, 1)
+
+        splitter.addWidget(right)
+        splitter.setSizes([300, 480])
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 2)
+        root.addWidget(splitter, 1)
+
+        # Bottom toolbar
+        bot = QHBoxLayout()
+        bot.setSpacing(8)
+
+        self._edit_btn = QPushButton("✏  Edit")
+        self._edit_btn.setObjectName("ghostBtn")
+        self._edit_btn.setEnabled(False)
+        self._edit_btn.clicked.connect(self._on_edit)
+        bot.addWidget(self._edit_btn)
+
+        self._del_btn = QPushButton("✕  Delete")
+        self._del_btn.setObjectName("dangerBtn")
+        self._del_btn.setEnabled(False)
+        self._del_btn.clicked.connect(self._on_delete)
+        bot.addWidget(self._del_btn)
+
+        bot.addStretch()
+
+        if self._encounter_id is not None:
+            self._count_spin = QSpinBox()
+            self._count_spin.setRange(1, 99)
+            self._count_spin.setValue(1)
+            self._count_spin.setFixedWidth(56)
+            self._count_spin.setPrefix("× ")
+            bot.addWidget(self._count_spin)
+
+            self._add_enc_btn = QPushButton("⚔  Add to Encounter")
+            self._add_enc_btn.setObjectName("accentBtn")
+            self._add_enc_btn.setEnabled(False)
+            self._add_enc_btn.clicked.connect(self._on_add_to_encounter)
+            bot.addWidget(self._add_enc_btn)
+            bot.addSpacing(8)
+
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(self.accept)
+        bot.addWidget(close_btn)
+
+        root.addLayout(bot)
+
+    # ── Data ─────────────────────────────────────────────────────────────────
+
+    def _load(self):
+        q = self._search.text().strip() if hasattr(self, "_search") else ""
+        self._monsters = self._svc.get_custom_monsters(self._campaign_id, q)
+        self._list.clear()
+        for m in self._monsters:
+            parts = [m.name]
+            if m.cr:     parts.append(f"CR {m.cr}")
+            if m.monster_type: parts.append(m.monster_type)
+            item = QListWidgetItem("  ·  ".join(parts))
+            item.setData(Qt.UserRole, m.id)
+            self._list.addItem(item)
+        self._update_buttons()
+        if not self._monsters:
+            self._detail_name.setText("No custom monsters yet.")
+            self._detail_meta.clear()
+            self._detail_body.clear()
+
+    def _on_select(self, row):
+        self._update_buttons(row)
+        if row < 0 or row >= len(self._monsters):
+            self._detail_name.clear()
+            self._detail_meta.clear()
+            self._detail_body.clear()
+            return
+        m = self._monsters[row]
+        self._detail_name.setText(m.name)
+        meta_parts = []
+        if m.cr:             meta_parts.append(f"CR {m.cr}")
+        if m.hp:             meta_parts.append(f"HP {m.hp}")
+        if m.ac:             meta_parts.append(f"AC {m.ac}")
+        if m.monster_type:   meta_parts.append(m.monster_type)
+        if m.size:           meta_parts.append(m.size)
+        if m.speed:          meta_parts.append(f"Speed: {m.speed}")
+        if m.initiative_bonus:
+            meta_parts.append(f"Initiative: +{m.initiative_bonus}" if m.initiative_bonus >= 0
+                               else f"Initiative: {m.initiative_bonus}")
+        self._detail_meta.setText("   ·   ".join(meta_parts))
+
+        lines = []
+        ab_labels = ["STR", "DEX", "CON", "INT", "WIS", "CHA"]
+        ab_vals   = [m.str_, m.dex, m.con, m.int_, m.wis, m.cha]
+        ab_strs   = [f"{l} {v}" for l, v in zip(ab_labels, ab_vals)]
+        lines.append("  ".join(ab_strs))
+        if m.attacks:
+            lines.append("\n── Attacks & Actions ──\n" + m.attacks)
+        if m.traits:
+            lines.append("\n── Traits ──\n" + m.traits)
+        if m.notes:
+            lines.append("\n── Notes ──\n" + m.notes)
+        self._detail_body.setPlainText("\n".join(lines))
+
+    def _update_buttons(self, row=None):
+        if row is None:
+            row = self._list.currentRow()
+        has_sel = 0 <= row < len(self._monsters)
+        self._edit_btn.setEnabled(has_sel)
+        self._del_btn.setEnabled(has_sel)
+        if self._encounter_id is not None and hasattr(self, "_add_enc_btn"):
+            self._add_enc_btn.setEnabled(has_sel)
+
+    # ── Actions ───────────────────────────────────────────────────────────────
+
+    def _on_new(self):
+        dlg = _CustomMonsterEditDialog(parent=self)
+        dlg.setStyleSheet(self.styleSheet())
+        if dlg.exec() != QDialog.Accepted:
+            return
+        vals = dlg.get_values()
+        if not vals["name"]:
+            return
+        self._svc.add_custom_monster(self._campaign_id, **vals)
+        self._load()
+
+    def _on_edit(self):
+        row = self._list.currentRow()
+        if row < 0 or row >= len(self._monsters):
+            return
+        m = self._monsters[row]
+        dlg = _CustomMonsterEditDialog(m, parent=self)
+        dlg.setStyleSheet(self.styleSheet())
+        if dlg.exec() != QDialog.Accepted:
+            return
+        vals = dlg.get_values()
+        if not vals["name"]:
+            return
+        self._svc.update_custom_monster(m.id, **vals)
+        self._load()
+
+    def _on_delete(self):
+        row = self._list.currentRow()
+        if row < 0 or row >= len(self._monsters):
+            return
+        m = self._monsters[row]
+        reply = QMessageBox.question(
+            self, "Delete Monster",
+            f"Delete \"{m.name}\" from the custom library?\nThis cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        if reply != QMessageBox.Yes:
+            return
+        self._svc.delete_custom_monster(m.id)
+        self._load()
+
+    def _on_add_to_encounter(self):
+        row = self._list.currentRow()
+        if row < 0 or row >= len(self._monsters) or self._encounter_id is None:
+            return
+        m     = self._monsters[row]
+        count = self._count_spin.value() if hasattr(self, "_count_spin") else 1
+        try:
+            self._svc.add_monster(
+                self._encounter_id,
+                name=m.name,
+                count=count,
+                cr=m.cr or "0",
+                hp_override=m.hp,
+                notes=f"AC {m.ac}" + (f", {m.notes}" if m.notes else ""),
+            )
+            # Provide brief feedback without closing the dialog
+            self._add_enc_btn.setText("✓  Added!")
+            QTimer.singleShot(1200, lambda: self._add_enc_btn.setText("⚔  Add to Encounter"))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  _MonsterFromBookDialog  —  focused monster browser for encounter building
+# ══════════════════════════════════════════════════════════════════════════════
+
+class _MonsterFromBookDialog(QDialog):
+    """Searches game-data books for monsters and adds them to an encounter.
+    Reuses GameDataLoader; only shows the Monsters tab with an 'Add' action."""
+
+    _SYS_MAP = {
+        "dnd5e":        "D&D 5e",
+        "pathfinder2e": "Pathfinder 2e",
+        "wh40k":        "Warhammer 40k",
+        "aos":          "Age of Sigmar",
+    }
+
+    def __init__(self, service, campaign_id: int, encounter_id: int,
+                 system_id: str = "custom",
+                 disabled_books: set | None = None,
+                 parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Browse Monsters — Add to Encounter")
+        self.setMinimumSize(860, 580)
+        self._svc            = service
+        self._campaign_id    = campaign_id
+        self._encounter_id   = encounter_id
+        self._system_id      = system_id
+        self._disabled_books = disabled_books or set()
+        self._results: list[dict] = []
+        self._build()
+        QTimer.singleShot(0, self._init_systems)
+
+    # ── Build ─────────────────────────────────────────────────────────────────
+
+    def _build(self):
+        root = QVBoxLayout(self)
+        root.setContentsMargins(16, 14, 16, 14)
+        root.setSpacing(10)
+
+        # Title
+        hdr = QHBoxLayout()
+        title = QLabel("Add Monsters from Books")
+        title.setObjectName("pageTitle")
+        hdr.addWidget(title)
+        hdr.addStretch()
+        root.addLayout(hdr)
+
+        # System + book filter row
+        sys_row = QHBoxLayout()
+        sys_row.setSpacing(8)
+        sys_row.addWidget(QLabel("System:"))
+        self._sys_combo = QComboBox()
+        self._sys_combo.setMinimumWidth(160)
+        self._sys_combo.currentTextChanged.connect(self._on_system_changed)
+        sys_row.addWidget(self._sys_combo)
+
+        sys_row.addWidget(QLabel("Book:"))
+        self._book_combo = QComboBox()
+        self._book_combo.setMinimumWidth(180)
+        self._book_combo.addItem("All Books")
+        self._book_combo.currentTextChanged.connect(self._do_search)
+        sys_row.addWidget(self._book_combo)
+
+        sys_row.addWidget(QLabel("CR:"))
+        self._cr_combo = QComboBox()
+        self._cr_combo.setMinimumWidth(80)
+        self._cr_combo.addItem("All CR")
+        self._cr_combo.currentTextChanged.connect(self._do_search)
+        sys_row.addWidget(self._cr_combo)
+
+        self._search = QLineEdit()
+        self._search.setPlaceholderText("🔍  Search monsters…")
+        self._search.setClearButtonEnabled(True)
+        self._search.textChanged.connect(self._do_search)
+        sys_row.addWidget(self._search, 2)
+
+        self._count_lbl = QLabel()
+        self._count_lbl.setObjectName("dimLabel")
+        sys_row.addWidget(self._count_lbl)
+        root.addLayout(sys_row)
+
+        # Splitter: list | detail
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.setChildrenCollapsible(False)
+
+        self._list = QListWidget()
+        self._list.setSelectionMode(QListWidget.ExtendedSelection)
+        self._list.currentRowChanged.connect(self._on_row_selected)
+        splitter.addWidget(self._list)
+
+        detail = QFrame()
+        detail.setObjectName("panelFrame")
+        dl = QVBoxLayout(detail)
+        dl.setContentsMargins(12, 10, 12, 10)
+        dl.setSpacing(6)
+        self._d_title = QLabel()
+        self._d_title.setObjectName("cardName")
+        self._d_title.setWordWrap(True)
+        self._d_meta = QLabel()
+        self._d_meta.setObjectName("dimLabel")
+        self._d_meta.setWordWrap(True)
+        self._d_body = QTextEdit()
+        self._d_body.setReadOnly(True)
+        dl.addWidget(self._d_title)
+        dl.addWidget(self._d_meta)
+        dl.addWidget(self._d_body, 1)
+        splitter.addWidget(detail)
+        splitter.setSizes([380, 440])
+        splitter.setStretchFactor(0, 2)
+        splitter.setStretchFactor(1, 2)
+        root.addWidget(splitter, 1)
+
+        # Bottom toolbar
+        bot = QHBoxLayout()
+        bot.setSpacing(8)
+        self._status_lbl = QLabel()
+        self._status_lbl.setObjectName("dimLabel")
+        bot.addWidget(self._status_lbl)
+        bot.addStretch()
+
+        bot.addWidget(QLabel("Count:"))
+        self._add_count = QSpinBox()
+        self._add_count.setRange(1, 99)
+        self._add_count.setValue(1)
+        self._add_count.setFixedWidth(60)
+        bot.addWidget(self._add_count)
+
+        self._add_btn = QPushButton("⚔  Add Selected to Encounter")
+        self._add_btn.setObjectName("accentBtn")
+        self._add_btn.clicked.connect(self._on_add_selected)
+        bot.addWidget(self._add_btn)
+        bot.addSpacing(8)
+
+        close_btn = QPushButton("Done")
+        close_btn.clicked.connect(self.accept)
+        bot.addWidget(close_btn)
+        root.addLayout(bot)
+
+    # ── System / search ───────────────────────────────────────────────────────
+
+    def _init_systems(self):
+        if not _GAME_DATA_AVAILABLE:
+            self._status_lbl.setText("Game data not available.")
+            return
+        systems = GameDataLoader.available_systems() or []
+        self._sys_combo.blockSignals(True)
+        self._sys_combo.addItems(systems)
+        self._sys_combo.blockSignals(False)
+        target = self._SYS_MAP.get(self._system_id, "")
+        if target in systems:
+            self._sys_combo.setCurrentText(target)
+        elif systems:
+            self._sys_combo.setCurrentIndex(0)
+        self._on_system_changed()
+
+    def _on_system_changed(self):
+        system = self._sys_combo.currentText()
+        if not system or not _GAME_DATA_AVAILABLE:
+            return
+        # Refresh CR combo
+        self._cr_combo.blockSignals(True)
+        self._cr_combo.clear()
+        self._cr_combo.addItem("All CR")
+        try:
+            self._cr_combo.addItems(GameDataLoader.challenge_ratings(system))
+        except Exception:
+            pass
+        self._cr_combo.blockSignals(False)
+        # Reset book combo
+        self._book_combo.blockSignals(True)
+        self._book_combo.clear()
+        self._book_combo.addItem("All Books")
+        self._book_combo.blockSignals(False)
+        self._do_search()
+
+    def _do_search(self):
+        if not _GAME_DATA_AVAILABLE:
+            return
+        system = self._sys_combo.currentText()
+        query  = self._search.text().strip()
+        cr     = self._cr_combo.currentText()
+        cr     = None if cr == "All CR" else cr
+        book   = self._book_combo.currentText()
+        book   = None if book == "All Books" else book
+        try:
+            results = GameDataLoader.search_monsters(
+                query, system=system, cr=cr, book=book)
+        except Exception as e:
+            self._count_lbl.setText(f"Error: {e}")
+            return
+        # Filter disabled books
+        if self._disabled_books:
+            results = [r for r in results
+                       if r.get("book", "") not in self._disabled_books]
+        self._results = results
+        # Lazily populate book combo
+        if self._book_combo.count() == 1 and results:
+            try:
+                books = GameDataLoader.book_names("Monsters", system)
+                self._book_combo.blockSignals(True)
+                self._book_combo.addItems(books)
+                self._book_combo.blockSignals(False)
+            except Exception:
+                pass
+        self._list.clear()
+        for entry in results:
+            name  = entry.get("name") or "(unnamed)"
+            props = entry.get("properties", {})
+            cr_v  = props.get("Challenge Rating", "")
+            detail = f"  ·  CR {cr_v}" if cr_v else ""
+            item = QListWidgetItem(name + detail)
+            item.setData(Qt.UserRole, name)
+            self._list.addItem(item)
+        self._count_lbl.setText(f"{len(results):,} results")
+
+    def _on_row_selected(self, row: int):
+        if row < 0 or row >= len(self._results):
+            self._d_title.clear(); self._d_meta.clear(); self._d_body.clear()
+            return
+        entry = self._results[row]
+        self._d_title.setText(entry.get("name", "(unnamed)"))
+        props = entry.get("properties", {}) or {}
+        parts = []
+        for k in ("Challenge Rating", "Type", "Size", "Alignment",
+                  "Hit Points", "Armor Class", "Speed"):
+            v = props.get(k)
+            if v: parts.append(f"{k}: {v}")
+        book = entry.get("book", "")
+        if book: parts.append(f"Source: {book}")
+        self._d_meta.setText("   ·   ".join(parts))
+        self._d_body.setPlainText(_format_entry(entry))
+
+    # ── Add to encounter ──────────────────────────────────────────────────────
+
+    def _on_add_selected(self):
+        rows = sorted({self._list.row(i) for i in self._list.selectedItems()})
+        if not rows:
+            self._status_lbl.setText("Select monsters to add.")
+            return
+        count = self._add_count.value()
+        added = 0
+        for row in rows:
+            if row >= len(self._results):
+                continue
+            entry = self._results[row]
+            name  = entry.get("name") or "(unnamed)"
+            props = entry.get("properties", {}) or {}
+            cr    = props.get("Challenge Rating", "") or "0"
+            try:
+                self._svc.add_monster(
+                    self._encounter_id,
+                    name=name, count=count, cr=cr,
+                )
+                added += 1
+            except Exception:
+                pass
+        noun = "monster" if added == 1 else "monsters"
+        self._status_lbl.setText(f"✓  Added {added} {noun} to encounter")
 
 
 # ══════════════════════════════════════════════════════════════════════════════

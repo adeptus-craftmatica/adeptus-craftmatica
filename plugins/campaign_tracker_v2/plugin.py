@@ -42,14 +42,21 @@ class Plugin(PluginBase):
             self.context.services.register("campaign_service", v1_svc)
 
         # ── V2-only repo ───────────────────────────────────────────────────
-        from .repository         import CampaignV2Repository
-        from .gallery_repository import CampaignGalleryRepository
-        from .asset_repository   import CampaignAssetRepository
-        from .service            import CampaignV2Service
-        v2_repo      = CampaignV2Repository(db)
-        gallery_repo = CampaignGalleryRepository(db)
-        asset_repo   = CampaignAssetRepository(db)
-        self._service = CampaignV2Service(v1_svc, v2_repo, gallery_repo, asset_repo)
+        from .repository                import CampaignV2Repository
+        from .gallery_repository        import CampaignGalleryRepository
+        from .asset_repository          import CampaignAssetRepository
+        from .quest_repository          import CampaignQuestRepository
+        from .custom_monster_repository import CustomMonsterRepository
+        from .service                   import CampaignV2Service
+        v2_repo             = CampaignV2Repository(db)
+        gallery_repo        = CampaignGalleryRepository(db)
+        asset_repo          = CampaignAssetRepository(db)
+        quest_repo          = CampaignQuestRepository(db)
+        custom_monster_repo = CustomMonsterRepository(db)
+        self._service = CampaignV2Service(
+            v1_svc, v2_repo, gallery_repo, asset_repo, quest_repo,
+            custom_monster_repo,
+        )
 
         # ── Build UI ───────────────────────────────────────────────────────
         from .ui import CampaignV2UI
@@ -64,8 +71,20 @@ class Plugin(PluginBase):
         bus = self.context.event_bus
 
         def _nav(payload=None):
-            target = (payload or {}).get("plugin_id", "")
-            if target in ("campaign_tracker_v2", "campaign_tracker") and self._ui_widget:
+            p      = payload or {}
+            target = p.get("plugin_id", "")
+            if target not in ("campaign_tracker_v2", "campaign_tracker"):
+                return
+            if not self._ui_widget:
+                return
+            campaign_id = p.get("project_id")
+            print(f"[CAMPAIGN V2] _nav: target={target!r} project_id={campaign_id!r}")
+            if campaign_id is not None:
+                try:
+                    self._ui_widget._open_campaign(int(campaign_id))
+                except Exception as e:
+                    print(f"[CAMPAIGN V2] _open_campaign failed: {e}")
+            else:
                 self._ui_widget.refresh()
 
         bus.subscribe("dashboard_navigate", _nav)
@@ -88,25 +107,24 @@ class Plugin(PluginBase):
 
     def _register_dashboard_provider(self):
         try:
-            from core.contracts.dashboard_registry import get_registry
+            registry = self.context.services.try_get("dashboard_registry")
+            if not registry:
+                return
             from .providers.dashboard_provider import CampaignDashboardProviderV2
-            reg      = get_registry()
             provider = CampaignDashboardProviderV2(self._service)
             provider._owner = "campaign_tracker_v2"
-            reg.register_provider("campaign_tracker", provider)
-            try:
-                self.context.event_bus.publish("dashboard_provider_updated", {})
-            except Exception:
-                pass
+            registry.register_provider("campaign_tracker", provider)
+            self.context.event_bus.emit("dashboard_provider_updated", {})
         except Exception as e:
             print(f"[CAMPAIGN V2] dashboard register: {e}")
 
     def _cleanup_dashboard_provider(self):
         try:
-            from core.contracts.dashboard_registry import get_registry
-            reg     = get_registry()
-            current = reg.get_provider("campaign_tracker")
+            registry = self.context.services.try_get("dashboard_registry")
+            if not registry:
+                return
+            current = registry.get_provider("campaign_tracker")
             if getattr(current, "_owner", None) == "campaign_tracker_v2":
-                reg.unregister_provider("campaign_tracker")
+                registry.unregister_provider("campaign_tracker")
         except Exception:
             pass

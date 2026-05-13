@@ -12,11 +12,14 @@ from typing import Optional
 class CampaignV2Service:
     """Facade over v1 service + v2 repository additions."""
 
-    def __init__(self, v1_service, v2_repo, gallery_repo, asset_repo=None):
-        self._svc     = v1_service
-        self._repo    = v2_repo
-        self._gallery = gallery_repo
-        self._assets  = asset_repo
+    def __init__(self, v1_service, v2_repo, gallery_repo,
+                 asset_repo=None, quest_repo=None, custom_monster_repo=None):
+        self._svc             = v1_service
+        self._repo            = v2_repo
+        self._gallery         = gallery_repo
+        self._assets          = asset_repo
+        self._quests          = quest_repo
+        self._custom_monsters = custom_monster_repo
 
     # ── Campaigns ─────────────────────────────────────────────────────────────
 
@@ -52,6 +55,16 @@ class CampaignV2Service:
         try:
             if self._assets:
                 self._assets.delete_for_campaign(campaign_id)
+        except Exception:
+            pass
+        try:
+            if self._quests:
+                self._quests.delete_for_campaign(campaign_id)
+        except Exception:
+            pass
+        try:
+            if self._custom_monsters:
+                self._custom_monsters.delete_for_campaign(campaign_id)
         except Exception:
             pass
         return self._svc.delete_campaign(campaign_id)
@@ -201,6 +214,27 @@ class CampaignV2Service:
 
     def remove_monster(self, monster_id: int):
         return self._svc.delete_encounter_monster(monster_id)
+
+    def update_monster(self, monster_id: int, name: str, count: int,
+                       cr: str = "0", hp_override: Optional[int] = None,
+                       notes: str = "") -> bool:
+        """Update an existing encounter monster entry in place."""
+        try:
+            from plugins.campaign_tracker.models import EncounterMonster
+            m = EncounterMonster(
+                encounter_id=0,   # not used by update
+                monster_name=name,
+                count=count,
+                cr=cr or "0",
+                hp_override=hp_override if hp_override else None,
+                notes=notes or None,
+                id=monster_id,
+            )
+            self._svc.update_encounter_monster(m)
+            return True
+        except Exception as e:
+            print(f"[CAMPAIGN V2] update_monster: {e}")
+            return False
 
     # ── Players ───────────────────────────────────────────────────────────────
 
@@ -371,3 +405,127 @@ class CampaignV2Service:
         if not self._assets:
             return False
         return self._assets.delete_asset(asset_id)
+
+    # ── Quests ────────────────────────────────────────────────────────────────
+
+    def get_quests(self, campaign_id: int, status: str | None = None):
+        if not self._quests:
+            return []
+        try:
+            return self._quests.get_quests(campaign_id, status)
+        except Exception:
+            return []
+
+    def get_quest(self, quest_id: int):
+        if not self._quests:
+            return None
+        try:
+            return self._quests.get_quest(quest_id)
+        except Exception:
+            return None
+
+    def get_quest_status_counts(self, campaign_id: int) -> dict[str, int]:
+        if not self._quests:
+            return {}
+        try:
+            return self._quests.get_status_counts(campaign_id)
+        except Exception:
+            return {}
+
+    def add_quest(self, campaign_id: int, title: str, **kwargs) -> int:
+        if not self._quests:
+            return -1
+        return self._quests.add_quest(campaign_id, title, **kwargs)
+
+    def update_quest(self, quest_id: int, title: str, status: str,
+                     priority: str, category: str, description: str,
+                     notes: str, reward: str,
+                     quest_giver: str = "", location: str = "",
+                     date_started: str = "", date_completed: str = "",
+                     linked_session_id=None, tags: str = "") -> bool:
+        if not self._quests:
+            return False
+        return self._quests.update_quest(
+            quest_id, title, status, priority, category, description, notes, reward,
+            quest_giver, location, date_started, date_completed,
+            linked_session_id, tags,
+        )
+
+    def toggle_quest_pin(self, quest_id: int) -> bool:
+        if not self._quests:
+            return False
+        return self._quests.toggle_pin(quest_id)
+
+    def search_quests(self, campaign_id: int, query: str):
+        if not self._quests:
+            return []
+        try:
+            return self._quests.search_quests(campaign_id, query)
+        except Exception:
+            return []
+
+    def update_quest_status(self, quest_id: int, status: str) -> bool:
+        if not self._quests:
+            return False
+        return self._quests.update_quest_status(quest_id, status)
+
+    def delete_quest(self, quest_id: int) -> bool:
+        if not self._quests:
+            return False
+        return self._quests.delete_quest(quest_id)
+
+    def get_objectives(self, quest_id: int):
+        if not self._quests:
+            return []
+        try:
+            return self._quests.get_objectives(quest_id)
+        except Exception:
+            return []
+
+    def add_objective(self, quest_id: int, text: str) -> int:
+        if not self._quests:
+            return -1
+        return self._quests.add_objective(quest_id, text)
+
+    def set_objective_completed(self, obj_id: int, completed: bool) -> bool:
+        if not self._quests:
+            return False
+        return self._quests.set_objective_completed(obj_id, completed)
+
+    def delete_objective(self, obj_id: int) -> bool:
+        if not self._quests:
+            return False
+        return self._quests.delete_objective(obj_id)
+
+    # ── Custom Monsters ───────────────────────────────────────────────────────
+
+    def get_custom_monsters(self, campaign_id: int, query: str = ""):
+        if not self._custom_monsters:
+            return []
+        try:
+            return self._custom_monsters.get_all(campaign_id, query)
+        except Exception:
+            return []
+
+    def get_custom_monster(self, monster_id: int):
+        if not self._custom_monsters:
+            return None
+        try:
+            return self._custom_monsters.get(monster_id)
+        except Exception:
+            return None
+
+    def add_custom_monster(self, campaign_id: int, name: str, **kwargs) -> int:
+        if not self._custom_monsters:
+            return -1
+        return self._custom_monsters.add(campaign_id, name, **kwargs)
+
+    def update_custom_monster(self, monster_id: int, name: str, **kwargs) -> bool:
+        if not self._custom_monsters:
+            return False
+        return self._custom_monsters.update(monster_id, name, **kwargs)
+
+    def delete_custom_monster(self, monster_id: int) -> bool:
+        if not self._custom_monsters:
+            return False
+        return self._custom_monsters.delete(monster_id)
