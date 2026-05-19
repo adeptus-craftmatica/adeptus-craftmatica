@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 from typing import Any, Callable
+import logging
+log = logging.getLogger(__name__)
 
 
 class ServiceRegistry:
@@ -37,7 +39,7 @@ class ServiceRegistry:
             raise ValueError(f"Service '{name}' is already registered")
 
         self._services[name] = service
-        print(f"[SERVICE] Registered: {name}")
+        log.debug(f"[SERVICE] Registered: {name}")
 
     def register_factory(self, name: str, factory: Callable[[], Any], override: bool = False):
         """
@@ -49,7 +51,7 @@ class ServiceRegistry:
             raise ValueError(f"Service '{name}' is already registered")
 
         self._factories[name] = factory
-        print(f"[SERVICE] Registered factory: {name}")
+        log.debug(f"[SERVICE] Registered factory: {name}")
 
     # ----------------------------
     # Retrieval
@@ -67,7 +69,7 @@ class ServiceRegistry:
 
         # Lazy factory
         if name in self._factories:
-            print(f"[SERVICE] Lazy-loading: {name}")
+            log.debug(f"[SERVICE] Lazy-loading: {name}")
             service = self._factories[name]()
             self._services[name] = service
             del self._factories[name]
@@ -98,12 +100,12 @@ class ServiceRegistry:
 
     def debug_dump(self):
         """Print all registered services (debugging)"""
-        print("\n=== SERVICE REGISTRY ===")
+        log.debug("\n=== SERVICE REGISTRY ===")
         for name in self._services:
-            print(f"✔ {name} (loaded)")
+            log.debug(f"✔ {name} (loaded)")
         for name in self._factories:
-            print(f"⏳ {name} (lazy)")
-        print("========================\n")
+            log.debug(f"⏳ {name} (lazy)")
+        log.debug("========================\n")
 
     # ----------------------------
     # Removal (optional)
@@ -118,4 +120,4 @@ class ServiceRegistry:
         else:
             raise KeyError(f"Service '{name}' not found")
 
-        print(f"[SERVICE] Unregistered: {name}")
+        log.debug(f"[SERVICE] Unregistered: {name}")

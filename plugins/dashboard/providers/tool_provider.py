@@ -1,6 +1,9 @@
 """Tool Tracker dashboard provider."""
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.contracts.dashboard_dto import (
     CommandStat, ProjectCard, Notification, QuickAction, Severity, Recommendation,
 )
@@ -24,7 +27,7 @@ class ToolDashboardProvider:
                 ),
             ]
         except Exception as e:
-            print(f"[TOOL PROVIDER] get_command_stats: {e}")
+            log.error(f"[TOOL PROVIDER] get_command_stats: {e}")
             return []
 
     def get_project_cards(self) -> list[ProjectCard]:
@@ -50,7 +53,7 @@ class ToolDashboardProvider:
                     action_label   = "View Tools",
                 ))
         except Exception as e:
-            print(f"[TOOL PROVIDER] get_notifications: {e}")
+            log.error(f"[TOOL PROVIDER] get_notifications: {e}")
         return notes
 
     def get_recommendations(self) -> list[Recommendation]:
@@ -77,7 +80,7 @@ class ToolDashboardProvider:
                     action_label="View Tools",
                 ))
         except Exception as e:
-            print(f"[TOOL PROVIDER] get_recommendations: {e}")
+            log.error(f"[TOOL PROVIDER] get_recommendations: {e}")
         return recs
 
     def get_quick_actions(self) -> list[QuickAction]:

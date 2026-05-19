@@ -1,3 +1,7 @@
+import logging
+log = logging.getLogger(__name__)
+
+
 class SettingsRegistry:
     """
     Registry for settings pages.
@@ -20,10 +24,10 @@ class SettingsRegistry:
         # with the same label in the settings dialog.
         existing_names = [n for n, _ in self._pages]
         if name in existing_names:
-            print(f"[SETTINGS] Warning: page '{name}' is already registered — skipping duplicate")
+            log.warning(f"[SETTINGS] Warning: page '{name}' is already registered — skipping duplicate")
             return
         self._pages.append((name, widget_factory))
-        print(f"[SETTINGS] Page registered: {name}")
+        log.debug(f"[SETTINGS] Page registered: {name}")
 
     def get_pages(self):
         return self._pages

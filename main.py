@@ -1,11 +1,19 @@
 # main.py
 
 import sys
+import logging
 from PySide6.QtWidgets import QApplication
 
 from core.app_context import AppContext
 from core.plugin_manager import PluginManager
 from ui.main_window import MainWindow
+
+logging.basicConfig(
+    level=logging.WARNING,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+
+log = logging.getLogger(__name__)
 
 
 def main():
@@ -15,9 +23,9 @@ def main():
     # Core App Context
     # (pass app so ThemeManager can be registered)
     # ----------------------------
-    print("[APP] Initializing context...")
+    log.debug("[APP] Initializing context...")
     context = AppContext(app=app)
-    print("[APP] Context initialized\n")
+    log.debug("[APP] Context initialized")
 
     # ----------------------------
     # Apply initial theme BEFORE window is created

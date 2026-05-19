@@ -9,6 +9,10 @@ Key Improvements:
 """
 
 from __future__ import annotations
+
+import logging
+log = logging.getLogger(__name__)
+
 from typing import Optional, Iterable
 import colorsys
 
@@ -137,7 +141,7 @@ class PaintService:
                     reverse=filter.sort_desc
                 )
             except Exception as e:
-                print(f"[SERVICE WARNING] Sorting failed: {e}")
+                log.warning(f"[SERVICE WARNING] Sorting failed: {e}")
 
         return paints
 
@@ -227,7 +231,7 @@ class PaintService:
         try:
             target_hsv = self._hex_to_hsv(target_hex)
         except Exception as e:
-            print(f"[SERVICE WARNING] Invalid target color {target_hex}: {e}")
+            log.warning(f"[SERVICE WARNING] Invalid target color {target_hex}: {e}")
             # Return all paints on error instead of empty list
             return paints
 
@@ -275,7 +279,7 @@ class PaintService:
                 matches.append((score, paint))
 
             except Exception as e:
-                print(f"[SERVICE WARNING] Invalid paint color {paint.color}: {e}")
+                log.warning(f"[SERVICE WARNING] Invalid paint color {paint.color}: {e}")
                 continue
 
         # Sort by score (lowest = best match)
@@ -402,7 +406,7 @@ class PaintService:
 # ============================================================
 
 def register(context):
-    print("[PAINT_TRACKER] Registering service...")
+    log.debug("[PAINT_TRACKER] Registering service...")
 
     db = context.services.get("db")
 
@@ -411,6 +415,6 @@ def register(context):
 
     context.services.register("paint_service", service, override=True)
 
-    print("[PAINT_TRACKER] Service registered")
+    log.debug("[PAINT_TRACKER] Service registered")
 
     return service

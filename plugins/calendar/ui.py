@@ -1,6 +1,9 @@
 """Calendar plugin main UI — toolbar + 4 views in a QStackedWidget."""
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from datetime import date, timedelta
 
 from PySide6.QtCore import Qt, Signal, QTimer
@@ -569,7 +572,7 @@ class CalendarUI(QWidget):
                 self._today_view.refresh(planned, activity, overdue, upcoming_wk)
 
         except Exception as e:
-            print(f"[CALENDAR UI] refresh error: {e}")
+            log.error(f"[CALENDAR UI] refresh error: {e}")
 
     # ══════════════════════════════════════════════════════════════════════════
     # Event handlers
@@ -607,7 +610,7 @@ class CalendarUI(QWidget):
                 events = [e for e in all_events if e.event_date == d_iso]
                 events.sort(key=lambda e: (e.time_start == "", e.time_start))
             except Exception as exc:
-                print(f"[CALENDAR UI] daily panel error: {exc}")
+                log.error(f"[CALENDAR UI] daily panel error: {exc}")
         self._daily_panel.show_date(d, events)
         self._daily_panel.setVisible(True)
 
@@ -633,7 +636,7 @@ class CalendarUI(QWidget):
             # Notify the dashboard so it re-polls overdue/notifications immediately
             self._emit_bus("calendar_event_updated", {"id": event_id})
         except Exception as e:
-            print(f"[CALENDAR UI] complete toggle error: {e}")
+            log.error(f"[CALENDAR UI] complete toggle error: {e}")
 
     def _open_event_dialog(self, event=None, default_date=None):
         from plugins.calendar.widgets.event_dialog import EventDialog as _ED
@@ -667,7 +670,7 @@ class CalendarUI(QWidget):
                 })
                 self.refresh()
             except Exception as e:
-                print(f"[CALENDAR UI] delete event error: {e}")
+                log.error(f"[CALENDAR UI] delete event error: {e}")
 
         elif result:
             # ── User saved (add or update) ────────────────────────────────────
@@ -687,7 +690,7 @@ class CalendarUI(QWidget):
                     })
                 self.refresh()
             except Exception as e:
-                print(f"[CALENDAR UI] save event error: {e}")
+                log.error(f"[CALENDAR UI] save event error: {e}")
 
     def _emit_bus(self, event_name: str, payload: dict):
         bus = getattr(self._ctx, "event_bus", None) if self._ctx else None

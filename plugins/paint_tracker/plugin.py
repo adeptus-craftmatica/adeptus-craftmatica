@@ -10,6 +10,10 @@ Key Improvements:
 """
 
 from __future__ import annotations
+
+import logging
+log = logging.getLogger(__name__)
+
 from core.plugin_base import PluginBase
 from .ui import PaintUI
 from .models import ValidationError, PaintFilter
@@ -33,7 +37,7 @@ class Plugin(PluginBase):
     # ============================================================
 
     def activate(self):
-        print(f"[PLUGIN] {self.display_name} activating...")
+        log.debug(f"[PLUGIN] {self.display_name} activating...")
 
         self._resolve_services()
         self._register_settings()
@@ -49,10 +53,10 @@ class Plugin(PluginBase):
         from PySide6.QtCore import QTimer
         QTimer.singleShot(250, self._register_dashboard_provider)
 
-        print(f"[PLUGIN] {self.display_name} activated")
+        log.debug(f"[PLUGIN] {self.display_name} activated")
 
     def deactivate(self):
-        print(f"[PLUGIN] {self.display_name} deactivating...")
+        log.debug(f"[PLUGIN] {self.display_name} deactivating...")
 
         self._unsubscribe_all()
         self._cleanup_dashboard_provider()
@@ -61,7 +65,7 @@ class Plugin(PluginBase):
         self._service = None
         self._settings = None
 
-        print(f"[PLUGIN] {self.display_name} deactivated")
+        log.debug(f"[PLUGIN] {self.display_name} deactivated")
 
     def get_ui(self):
         return self._ui
@@ -91,7 +95,7 @@ class Plugin(PluginBase):
                 except Exception:
                     pass
         except Exception as e:
-            print(f"[PAINT TRACKER] Dashboard provider failed: {e}")
+            log.error(f"[PAINT TRACKER] Dashboard provider failed: {e}")
 
     def _cleanup_dashboard_provider(self):
         """Only remove our registration if we still own the key."""
@@ -146,7 +150,7 @@ class Plugin(PluginBase):
                     self._ui.type_combo.setCurrentText(default_type)
 
         except Exception as e:
-            print(f"[PLUGIN WARNING] Failed to apply settings: {e}")
+            log.warning(f"[PLUGIN WARNING] Failed to apply settings: {e}")
 
     def _initial_load(self):
         try:
@@ -167,7 +171,7 @@ class Plugin(PluginBase):
             })
 
         except Exception as e:
-            print(f"[PLUGIN WARNING] Failed initial load: {e}")
+            log.warning(f"[PLUGIN WARNING] Failed initial load: {e}")
             self._refresh_ui()
 
     # ============================================================
@@ -214,9 +218,9 @@ class Plugin(PluginBase):
                 self._active_color_filter = color.upper()
             else:
                 self._active_color_filter = None
-            print(f"[PLUGIN] Color filter state updated: {self._active_color_filter}")
+            log.debug(f"[PLUGIN] Color filter state updated: {self._active_color_filter}")
         except Exception as e:
-            print(f"[PLUGIN ERROR] Color filter state update failed: {e}")
+            log.error(f"[PLUGIN ERROR] Color filter state update failed: {e}")
 
     def _apply_color_filter_to_subset(self, paints: list) -> list:
         """
@@ -250,7 +254,7 @@ class Plugin(PluginBase):
                 paints=paints
             )
         except Exception as e:
-            print(f"[PLUGIN WARNING] Color filter application failed: {e}")
+            log.warning(f"[PLUGIN WARNING] Color filter application failed: {e}")
             return paints
 
     # ============================================================
@@ -262,7 +266,7 @@ class Plugin(PluginBase):
             self._settings.set("paint_tracker.default_brand", brand)
             self._settings.set("paint_tracker.default_type", paint_type)
         except Exception as e:
-            print(f"[PLUGIN WARNING] Failed to persist settings: {e}")
+            log.warning(f"[PLUGIN WARNING] Failed to persist settings: {e}")
 
     def _persist_filter(self, paint_filter: PaintFilter):
         try:
@@ -276,7 +280,7 @@ class Plugin(PluginBase):
                 "notify_only": getattr(paint_filter, "notify_only", False),
             })
         except Exception as e:
-            print(f"[PLUGIN WARNING] Failed to save filter: {e}")
+            log.warning(f"[PLUGIN WARNING] Failed to save filter: {e}")
 
     # ============================================================
     # EVENT HANDLERS
@@ -307,7 +311,7 @@ class Plugin(PluginBase):
             if self._ui:
                 self._ui._show_error(str(e))
         except Exception as e:
-            print(f"[PLUGIN ERROR] Add paint failed: {e}")
+            log.error(f"[PLUGIN ERROR] Add paint failed: {e}")
             if self._ui:
                 self._ui._show_error(str(e))
 
@@ -336,7 +340,7 @@ class Plugin(PluginBase):
             if self._ui:
                 self._ui._show_error(str(e))
         except Exception as e:
-            print(f"[PLUGIN ERROR] Update paint failed: {e}")
+            log.error(f"[PLUGIN ERROR] Update paint failed: {e}")
             if self._ui:
                 self._ui._show_error(str(e))
 
@@ -383,7 +387,7 @@ class Plugin(PluginBase):
                         _plug._refresh_with_current_filter()
                         _plug.context.event_bus.emit("paint_added", {})
                     except Exception as ex:
-                        print(f"[UNDO] Restore paint failed: {ex}")
+                        log.error(f"[UNDO] Restore paint failed: {ex}")
 
                 from ui.toast import ToastManager
                 from ui.undo_manager import UndoManager
@@ -402,7 +406,7 @@ class Plugin(PluginBase):
             self._refresh_with_current_filter()
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] Remove paint failed: {e}")
+            log.error(f"[PLUGIN ERROR] Remove paint failed: {e}")
             if self._ui:
                 self._ui._show_error(str(e))
 
@@ -425,7 +429,7 @@ class Plugin(PluginBase):
         try:
             paint_filter = payload.get("filter")
             if not paint_filter:
-                print("[PLUGIN WARNING] Filter changed but no filter provided")
+                log.warning("[PLUGIN WARNING] Filter changed but no filter provided")
                 return
 
             # Persist filter settings
@@ -455,10 +459,10 @@ class Plugin(PluginBase):
 
             self._ui.update_statistics(stats)
 
-            print(f"[PLUGIN] Filter applied: {len(base_filtered_paints)} base → {len(final_paints)} final")
+            log.debug(f"[PLUGIN] Filter applied: {len(base_filtered_paints)} base → {len(final_paints)} final")
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] Filter failed: {e}")
+            log.error(f"[PLUGIN ERROR] Filter failed: {e}")
             if self._ui:
                 self._ui._show_error(f"Filter error: {e}")
 
@@ -476,7 +480,7 @@ class Plugin(PluginBase):
             self._refresh_with_current_filter()
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] Import failed: {e}")
+            log.error(f"[PLUGIN ERROR] Import failed: {e}")
             self.context.event_bus.emit("paints_import_complete", {
                 "success_count": 0,
                 "errors": [str(e)]
@@ -517,4 +521,4 @@ class Plugin(PluginBase):
             })
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] Refresh failed: {e}")
+            log.error(f"[PLUGIN ERROR] Refresh failed: {e}")

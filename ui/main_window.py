@@ -1,5 +1,8 @@
 # ui/main_window.py
 
+import logging
+log = logging.getLogger(__name__)
+
 from PySide6.QtCore import Qt, QTimer, QObject, QEvent
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
@@ -357,7 +360,7 @@ class MainWindow(QMainWindow):
             try:
                 w.handle_quick_create()
             except Exception as e:
-                print(f"[MainWindow] quick_create error in {active_pid}: {e}")
+                log.error(f"[MainWindow] quick_create error in {active_pid}: {e}")
         else:
             # Fallback: emit event so the plugin can intercept it
             bus = getattr(self.context, "event_bus", None)
@@ -529,9 +532,9 @@ class MainWindow(QMainWindow):
                 widget.setProperty("plugin_id", plugin_id)
 
                 self.tabs.addTab(widget, tab_name)
-                print(f"[UI] Loaded tab: {tab_name} (id={plugin_id})")
+                log.debug(f"[UI] Loaded tab: {tab_name} (id={plugin_id})")
             except Exception as e:
-                print(f"[UI ERROR] Failed to load plugin UI: {e}")
+                log.error(f"[UI ERROR] Failed to load plugin UI: {e}")
 
         self._apply_saved_tab_order()
         # Always start on the Dashboard tab (index 0 after ordering)
@@ -635,7 +638,7 @@ class MainWindow(QMainWindow):
                 settings.set("plugin_layout.order", full_order)
                 settings.set("plugin_layout.labels", labels)
             except Exception as e:
-                print(f"[UI] Failed to persist plugin layout: {e}")
+                log.error(f"[UI] Failed to persist plugin layout: {e}")
 
     def _subscribe_navigation(self):
         """Subscribe to event-bus navigation events emitted by dashboard widgets."""
@@ -645,7 +648,7 @@ class MainWindow(QMainWindow):
         try:
             bus.subscribe("dashboard_navigate", self._on_dashboard_navigate)
         except Exception as e:
-            print(f"[UI] Could not subscribe to dashboard_navigate: {e}")
+            log.error(f"[UI] Could not subscribe to dashboard_navigate: {e}")
 
     # ── Cross-plugin navigation ────────────────────────────────────────────────
 
@@ -900,9 +903,9 @@ class MainWindow(QMainWindow):
                     tab_name = labels.get(pid) or getattr(plugin, "display_name", pid)
                     widget.setProperty("plugin_id", pid)
                     self.tabs.addTab(widget, tab_name)
-                    print(f"[UI] Re-enabled tab: {tab_name}  (id={pid})")
+                    log.debug(f"[UI] Re-enabled tab: {tab_name}  (id={pid})")
             except Exception as e:
-                print(f"[UI] Failed to add tab for re-enabled plugin '{plugin_id}': {e}")
+                log.error(f"[UI] Failed to add tab for re-enabled plugin '{plugin_id}': {e}")
 
         # ── 3. Reorder / relabel all surviving tabs ───────────────────────────
         self.apply_layout(order, labels)
@@ -912,7 +915,7 @@ class MainWindow(QMainWindow):
             try:
                 settings.set("plugin_layout.disabled", disabled)
             except Exception as e:
-                print(f"[UI] Failed to persist disabled plugins: {e}")
+                log.error(f"[UI] Failed to persist disabled plugins: {e}")
 
         # ── 5. Report any plugins that failed to load ─────────────────────────
         if failed_enable:

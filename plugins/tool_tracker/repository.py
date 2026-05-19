@@ -3,6 +3,9 @@ Tool Tracker — Repository (SQLite persistence)
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from typing import Optional
 
 from .models import Tool, ToolFilter
@@ -150,9 +153,9 @@ class ToolRepository:
 # ── Auto-registration ──────────────────────────────────────────────────────────
 
 def register(context):
-    print("[TOOL_TRACKER] Registering repository...")
+    log.debug("[TOOL_TRACKER] Registering repository...")
     db   = context.services.get("db")
     repo = ToolRepository(db)
     context.services.register("tool_repository", repo, override=True)
-    print("[TOOL_TRACKER] Repository registered")
+    log.debug("[TOOL_TRACKER] Repository registered")
     return repo

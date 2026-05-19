@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from core.migrations import SchemaManager
 from .models import Model, ModelFilter
 
 
@@ -15,9 +16,14 @@ class ModelRepository:
     LINK_TABLE   = "model_tracker_paint_links"
     IMAGES_TABLE = "model_tracker_images"
 
+    _MIGRATIONS: list[str] = [
+        "ALTER TABLE model_tracker_models ADD COLUMN image_path TEXT",
+    ]
+
     def __init__(self, db):
         self.db = db
         self._ensure_schema()
+        SchemaManager(db).migrate("model_tracker", self._MIGRATIONS)
 
     # ============================================================
     # SCHEMA
@@ -40,12 +46,6 @@ class ModelRepository:
                 updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-
-        # Migration: add image_path to existing databases
-        try:
-            self.db.execute(f"ALTER TABLE {self.TABLE} ADD COLUMN image_path TEXT")
-        except Exception:
-            pass  # Column already exists
 
         # Cross-plugin paint links (survives paint_tracker not being loaded)
         self.db.execute(f"""

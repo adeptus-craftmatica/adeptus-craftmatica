@@ -6,6 +6,9 @@ Track hobby tools — nippers, files, blades, brushes, adhesives and more.
 
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.plugin_base import PluginBase
 from .ui import ToolUI
 from .models import ValidationError, ToolFilter
@@ -25,17 +28,17 @@ class Plugin(PluginBase):
     # ============================================================
 
     def activate(self):
-        print(f"[PLUGIN] {self.display_name} activating...")
+        log.debug(f"[PLUGIN] {self.display_name} activating...")
 
         self._resolve_services()
         self._init_ui()
         self._register_events()
         self._initial_load()
 
-        print(f"[PLUGIN] {self.display_name} activated")
+        log.debug(f"[PLUGIN] {self.display_name} activated")
 
     def deactivate(self):
-        print(f"[PLUGIN] {self.display_name} deactivating...")
+        log.debug(f"[PLUGIN] {self.display_name} deactivating...")
 
         self._unsubscribe_all()
 
@@ -43,7 +46,7 @@ class Plugin(PluginBase):
         self._service = None
         self._settings = None
 
-        print(f"[PLUGIN] {self.display_name} deactivated")
+        log.debug(f"[PLUGIN] {self.display_name} deactivated")
 
     def get_ui(self):
         return self._ui
@@ -73,7 +76,7 @@ class Plugin(PluginBase):
                 "filter": ToolFilter()
             })
         except Exception as e:
-            print(f"[PLUGIN WARNING] Initial load failed: {e}")
+            log.warning(f"[PLUGIN WARNING] Initial load failed: {e}")
             self._refresh_ui()
 
     # ============================================================
@@ -122,7 +125,7 @@ class Plugin(PluginBase):
             if self._ui:
                 self._ui._show_error(str(e))
         except Exception as e:
-            print(f"[PLUGIN ERROR] Add tool failed: {e}")
+            log.error(f"[PLUGIN ERROR] Add tool failed: {e}")
             if self._ui:
                 self._ui._show_error(str(e))
 
@@ -147,7 +150,7 @@ class Plugin(PluginBase):
             if self._ui:
                 self._ui._show_error(str(e))
         except Exception as e:
-            print(f"[PLUGIN ERROR] Update tool failed: {e}")
+            log.error(f"[PLUGIN ERROR] Update tool failed: {e}")
             if self._ui:
                 self._ui._show_error(str(e))
 
@@ -164,7 +167,7 @@ class Plugin(PluginBase):
             self._refresh_ui()
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] Remove tool failed: {e}")
+            log.error(f"[PLUGIN ERROR] Remove tool failed: {e}")
             if self._ui:
                 self._ui._show_error(str(e))
 
@@ -185,10 +188,10 @@ class Plugin(PluginBase):
             self._ui.display_tools(tools, brands=brands)
             self._ui.update_statistics(stats)
 
-            print(f"[PLUGIN] Filter applied: {len(tools)} tools shown")
+            log.debug(f"[PLUGIN] Filter applied: {len(tools)} tools shown")
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] Filter failed: {e}")
+            log.error(f"[PLUGIN ERROR] Filter failed: {e}")
             if self._ui:
                 self._ui._show_error(f"Filter error: {e}")
 
@@ -203,4 +206,4 @@ class Plugin(PluginBase):
                 "filter": ToolFilter()
             })
         except Exception as e:
-            print(f"[PLUGIN ERROR] Refresh failed: {e}")
+            log.error(f"[PLUGIN ERROR] Refresh failed: {e}")

@@ -6,7 +6,12 @@ Handles all database operations for schemes, steps and model links.
 
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from typing import Optional
+
+from core.migrations import SchemaManager
 from .models import PaintScheme, SchemeStep, SchemeFilter
 
 
@@ -15,9 +20,18 @@ class SchemeRepository:
     STEPS_TABLE = "paint_scheme_steps"
     LINKS_TABLE = "paint_scheme_model_links"
 
+    _MIGRATIONS: list[str] = [
+        "ALTER TABLE paint_scheme_schemes ADD COLUMN game_system TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE paint_scheme_schemes ADD COLUMN faction     TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE paint_scheme_schemes ADD COLUMN description TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE paint_scheme_steps   ADD COLUMN paint_name  TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE paint_scheme_steps   ADD COLUMN notes       TEXT NOT NULL DEFAULT ''",
+    ]
+
     def __init__(self, db):
         self.db = db
         self._ensure_schema()
+        SchemaManager(db).migrate("paint_scheme", self._MIGRATIONS)
 
     # ============================================================
     # SCHEMA
@@ -59,13 +73,6 @@ class SchemeRepository:
             )
         """)
 
-        # Migration-safe column additions
-        self._ensure_column(self.SCHEMES_TABLE, "game_system", "TEXT NOT NULL DEFAULT ''")
-        self._ensure_column(self.SCHEMES_TABLE, "faction",     "TEXT NOT NULL DEFAULT ''")
-        self._ensure_column(self.SCHEMES_TABLE, "description", "TEXT NOT NULL DEFAULT ''")
-        self._ensure_column(self.STEPS_TABLE, "paint_name",    "TEXT NOT NULL DEFAULT ''")
-        self._ensure_column(self.STEPS_TABLE, "notes",         "TEXT NOT NULL DEFAULT ''")
-
         # Indexes
         self.db.execute(f"""
             CREATE INDEX IF NOT EXISTS idx_scheme_steps_scheme_id
@@ -79,17 +86,6 @@ class SchemeRepository:
             CREATE INDEX IF NOT EXISTS idx_scheme_links_model_id
             ON {self.LINKS_TABLE}(model_id)
         """)
-
-    def _ensure_column(self, table: str, column: str, column_def: str):
-        """Add a column if it does not already exist (migration safety)."""
-        try:
-            cols = self.db.query(f"PRAGMA table_info({table})")
-            existing = [c["name"] for c in cols]
-            if column not in existing:
-                print(f"[DB] Adding column {column} to {table}...")
-                self.db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {column_def}")
-        except Exception as e:
-            print(f"[DB WARNING] Failed to ensure column {column} on {table}: {e}")
 
     # ============================================================
     # SCHEME CRUD
@@ -230,7 +226,7 @@ class SchemeRepository:
                 VALUES (?, ?)
             """, (scheme_id, model_id))
         except Exception as e:
-            print(f"[DB WARNING] Failed to add model link: {e}")
+            log.warning(f"[DB WARNING] Failed to add model link: {e}")
 
     def remove_model_link(self, scheme_id: int, model_id: int):
         self.db.execute(f"""

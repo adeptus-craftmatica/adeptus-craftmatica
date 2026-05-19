@@ -6,6 +6,9 @@ can aggregate calendar data alongside other plugins.
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.contracts.dashboard_dto import (
     CommandStat,
     Notification,
@@ -29,7 +32,7 @@ class CalendarDashboardProvider:
         try:
             stats = self._service.get_stats()
         except Exception as e:
-            print(f"[CALENDAR PROVIDER] get_stats failed: {e}")
+            log.error(f"[CALENDAR PROVIDER] get_stats failed: {e}")
             return []
 
         today_count   = stats.get("today", 0)
@@ -74,7 +77,7 @@ class CalendarDashboardProvider:
         try:
             events = self._service.get_upcoming(days=30)
         except Exception as e:
-            print(f"[CALENDAR PROVIDER] get_upcoming failed: {e}")
+            log.error(f"[CALENDAR PROVIDER] get_upcoming failed: {e}")
             return []
 
         cards: list[ProjectCard] = []
@@ -107,7 +110,7 @@ class CalendarDashboardProvider:
         try:
             overdue = self._service.get_overdue()
         except Exception as e:
-            print(f"[CALENDAR PROVIDER] get_overdue failed: {e}")
+            log.error(f"[CALENDAR PROVIDER] get_overdue failed: {e}")
             overdue = []
 
         for event in overdue[:3]:
@@ -125,7 +128,7 @@ class CalendarDashboardProvider:
         try:
             today_events = self._service.get_today()
         except Exception as e:
-            print(f"[CALENDAR PROVIDER] get_today failed: {e}")
+            log.error(f"[CALENDAR PROVIDER] get_today failed: {e}")
             today_events = []
 
         count = len(today_events)
@@ -171,7 +174,7 @@ class CalendarDashboardProvider:
         try:
             overdue = self._service.get_overdue()
         except Exception as e:
-            print(f"[CALENDAR PROVIDER] get_overdue (recommendations) failed: {e}")
+            log.error(f"[CALENDAR PROVIDER] get_overdue (recommendations) failed: {e}")
             overdue = []
 
         for event in overdue:
@@ -191,7 +194,7 @@ class CalendarDashboardProvider:
         try:
             today_events = self._service.get_today()
         except Exception as e:
-            print(f"[CALENDAR PROVIDER] get_today (recommendations) failed: {e}")
+            log.error(f"[CALENDAR PROVIDER] get_today (recommendations) failed: {e}")
             today_events = []
 
         for event in today_events:
@@ -212,7 +215,7 @@ class CalendarDashboardProvider:
         try:
             upcoming = self._service.get_upcoming(days=30)
         except Exception as e:
-            print(f"[CALENDAR PROVIDER] get_upcoming (recommendations) failed: {e}")
+            log.error(f"[CALENDAR PROVIDER] get_upcoming (recommendations) failed: {e}")
             upcoming = []
 
         for event in upcoming:

@@ -18,6 +18,9 @@ Provider interface (duck-typed, no ABC required):
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -38,11 +41,11 @@ class DashboardRegistry:
 
     def register_provider(self, plugin_id: str, provider: object) -> None:
         self._providers[plugin_id] = provider
-        print(f"[DASHBOARD REGISTRY] Registered provider: {plugin_id}")
+        log.debug(f"[DASHBOARD REGISTRY] Registered provider: {plugin_id}")
 
     def unregister_provider(self, plugin_id: str) -> None:
         self._providers.pop(plugin_id, None)
-        print(f"[DASHBOARD REGISTRY] Unregistered provider: {plugin_id}")
+        log.debug(f"[DASHBOARD REGISTRY] Unregistered provider: {plugin_id}")
 
     def get_provider(self, plugin_id: str) -> object | None:
         return self._providers.get(plugin_id)
@@ -74,7 +77,7 @@ class DashboardRegistry:
                             stat.card_id = f"{pid}.{slug}"
                     results.extend(items)
             except Exception as e:
-                print(f"[DASHBOARD REGISTRY] get_command_stats failed [{pid}]: {e}")
+                log.error(f"[DASHBOARD REGISTRY] get_command_stats failed [{pid}]: {e}")
         return results
 
     def get_all_projects(self) -> list["ProjectCard"]:
@@ -85,7 +88,7 @@ class DashboardRegistry:
                 if items:
                     results.extend(items)
             except Exception as e:
-                print(f"[DASHBOARD REGISTRY] get_project_cards failed [{pid}]: {e}")
+                log.error(f"[DASHBOARD REGISTRY] get_project_cards failed [{pid}]: {e}")
         return results
 
     def get_all_notifications(self) -> list["Notification"]:
@@ -96,7 +99,7 @@ class DashboardRegistry:
                 if items:
                     results.extend(items)
             except Exception as e:
-                print(f"[DASHBOARD REGISTRY] get_notifications failed [{pid}]: {e}")
+                log.error(f"[DASHBOARD REGISTRY] get_notifications failed [{pid}]: {e}")
         # Critical first, then warning, success, info
         results.sort(key=lambda n: _SEVERITY_ORDER.get(n.severity, 99))
         return results
@@ -113,7 +116,7 @@ class DashboardRegistry:
                 if items:
                     results.extend(items)
             except Exception as e:
-                print(f"[DASHBOARD REGISTRY] get_recommendations failed [{pid}]: {e}")
+                log.error(f"[DASHBOARD REGISTRY] get_recommendations failed [{pid}]: {e}")
         results.sort(key=lambda r: r.priority)
         return results
 
@@ -125,5 +128,5 @@ class DashboardRegistry:
                 if items:
                     results.extend(items)
             except Exception as e:
-                print(f"[DASHBOARD REGISTRY] get_quick_actions failed [{pid}]: {e}")
+                log.error(f"[DASHBOARD REGISTRY] get_quick_actions failed [{pid}]: {e}")
         return results

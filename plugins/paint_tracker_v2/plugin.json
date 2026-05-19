@@ -8,5 +8,7 @@
     "ui": true,
     "category": "hobby",
     "dependencies": [],
+    "optional_dependencies": ["paint_tracker"],
+    "_note_optional_deps": "If paint_tracker (v1) is loaded, its paint_service is shared. Both v1 and v2 should not run simultaneously with separate service instances.",
     "events": ["paint_added", "paint_updated", "paint_removed"]
 }

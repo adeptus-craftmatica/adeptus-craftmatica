@@ -1,6 +1,9 @@
 """Dashboard main UI — tabbed layout."""
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTabWidget,
@@ -505,4 +508,4 @@ class DashboardUI(QWidget):
         try:
             self._cal_intelligence.refresh(today, week, milestones, overdue)
         except Exception as e:
-            print(f"[DASHBOARD UI] refresh_calendar_intelligence error: {e}")
+            log.error(f"[DASHBOARD UI] refresh_calendar_intelligence error: {e}")

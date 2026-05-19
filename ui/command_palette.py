@@ -27,6 +27,9 @@ Register commands from anywhere:
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import re
 from collections import deque
 from dataclasses import dataclass, field
@@ -627,7 +630,7 @@ class CommandPalette(QFrame):
             try:
                 cmd.action()
             except Exception as e:
-                print(f"[CommandPalette] Error running '{cmd.id}': {e}")
+                log.error(f"[CommandPalette] Error running '{cmd.id}': {e}")
 
     # ── List helpers ──────────────────────────────────────────────────────────
 

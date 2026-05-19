@@ -5,6 +5,9 @@ Registered into the application Settings dialog via SettingsRegistry.
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout,
@@ -193,4 +196,4 @@ class CalendarSettingsPage(QWidget):
                     "default_duration": self._duration_spin.value(),
                 })
             except Exception as e:
-                print(f"[CALENDAR SETTINGS] Failed to emit calendar_settings_changed: {e}")
+                log.error(f"[CALENDAR SETTINGS] Failed to emit calendar_settings_changed: {e}")

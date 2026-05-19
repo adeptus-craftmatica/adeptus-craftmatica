@@ -2,6 +2,9 @@
 
 from pathlib import Path
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.event_bus import EventBus
 from core.database_service import DatabaseService
 from core.service_registry import ServiceRegistry
@@ -86,8 +89,8 @@ class AppContext:
             )
             self.services.register("theme_manager", theme_manager)
         else:
-            print("[APP] No QApplication reference — ThemeManager skipped.")
+            log.debug("[APP] No QApplication reference — ThemeManager skipped.")
 
-        print("[APP] Context initialized")
+        log.debug("[APP] Context initialized")
 
         self.services.debug_dump()

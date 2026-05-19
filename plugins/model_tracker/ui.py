@@ -17,6 +17,9 @@ New features vs previous version:
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import os
 from pathlib import Path
 
@@ -591,7 +594,7 @@ class LibraryImportDialog(QDialog):
                     # can see the file loaded but produced nothing
                     self._file_count += 1
             except Exception as e:
-                print(f"[LIBRARY IMPORT] Parse error — {Path(path).name}: {e}")
+                log.error(f"[LIBRARY IMPORT] Parse error — {Path(path).name}: {e}")
 
     # ── Format detection ──────────────────────────────────────────────────────
 
@@ -1195,7 +1198,7 @@ class LibraryImportDialog(QDialog):
                 self.context.event_bus.emit("model_added", model.to_dict())
             except Exception as e:
                 errors.append((unit["_name"], str(e)))
-                print(f"[LIBRARY IMPORT] {unit['_name']}: {e}")
+                log.error(f"[LIBRARY IMPORT] {unit['_name']}: {e}")
 
         # ── Result summary ────────────────────────────────────────────────────
         parts = []
@@ -2263,7 +2266,7 @@ class ModelUI(QWidget):
         try:
             projects = proj_svc.get_projects_for_entity("model", model_id)
         except Exception as e:
-            print(f"[MODEL UI] _refresh_projects_section: {e}")
+            log.error(f"[MODEL UI] _refresh_projects_section: {e}")
             self._projects_section.set_empty("Could not load projects.")
             return
 

@@ -7,6 +7,9 @@ Registered as 'scheme_service' in the service registry.
 
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from typing import Optional
 
 from .models import PaintScheme, SchemeStep, SchemeFilter
@@ -182,11 +185,11 @@ class SchemeService:
 # ============================================================
 
 def register(context):
-    print("[PAINT_SCHEME] Registering service...")
+    log.debug("[PAINT_SCHEME] Registering service...")
 
     db = context.services.get("db")
     if not db:
-        print("[PAINT_SCHEME] ERROR: db service not available")
+        log.error("[PAINT_SCHEME] ERROR: db service not available")
         return None
 
     repo = SchemeRepository(db)
@@ -194,5 +197,5 @@ def register(context):
 
     context.services.register("scheme_service", service, override=True)
 
-    print("[PAINT_SCHEME] Service registered as 'scheme_service'")
+    log.debug("[PAINT_SCHEME] Service registered as 'scheme_service'")
     return service

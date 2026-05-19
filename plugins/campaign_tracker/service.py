@@ -5,6 +5,9 @@ Business logic layer. Registered as 'campaign_service' in ServiceRegistry.
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from typing import Optional
 
 from .models import (
@@ -416,21 +419,27 @@ class CampaignService:
     def get_statistics(self) -> CampaignStatistics:
         return self.repo.get_statistics()
 
+    def count_sessions_by_campaign(self) -> dict:
+        return self.repo.count_sessions_by_campaign()
+
+    def count_characters_by_campaign(self) -> dict:
+        return self.repo.count_characters_by_campaign()
+
     # ── Cross-plugin ───────────────────────────────────────────────────────────
 
     def on_model_removed(self, model_id: int):
         self.repo.remove_model_links(model_id)
-        print(f"[CAMPAIGN SERVICE] Nullified model_id={model_id} links in characters")
+        log.debug(f"[CAMPAIGN SERVICE] Nullified model_id={model_id} links in characters")
 
 
 # ── Auto-registration ──────────────────────────────────────────────────────────
 
 def register(context):
-    print("[CAMPAIGN_TRACKER] Registering service...")
+    log.debug("[CAMPAIGN_TRACKER] Registering service...")
     db = context.services.get("db")
     from .repository import CampaignRepository
     repo = CampaignRepository(db)
     service = CampaignService(repo)
     context.services.register("campaign_service", service, override=True)
-    print("[CAMPAIGN_TRACKER] Service registered as 'campaign_service'")
+    log.debug("[CAMPAIGN_TRACKER] Service registered as 'campaign_service'")
     return service

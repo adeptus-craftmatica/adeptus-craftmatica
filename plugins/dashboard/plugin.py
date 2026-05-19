@@ -1,6 +1,9 @@
 """Dashboard plugin — aggregates data from all other plugins."""
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import json
 from datetime import date, timedelta
 
@@ -203,9 +206,14 @@ class Plugin(PluginBase):
     def _setup_providers(self):
         registry = self.context.services.try_get("dashboard_registry")
         if not registry:
-            print("[DASHBOARD] dashboard_registry not found — skipping providers")
+            log.warning("[DASHBOARD] dashboard_registry not found — skipping providers")
             return
 
+        # These are fallback providers used when only the v1 plugin is loaded.
+        # If a v2 plugin is also active (e.g. campaign_tracker_v2), its dedicated
+        # provider registers under the same canonical key AFTER this runs and
+        # naturally overwrites the fallback.  On deactivation the v2 plugin
+        # restores or unregisters cleanly via the _owner marker pattern.
         _PROVIDER_MAP = [
             ("project_tracker",  "plugins.project_tracker.providers.dashboard_provider", "ProjectDashboardProvider",  "project_service"),
             ("paint_tracker",    "plugins.dashboard.providers.paint_provider",    "PaintDashboardProvider",    "paint_service"),
@@ -230,7 +238,7 @@ class Plugin(PluginBase):
                 registry.register_provider(plugin_id, provider)
                 self._registered_provider_ids.append(plugin_id)
             except Exception as e:
-                print(f"[DASHBOARD] Failed to register provider {plugin_id}: {e}")
+                log.error(f"[DASHBOARD] Failed to register provider {plugin_id}: {e}")
 
     def _register_settings_page(self):
         registry = self.context.services.try_get("settings_registry")
@@ -351,7 +359,7 @@ class Plugin(PluginBase):
         try:
             self.context.event_bus.emit(event, payload)
         except Exception as e:
-            print(f"[DASHBOARD] Failed to emit action {event}: {e}")
+            log.error(f"[DASHBOARD] Failed to emit action {event}: {e}")
 
     # ── Refresh ────────────────────────────────────────────────────────────────
 
@@ -376,61 +384,61 @@ class Plugin(PluginBase):
             visible_stats = [s for s in all_stats if s.card_id not in hidden_cards]
             self._ui.refresh_command_stats(visible_stats)
         except Exception as e:
-            print(f"[DASHBOARD] refresh command stats: {e}")
+            log.error(f"[DASHBOARD] refresh command stats: {e}")
 
         # Fetch project cards once; pass to both consumers independently
         project_cards = []
         try:
             project_cards = registry.get_all_projects()
         except Exception as e:
-            print(f"[DASHBOARD] get_all_projects: {e}")
+            log.error(f"[DASHBOARD] get_all_projects: {e}")
 
         try:
             self._ui.refresh_projects(project_cards)
         except Exception as e:
-            print(f"[DASHBOARD] refresh projects: {e}")
+            log.error(f"[DASHBOARD] refresh projects: {e}")
 
         try:
             self._ui.refresh_active_projects_strip(project_cards)
         except Exception as e:
-            print(f"[DASHBOARD] refresh active projects strip: {e}")
+            log.error(f"[DASHBOARD] refresh active projects strip: {e}")
 
         try:
             self._ui.refresh_quick_actions(registry.get_all_quick_actions())
         except Exception as e:
-            print(f"[DASHBOARD] refresh quick actions: {e}")
+            log.error(f"[DASHBOARD] refresh quick actions: {e}")
 
         try:
             notifications = registry.get_all_notifications()
             self._ui.refresh_notifications(notifications)
         except Exception as e:
-            print(f"[DASHBOARD] refresh notifications: {e}")
+            log.error(f"[DASHBOARD] refresh notifications: {e}")
             notifications = []
 
         try:
             self._ui.refresh_alerts_mini(notifications)
         except Exception as e:
-            print(f"[DASHBOARD] refresh alerts mini: {e}")
+            log.error(f"[DASHBOARD] refresh alerts mini: {e}")
 
         try:
             self._ui.refresh_recommendations(registry.get_all_recommendations())
         except Exception as e:
-            print(f"[DASHBOARD] refresh recommendations: {e}")
+            log.error(f"[DASHBOARD] refresh recommendations: {e}")
 
         try:
             self._refresh_paint_intel(registry)
         except Exception as e:
-            print(f"[DASHBOARD] refresh paint intel: {e}")
+            log.error(f"[DASHBOARD] refresh paint intel: {e}")
 
         try:
             self._refresh_activity()
         except Exception as e:
-            print(f"[DASHBOARD] refresh activity: {e}")
+            log.error(f"[DASHBOARD] refresh activity: {e}")
 
         try:
             self._refresh_calendar_intelligence()
         except Exception as e:
-            print(f"[DASHBOARD] refresh calendar intelligence: {e}")
+            log.error(f"[DASHBOARD] refresh calendar intelligence: {e}")
 
         # Apply user's section visibility preferences last, after all data is loaded
         self._apply_section_visibility()
@@ -466,7 +474,7 @@ class Plugin(PluginBase):
         except AttributeError:
             pass  # calendar_service version that predates get_overdue()
         except Exception as e:
-            print(f"[DASHBOARD] get_overdue(): {e}")
+            log.error(f"[DASHBOARD] get_overdue(): {e}")
 
         self._ui.refresh_calendar_intelligence(today_events, week_events, milestones, overdue)
 

@@ -1,6 +1,9 @@
 """Calendar service — business logic layer."""
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import calendar
 from datetime import date, timedelta
 from typing import Optional
@@ -241,7 +244,7 @@ class CalendarService:
                 )
                 results.append(clone)
         except Exception as e:
-            print(f"[CALENDAR] Recurrence expansion error: {e}")
+            log.error(f"[CALENDAR] Recurrence expansion error: {e}")
 
         return results
 

@@ -22,9 +22,11 @@ Usage
 from __future__ import annotations
 
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Optional
+log = logging.getLogger(__name__)
 
 from PySide6.QtCore import QObject, Signal, QTimer, QThread, Qt
 from PySide6.QtWidgets import QApplication
@@ -1660,7 +1662,7 @@ class ThemeManager(QObject):
             during the Qt widget-tree style traversal.
         """
         if theme_id not in self._themes:
-            print(f"[THEME] Unknown theme id: {theme_id!r}")
+            log.error(f"[THEME] Unknown theme id: {theme_id!r}")
             return
         self._current = theme_id
         if self._settings:
@@ -1740,7 +1742,7 @@ class ThemeManager(QObject):
             QApplication.restoreOverrideCursor()
 
         self.theme_changed.emit(theme_id)
-        print(f"[THEME] Applied: {self._themes[theme_id].meta.name}")
+        log.debug(f"[THEME] Applied: {self._themes[theme_id].meta.name}")
 
     def apply_current(self) -> None:
         """Re-apply the current theme (e.g. after editing tokens in-place)."""
@@ -1782,7 +1784,7 @@ class ThemeManager(QObject):
             encoding="utf-8",
         )
         self._themes[theme.meta.id] = theme
-        print(f"[THEME] Saved: {theme.meta.name} → {path.name}")
+        log.debug(f"[THEME] Saved: {theme.meta.name} → {path.name}")
 
     def delete_theme(self, theme_id: str) -> None:
         """Delete a user theme from disk and memory."""
@@ -1797,7 +1799,7 @@ class ThemeManager(QObject):
         del self._themes[theme_id]
         if self._current == theme_id:
             self.apply_theme("dark_default")
-        print(f"[THEME] Deleted: {theme_id}")
+        log.debug(f"[THEME] Deleted: {theme_id}")
 
     # ── Paint-scheme generation ─────────────────────────────────────────────
 
@@ -1836,7 +1838,7 @@ class ThemeManager(QObject):
                 theme = Theme.from_dict(data)
                 self._themes[theme.meta.id] = theme
             except Exception as exc:
-                print(f"[THEME] Failed to load {path.name}: {exc}")
+                log.error(f"[THEME] Failed to load {path.name}: {exc}")
 
         if not self._themes:
             # Absolute fallback — create an in-memory default so the app
@@ -1844,5 +1846,5 @@ class ThemeManager(QObject):
             fallback = Theme(meta=ThemeMeta(id="dark_default", name="Dark (Default)", builtin=True))
             self._themes["dark_default"] = fallback
 
-        print(f"[THEME] Loaded {len(self._themes)} theme(s): "
+        log.debug(f"[THEME] Loaded {len(self._themes)} theme(s): "
               f"{', '.join(self._themes)}")

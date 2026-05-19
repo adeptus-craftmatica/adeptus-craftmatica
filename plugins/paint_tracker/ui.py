@@ -5,6 +5,9 @@ Dynamic colour values (swatch backgrounds, low-stock tints) are necessarily inli
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import csv
 
 from PySide6.QtCore import Qt, QSignalBlocker
@@ -921,7 +924,7 @@ class PaintUI(QWidget):
                     try:
                         _svc.add_paint(**snap)
                     except Exception as ex:
-                        print(f"[UNDO] Restore paint failed: {ex}")
+                        log.error(f"[UNDO] Restore paint failed: {ex}")
                 _ctx.event_bus.emit("paint_filter_changed", {})
 
             from ui.undo_manager import UndoManager

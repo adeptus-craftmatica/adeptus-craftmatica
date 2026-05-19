@@ -3,6 +3,9 @@ Materials Tracker — Repository (SQLite persistence)
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from typing import Optional
 
 from .models import Material, MaterialFilter
@@ -156,9 +159,9 @@ class MaterialRepository:
 # ── Auto-registration ──────────────────────────────────────────────────────────
 
 def register(context):
-    print("[MATERIALS_TRACKER] Registering repository...")
+    log.debug("[MATERIALS_TRACKER] Registering repository...")
     db   = context.services.get("db")
     repo = MaterialRepository(db)
     context.services.register("material_repository", repo, override=True)
-    print("[MATERIALS_TRACKER] Repository registered")
+    log.debug("[MATERIALS_TRACKER] Repository registered")
     return repo

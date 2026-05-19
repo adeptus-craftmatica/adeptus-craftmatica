@@ -4,6 +4,8 @@ import importlib
 import sys
 from pathlib import Path
 import json
+import logging
+log = logging.getLogger(__name__)
 
 
 class PluginManager:
@@ -32,9 +34,9 @@ class PluginManager:
         # ----------------------------
         load_order = self._resolve_dependencies(manifests)
 
-        print("\n[PLUGIN] Load order:")
+        log.debug("\n[PLUGIN] Load order:")
         for p in load_order:
-            print(f"   → {p}")
+            log.debug(f"   → {p}")
 
         # ----------------------------
         # 3. Determine disabled plugins
@@ -61,10 +63,10 @@ class PluginManager:
                 or plugin_name == "dashboard"
             )
             if not is_core and plugin_name in disabled:
-                print(f"[PLUGIN] Skipping disabled plugin: {plugin_name}")
+                log.debug(f"[PLUGIN] Skipping disabled plugin: {plugin_name}")
                 continue
 
-            print(f"\n[PLUGIN] Loading: {plugin_name}")
+            log.debug(f"\n[PLUGIN] Loading: {plugin_name}")
 
             # Auto-register
             self._auto_register_modules(plugin_name, plugin_path)
@@ -81,10 +83,10 @@ class PluginManager:
                 plugin.activate()
                 self.plugins.append(plugin)
 
-                print(f"[PLUGIN] Loaded: {plugin.display_name}")
+                log.debug(f"[PLUGIN] Loaded: {plugin.display_name}")
 
             except Exception as e:
-                print(f"[PLUGIN ERROR] Failed to load {plugin_name}: {e}")
+                log.error(f"[PLUGIN ERROR] Failed to load {plugin_name}: {e}")
 
     # ============================================================
     # 🔍 DISCOVERY
@@ -107,7 +109,7 @@ class PluginManager:
                 manifests[plugin_name] = (plugin_path, data)
 
             except Exception as e:
-                print(f"[PLUGIN ERROR] Invalid manifest in {plugin_path}: {e}")
+                log.error(f"[PLUGIN ERROR] Invalid manifest in {plugin_path}: {e}")
 
         return manifests
 
@@ -179,7 +181,7 @@ class PluginManager:
         Returns the activated plugin object, or None on failure.
         """
         if plugin_id not in self.all_manifests:
-            print(f"[PLUGIN] Cannot load '{plugin_id}': not found in manifests")
+            log.error(f"[PLUGIN] Cannot load '{plugin_id}': not found in manifests")
             return None
 
         # Already active — hand back the existing instance
@@ -188,11 +190,11 @@ class PluginManager:
             None,
         )
         if existing:
-            print(f"[PLUGIN] '{plugin_id}' is already loaded — returning existing instance")
+            log.debug(f"[PLUGIN] '{plugin_id}' is already loaded — returning existing instance")
             return existing
 
         plugin_path, data = self.all_manifests[plugin_id]
-        print(f"\n[PLUGIN] Dynamically loading: {plugin_id}")
+        log.debug(f"\n[PLUGIN] Dynamically loading: {plugin_id}")
 
         # Register any sub-modules that expose a register() function
         self._auto_register_modules(plugin_id, plugin_path)
@@ -210,12 +212,12 @@ class PluginManager:
             plugin.activate()
             self.plugins.append(plugin)
 
-            print(f"[PLUGIN] Dynamically loaded: {plugin.display_name}")
+            log.debug(f"[PLUGIN] Dynamically loaded: {plugin.display_name}")
             return plugin
 
         except Exception as e:
             import traceback
-            print(f"[PLUGIN ERROR] Failed to dynamically load '{plugin_id}': {e}")
+            log.error(f"[PLUGIN ERROR] Failed to dynamically load '{plugin_id}': {e}")
             traceback.print_exc()
             return None
 
@@ -236,11 +238,11 @@ class PluginManager:
         try:
             plugin.deactivate()
         except Exception as e:
-            print(f"[PLUGIN] Deactivation error for '{plugin_id}': {e}")
+            log.error(f"[PLUGIN] Deactivation error for '{plugin_id}': {e}")
 
         self.plugins = [p for p in self.plugins
                         if getattr(p, "plugin_id", "") != plugin_id]
-        print(f"[PLUGIN] Unloaded: {plugin_id}")
+        log.debug(f"[PLUGIN] Unloaded: {plugin_id}")
         return True
 
     # ============================================================
@@ -261,8 +263,8 @@ class PluginManager:
                 register_fn = getattr(module, "register", None)
 
                 if callable(register_fn):
-                    print(f"[AUTO] Registering: {full_module_path}")
+                    log.debug(f"[AUTO] Registering: {full_module_path}")
                     register_fn(self.context)
 
             except Exception as e:
-                print(f"[AUTO ERROR] {full_module_path}: {e}")
+                log.error(f"[AUTO ERROR] {full_module_path}: {e}")

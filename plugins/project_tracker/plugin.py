@@ -8,6 +8,9 @@ loads initial data.  All business logic stays in the service.
 
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.plugin_base import PluginBase
 from .service import ProjectService
 from .models import ValidationError, ProjectStatus
@@ -36,7 +39,7 @@ class Plugin(PluginBase):
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
     def activate(self):
-        print(f"[PLUGIN] {self.display_name} activating…")
+        log.debug(f"[PLUGIN] {self.display_name} activating…")
 
         # ── 1. Database / service (must succeed) ──────────────────────────────
         db = self.context.services.get("db")
@@ -56,7 +59,7 @@ class Plugin(PluginBase):
             self._ui = ProjectUI(self.context)
         except Exception as e:
             import traceback
-            print(f"[PROJECT PLUGIN] UI construction failed: {e}")
+            log.error(f"[PROJECT PLUGIN] UI construction failed: {e}")
             traceback.print_exc()
             self._ProjectEditDialog = None
             # Create a minimal fallback so the tab still appears
@@ -71,9 +74,9 @@ class Plugin(PluginBase):
         try:
             self._load_initial()
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Initial load failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Initial load failed: {e}")
 
-        print(f"[PLUGIN] {self.display_name} activated")
+        log.debug(f"[PLUGIN] {self.display_name} activated")
 
     def deactivate(self):
         for event, handler in self._subs:
@@ -182,7 +185,7 @@ class Plugin(PluginBase):
                 self._ui.show_empty_detail()
         except Exception as e:
             import traceback
-            print(f"[PROJECT PLUGIN] Initial load failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Initial load failed: {e}")
             traceback.print_exc()
 
     def _load_project(self, project_id: int):
@@ -207,7 +210,7 @@ class Plugin(PluginBase):
             )
         except Exception as e:
             import traceback
-            print(f"[PROJECT PLUGIN] Load project {project_id} failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Load project {project_id} failed: {e}")
             traceback.print_exc()
 
     def _refresh_after_milestone(self, project_id: int) -> None:
@@ -234,7 +237,7 @@ class Plugin(PluginBase):
                     pass
             self._ui.display_projects(projects, stats_map=stats_map)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Refresh list failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Refresh list failed: {e}")
 
     # ── Project handlers ──────────────────────────────────────────────────────
 
@@ -249,7 +252,7 @@ class Plugin(PluginBase):
             if self._is_full_ui():
                 self._ui._show_error(str(e))
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Create failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Create failed: {e}")
 
     def _on_edit_requested(self, payload: dict):
         project_id = payload.get("id")
@@ -271,7 +274,7 @@ class Plugin(PluginBase):
                     "id": project_id, "status": new_status,
                 })
             except Exception as e:
-                print(f"[PROJECT PLUGIN] Quick status update failed: {e}")
+                log.error(f"[PROJECT PLUGIN] Quick status update failed: {e}")
             return
 
         if not self._is_full_ui() or not self._ProjectEditDialog:
@@ -292,7 +295,7 @@ class Plugin(PluginBase):
             if self._is_full_ui():
                 self._ui._show_error(str(e))
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Edit failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Edit failed: {e}")
 
     def _on_delete(self, payload: dict):
         project_id = payload.get("id")
@@ -311,7 +314,7 @@ class Plugin(PluginBase):
             elif self._is_full_ui():
                 self._ui.show_empty_detail()
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Delete failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Delete failed: {e}")
 
     def _on_selected(self, payload: dict):
         project_id = payload.get("id")
@@ -371,7 +374,7 @@ class Plugin(PluginBase):
                 self._service.set_focus_milestone(pid, new_m.id)
             self._refresh_after_milestone(pid)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Milestone add failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Milestone add failed: {e}")
 
     def _on_milestone_update(self, payload: dict):
         try:
@@ -394,7 +397,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._refresh_after_milestone(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Milestone update failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Milestone update failed: {e}")
 
     def _on_milestone_toggle(self, payload: dict):
         try:
@@ -408,7 +411,7 @@ class Plugin(PluginBase):
                     try:
                         self._service.set_focus_milestone(pid, None)
                     except Exception as _fe:
-                        print(f"[PROJECT PLUGIN] Auto-clear focus: {_fe}")
+                        log.error(f"[PROJECT PLUGIN] Auto-clear focus: {_fe}")
                 # Completed — log as a named activity event
                 self.context.event_bus.emit("project_milestone_completed", {
                     "id":    mid,
@@ -424,7 +427,7 @@ class Plugin(PluginBase):
             if pid:
                 self._refresh_after_milestone(pid)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Milestone toggle failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Milestone toggle failed: {e}")
 
     def _on_milestone_delete(self, payload: dict):
         try:
@@ -456,7 +459,7 @@ class Plugin(PluginBase):
                         if _pid and _plug._is_full_ui():
                             _plug._refresh_after_milestone(_pid)
                     except Exception as ex:
-                        print(f"[UNDO] Restore milestone failed: {ex}")
+                        log.error(f"[UNDO] Restore milestone failed: {ex}")
 
                 from ui.toast import ToastManager
                 from ui.undo_manager import UndoManager
@@ -474,7 +477,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._refresh_after_milestone(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Milestone delete failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Milestone delete failed: {e}")
 
     def _on_milestone_focus_toggle(self, payload: dict):
         try:
@@ -491,7 +494,7 @@ class Plugin(PluginBase):
                 self._service.set_focus_milestone(pid, mid)
             self._load_project(pid)   # focus doesn't affect card counts, no need to refresh list
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Milestone focus toggle failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Milestone focus toggle failed: {e}")
 
     def _on_milestone_quantity_step(self, payload: dict):
         """Handle +1 / -1 taps on a quantity-tracked milestone."""
@@ -508,7 +511,7 @@ class Plugin(PluginBase):
                     try:
                         self._service.set_focus_milestone(pid, None)
                     except Exception as _fe:
-                        print(f"[PROJECT PLUGIN] Auto-clear focus (qty): {_fe}")
+                        log.error(f"[PROJECT PLUGIN] Auto-clear focus (qty): {_fe}")
                 from ui.toast import ToastManager
                 ToastManager.instance().show(
                     f"✓  '{m.title}' — all {m.quantity_total} done!",
@@ -523,7 +526,7 @@ class Plugin(PluginBase):
                 })
             self._refresh_after_milestone(pid)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Milestone quantity step failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Milestone quantity step failed: {e}")
 
     # ── Note handlers ─────────────────────────────────────────────────────────
 
@@ -537,7 +540,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Note add failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Note add failed: {e}")
 
     def _on_note_update(self, payload: dict):
         try:
@@ -549,7 +552,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Note update failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Note update failed: {e}")
 
     def _on_note_delete(self, payload: dict):
         try:
@@ -557,7 +560,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Note delete failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Note delete failed: {e}")
 
     # ── Session handlers ──────────────────────────────────────────────────────
 
@@ -579,7 +582,7 @@ class Plugin(PluginBase):
             if self._is_full_ui():
                 self._ui._show_error(str(e))
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Session log failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Session log failed: {e}")
 
     def _on_session_start(self, payload: dict):
         try:
@@ -591,7 +594,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Session start failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Session start failed: {e}")
 
     def _on_session_end(self, payload: dict):
         try:
@@ -614,7 +617,7 @@ class Plugin(PluginBase):
             self._push_session_to_calendar(pid, session)
 
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Session end failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Session end failed: {e}")
 
     def _push_session_to_calendar(self, project_id, session) -> None:
         """Create a completed CalendarEvent record for a finished hobby session."""
@@ -658,7 +661,7 @@ class Plugin(PluginBase):
                 linked_name      = project_name,
             )
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Calendar push failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Calendar push failed: {e}")
 
     def _on_session_delete(self, payload: dict):
         try:
@@ -666,7 +669,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Session delete failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Session delete failed: {e}")
 
     # ── Link handlers ─────────────────────────────────────────────────────────
 
@@ -681,7 +684,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Link failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Link failed: {e}")
 
     def _on_unlink_entity(self, payload: dict):
         try:
@@ -693,7 +696,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Unlink failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Unlink failed: {e}")
 
     # ── Gallery handlers ──────────────────────────────────────────────────────
 
@@ -714,7 +717,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Gallery add failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Gallery add failed: {e}")
 
     def _on_gallery_update(self, payload: dict):
         try:
@@ -727,7 +730,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Gallery update failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Gallery update failed: {e}")
 
     def _on_gallery_delete(self, payload: dict):
         try:
@@ -738,7 +741,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Gallery delete failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Gallery delete failed: {e}")
 
 
     # ── Requirements handlers ─────────────────────────────────────────────────
@@ -757,7 +760,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Requirement add failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Requirement add failed: {e}")
 
     def _on_requirement_update(self, payload: dict):
         try:
@@ -772,7 +775,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Requirement update failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Requirement update failed: {e}")
 
     def _on_requirement_delete(self, payload: dict):
         try:
@@ -780,7 +783,7 @@ class Plugin(PluginBase):
             if self._current_project_id:
                 self._load_project(self._current_project_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] Requirement delete failed: {e}")
+            log.error(f"[PROJECT PLUGIN] Requirement delete failed: {e}")
 
     # ── Dashboard deep-link handler ───────────────────────────────────────────
 
@@ -806,4 +809,4 @@ class Plugin(PluginBase):
             if tab:
                 self._ui._detail_panel.navigate_to_tab(tab, item_id=item_id)
         except Exception as e:
-            print(f"[PROJECT PLUGIN] dashboard_navigate failed: {e}")
+            log.error(f"[PROJECT PLUGIN] dashboard_navigate failed: {e}")

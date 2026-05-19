@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
+from core.migrations import SchemaManager
 from .models import (
     Campaign, CampaignPlayer, Character, CharacterImage,
     Battle, BattleParticipant, BattleImage, CampaignImage,
@@ -18,6 +19,25 @@ from .models import (
 
 
 class CampaignRepository:
+    _MIGRATIONS: list[str] = [
+        # v1–v3: crop columns on character_images
+        "ALTER TABLE campaign_tracker_character_images ADD COLUMN zoom    REAL DEFAULT 1.0",
+        "ALTER TABLE campaign_tracker_character_images ADD COLUMN focal_x REAL DEFAULT 0.5",
+        "ALTER TABLE campaign_tracker_character_images ADD COLUMN focal_y REAL DEFAULT 0.5",
+        # v4–v6: crop columns on battle_images
+        "ALTER TABLE campaign_tracker_battle_images ADD COLUMN zoom    REAL DEFAULT 1.0",
+        "ALTER TABLE campaign_tracker_battle_images ADD COLUMN focal_x REAL DEFAULT 0.5",
+        "ALTER TABLE campaign_tracker_battle_images ADD COLUMN focal_y REAL DEFAULT 0.5",
+        # v7: caption on campaign_images
+        "ALTER TABLE campaign_tracker_campaign_images ADD COLUMN caption TEXT DEFAULT ''",
+        # v8–v12: extra character columns
+        "ALTER TABLE campaign_tracker_characters ADD COLUMN experience_points   INTEGER DEFAULT 0",
+        "ALTER TABLE campaign_tracker_characters ADD COLUMN death_saves_success INTEGER DEFAULT 0",
+        "ALTER TABLE campaign_tracker_characters ADD COLUMN death_saves_failure INTEGER DEFAULT 0",
+        "ALTER TABLE campaign_tracker_characters ADD COLUMN currency_json       TEXT    DEFAULT NULL",
+        "ALTER TABLE campaign_tracker_characters ADD COLUMN spell_slots_json    TEXT    DEFAULT NULL",
+    ]
+
     CAMPAIGN_TABLE     = "campaign_tracker_campaigns"
     PLAYER_TABLE       = "campaign_tracker_players"
     CHARACTER_TABLE    = "campaign_tracker_characters"
@@ -38,6 +58,7 @@ class CampaignRepository:
     def __init__(self, db):
         self.db = db
         self._ensure_schema()
+        SchemaManager(db).migrate("campaign_tracker", self._MIGRATIONS)
 
     def _ensure_schema(self):
         self.db.execute(f"""
@@ -97,12 +118,6 @@ class CampaignRepository:
                 focal_y REAL DEFAULT 0.5
             )
         """)
-        # Migrations: add crop columns to existing DBs
-        for col, dflt in [("zoom", "1.0"), ("focal_x", "0.5"), ("focal_y", "0.5")]:
-            try:
-                self.db.execute(f"ALTER TABLE {self.CHAR_IMAGE_TABLE} ADD COLUMN {col} REAL DEFAULT {dflt}")
-            except Exception:
-                pass
         self.db.execute(f"""
             CREATE TABLE IF NOT EXISTS {self.BATTLE_TABLE} (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -142,12 +157,6 @@ class CampaignRepository:
                 focal_y REAL DEFAULT 0.5
             )
         """)
-        # Migrations: add crop columns to existing DBs
-        for col, dflt in [("zoom", "1.0"), ("focal_x", "0.5"), ("focal_y", "0.5")]:
-            try:
-                self.db.execute(f"ALTER TABLE {self.BATTLE_IMAGE_TABLE} ADD COLUMN {col} REAL DEFAULT {dflt}")
-            except Exception:
-                pass
         self.db.execute(f"""
             CREATE TABLE IF NOT EXISTS {self.JOURNAL_TABLE} (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -242,29 +251,6 @@ class CampaignRepository:
                 focal_y REAL DEFAULT 0.5
             )
         """)
-        # Migrations for campaign_images (in case table existed without caption)
-        try:
-            self.db.execute(
-                f"ALTER TABLE {self.CAMPAIGN_IMAGE_TABLE} ADD COLUMN caption TEXT DEFAULT ''"
-            )
-        except Exception:
-            pass
-
-        # Migrate existing character table to add new columns
-        for col, dflt in [
-            ("experience_points",  "0"),
-            ("death_saves_success","0"),
-            ("death_saves_failure","0"),
-            ("currency_json",      "NULL"),
-            ("spell_slots_json",   "NULL"),
-        ]:
-            try:
-                self.db.execute(
-                    f"ALTER TABLE {self.CHARACTER_TABLE} ADD COLUMN {col} "
-                    f"{'INTEGER' if dflt != 'NULL' else 'TEXT'} DEFAULT {dflt}"
-                )
-            except Exception:
-                pass   # column already exists
 
     # ── Campaigns ──────────────────────────────────────────────────────────────
 
@@ -846,6 +832,22 @@ class CampaignRepository:
         cur = self.db.execute(
             f"DELETE FROM {self.CAMPAIGN_IMAGE_TABLE} WHERE id=?", (img_id,))
         return cur.rowcount > 0
+
+    # ── Aggregate counts ───────────────────────────────────────────────────────
+
+    def count_sessions_by_campaign(self) -> dict:
+        """Return {campaign_id: session_count} for all campaigns in one query."""
+        rows = self.db.query(
+            f"SELECT campaign_id, COUNT(*) FROM {self.BATTLE_TABLE} GROUP BY campaign_id"
+        )
+        return {r[0]: r[1] for r in rows}
+
+    def count_characters_by_campaign(self) -> dict:
+        """Return {campaign_id: character_count} for all campaigns in one query."""
+        rows = self.db.query(
+            f"SELECT campaign_id, COUNT(*) FROM {self.CHARACTER_TABLE} GROUP BY campaign_id"
+        )
+        return {r[0]: r[1] for r in rows}
 
     # ── Statistics ─────────────────────────────────────────────────────────────
 

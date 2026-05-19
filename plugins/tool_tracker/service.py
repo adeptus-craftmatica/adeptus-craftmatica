@@ -3,6 +3,9 @@ Tool Tracker — Service Layer (business logic)
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from typing import Optional
 
 from .models import Tool, ToolFilter, ToolStatistics, ValidationError
@@ -81,7 +84,7 @@ class ToolService:
                     reverse=f.sort_desc,
                 )
             except Exception as e:
-                print(f"[TOOL SERVICE] Sort failed: {e}")
+                log.error(f"[TOOL SERVICE] Sort failed: {e}")
         return tools
 
     # ── Statistics ────────────────────────────────────────────────────────────
@@ -143,9 +146,9 @@ class ToolService:
 # ── Auto-registration ──────────────────────────────────────────────────────────
 
 def register(context):
-    print("[TOOL_TRACKER] Registering service...")
+    log.debug("[TOOL_TRACKER] Registering service...")
     repo    = context.services.get("tool_repository")
     service = ToolService(repo)
     context.services.register("tool_service", service, override=True)
-    print("[TOOL_TRACKER] Service registered")
+    log.debug("[TOOL_TRACKER] Service registered")
     return service

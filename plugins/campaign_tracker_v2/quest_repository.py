@@ -11,6 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from core.migrations import SchemaManager
+
 
 @dataclass
 class CampaignQuest:
@@ -46,6 +48,17 @@ class CampaignQuestRepository:
     _Q   = "campaign_quests_v2"
     _OBJ = "campaign_quest_objectives_v2"
 
+    _MIGRATIONS: list[str] = [
+        "ALTER TABLE campaign_quests_v2 ADD COLUMN quest_giver       TEXT    NOT NULL DEFAULT ''",
+        "ALTER TABLE campaign_quests_v2 ADD COLUMN location          TEXT    NOT NULL DEFAULT ''",
+        "ALTER TABLE campaign_quests_v2 ADD COLUMN date_started      TEXT    NOT NULL DEFAULT ''",
+        "ALTER TABLE campaign_quests_v2 ADD COLUMN date_completed    TEXT    NOT NULL DEFAULT ''",
+        "ALTER TABLE campaign_quests_v2 ADD COLUMN pinned            INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE campaign_quests_v2 ADD COLUMN linked_session_id INTEGER",
+        "ALTER TABLE campaign_quests_v2 ADD COLUMN tags              TEXT    NOT NULL DEFAULT ''",
+        "ALTER TABLE campaign_quest_objectives_v2 ADD COLUMN failed  INTEGER NOT NULL DEFAULT 0",
+    ]
+
     _COLS = (
         "id,campaign_id,title,status,priority,category,"
         "description,notes,reward,quest_giver,location,"
@@ -56,6 +69,7 @@ class CampaignQuestRepository:
     def __init__(self, db):
         self._db = db
         self._init_tables()
+        SchemaManager(db).migrate("campaign_tracker_v2.quests", self._MIGRATIONS)
 
     def _init_tables(self):
         self._db.execute(f"""
@@ -84,24 +98,6 @@ class CampaignQuestRepository:
             f"CREATE INDEX IF NOT EXISTS idx_{self._Q}_campaign "
             f"ON {self._Q} (campaign_id)"
         )
-        # Migrate: safely add columns added after the initial release
-        _migrations = [
-            ("quest_giver",       "TEXT    NOT NULL DEFAULT ''"),
-            ("location",          "TEXT    NOT NULL DEFAULT ''"),
-            ("date_started",      "TEXT    NOT NULL DEFAULT ''"),
-            ("date_completed",    "TEXT    NOT NULL DEFAULT ''"),
-            ("pinned",            "INTEGER NOT NULL DEFAULT 0"),
-            ("linked_session_id", "INTEGER"),
-            ("tags",              "TEXT    NOT NULL DEFAULT ''"),
-        ]
-        for col, defn in _migrations:
-            try:
-                self._db.execute(
-                    f"ALTER TABLE {self._Q} ADD COLUMN {col} {defn}"
-                )
-            except Exception:
-                pass  # column already exists
-
         self._db.execute(f"""
             CREATE TABLE IF NOT EXISTS {self._OBJ} (
                 id        INTEGER PRIMARY KEY AUTOINCREMENT,

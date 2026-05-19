@@ -11,6 +11,9 @@ Cross-plugin integration:
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.plugin_base import PluginBase
 from .ui import ArmyBuilderUI
 from .models import ValidationError, ArmyFilter
@@ -36,7 +39,7 @@ class Plugin(PluginBase):
     # ============================================================
 
     def activate(self):
-        print(f"[PLUGIN] {self.display_name} activating...")
+        log.debug(f"[PLUGIN] {self.display_name} activating...")
 
         self._resolve_services()
         self._register_settings()
@@ -50,16 +53,16 @@ class Plugin(PluginBase):
         from PySide6.QtCore import QTimer
         QTimer.singleShot(250, self._register_dashboard_provider)
 
-        print(f"[PLUGIN] {self.display_name} activated")
+        log.debug(f"[PLUGIN] {self.display_name} activated")
 
     def deactivate(self):
-        print(f"[PLUGIN] {self.display_name} deactivating...")
+        log.debug(f"[PLUGIN] {self.display_name} deactivating...")
         self._unsubscribe_all()
         self._cleanup_dashboard_provider()
         self._ui = None
         self._service = None
         self._settings = None
-        print(f"[PLUGIN] {self.display_name} deactivated")
+        log.debug(f"[PLUGIN] {self.display_name} deactivated")
 
     def get_ui(self):
         return self._ui
@@ -96,7 +99,7 @@ class Plugin(PluginBase):
             if default_system:
                 self._ui.new_system_combo.setCurrentText(default_system)
         except Exception as e:
-            print(f"[PLUGIN WARNING] {self.display_name}: Failed to apply settings: {e}")
+            log.warning(f"[PLUGIN WARNING] {self.display_name}: Failed to apply settings: {e}")
 
     def _initial_load(self):
         try:
@@ -104,7 +107,7 @@ class Plugin(PluginBase):
                 "filter": ArmyFilter()
             })
         except Exception as e:
-            print(f"[PLUGIN WARNING] {self.display_name}: Initial load failed: {e}")
+            log.warning(f"[PLUGIN WARNING] {self.display_name}: Initial load failed: {e}")
 
     # ============================================================
     # EVENT SUBSCRIPTIONS
@@ -176,7 +179,7 @@ class Plugin(PluginBase):
             if self._ui:
                 self._ui.show_create_error(str(e))
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} create army: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} create army: {e}")
             if self._ui:
                 self._ui.show_create_error(str(e))
 
@@ -202,7 +205,7 @@ class Plugin(PluginBase):
             if self._ui:
                 self._ui.show_create_error(str(e))
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} update army: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} update army: {e}")
 
     def _on_army_delete(self, payload: dict):
         try:
@@ -216,7 +219,7 @@ class Plugin(PluginBase):
                 self._refresh_list()
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} delete army: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} delete army: {e}")
 
     def _on_army_duplicate(self, payload: dict):
         try:
@@ -226,7 +229,7 @@ class Plugin(PluginBase):
                 self._ui.show_create_success(f"Duplicated as: {new_army.name}")
             self._refresh_list()
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} duplicate army: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} duplicate army: {e}")
             if self._ui:
                 self._ui.show_create_error(str(e))
 
@@ -241,7 +244,7 @@ class Plugin(PluginBase):
                 self._ui.load_army_into_builder(army, units)
             self._refresh_paint_tab(army_id)
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} open army: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} open army: {e}")
 
     def _on_filter_changed(self, payload: dict):
         if not self._ui:
@@ -274,7 +277,7 @@ class Plugin(PluginBase):
             self._ui.update_statistics(stats)
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} filter: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} filter: {e}")
 
     def _on_export(self, payload: dict):
         try:
@@ -287,7 +290,7 @@ class Plugin(PluginBase):
             if self._ui:
                 self._ui.show_export_dialog(text)
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} export: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} export: {e}")
 
     # ============================================================
     # UNIT EVENT HANDLERS
@@ -317,7 +320,7 @@ class Plugin(PluginBase):
             if self._ui:
                 self._ui.show_unit_error(str(e))
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} add unit: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} add unit: {e}")
             if self._ui:
                 self._ui.show_unit_error(str(e))
 
@@ -344,7 +347,7 @@ class Plugin(PluginBase):
             if self._ui:
                 self._ui.show_unit_error(str(e))
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} update unit: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} update unit: {e}")
 
     def _on_unit_remove(self, payload: dict):
         try:
@@ -360,7 +363,7 @@ class Plugin(PluginBase):
                 self._refresh_builder(army_id)
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} remove unit: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} remove unit: {e}")
 
     def _on_unit_edit_requested(self, payload: dict):
         """UI wants the full unit data to populate the form."""
@@ -369,7 +372,7 @@ class Plugin(PluginBase):
             if unit and self._ui:
                 self._ui.populate_unit_form(unit)
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} unit edit: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} unit edit: {e}")
 
     def _on_unit_duplicate(self, payload: dict):
         try:
@@ -378,7 +381,7 @@ class Plugin(PluginBase):
                 self._ui.show_unit_success(f"Duplicated: {unit.unit_name}")
             self._refresh_builder(unit.army_id)
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} duplicate unit: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} duplicate unit: {e}")
             if self._ui:
                 self._ui.show_unit_error(str(e))
 
@@ -429,7 +432,7 @@ class Plugin(PluginBase):
             self._refresh_builder(army_id)
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} reorder unit: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} reorder unit: {e}")
 
     # ============================================================
     # CROSS-PLUGIN
@@ -444,7 +447,7 @@ class Plugin(PluginBase):
             if self._ui and self._ui._current_army_id:
                 self._refresh_builder(self._ui._current_army_id)
         except Exception as e:
-            print(f"[PLUGIN WARNING] {self.display_name} model_removed cleanup: {e}")
+            log.warning(f"[PLUGIN WARNING] {self.display_name} model_removed cleanup: {e}")
 
     def _on_paint_removed(self, payload: dict):
         paint_id = payload.get("id")
@@ -456,7 +459,7 @@ class Plugin(PluginBase):
             if self._ui and self._ui._current_army_id:
                 self._refresh_paint_tab(self._ui._current_army_id)
         except Exception as e:
-            print(f"[PLUGIN WARNING] {self.display_name} paint_removed cleanup: {e}")
+            log.warning(f"[PLUGIN WARNING] {self.display_name} paint_removed cleanup: {e}")
 
     def _on_army_paints_refresh(self, payload: dict):
         army_id = payload.get("id")
@@ -484,7 +487,7 @@ class Plugin(PluginBase):
             self._refresh_paint_tab(army_id)
             self._refresh_stats()
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} refresh builder: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} refresh builder: {e}")
 
     def _refresh_stats(self):
         """Push fresh army-level statistics to the UI without rebuilding the list."""
@@ -494,7 +497,7 @@ class Plugin(PluginBase):
             stats = self._service.get_statistics()
             self._ui.update_statistics(stats)
         except Exception as e:
-            print(f"[PLUGIN WARNING] {self.display_name} stats refresh: {e}")
+            log.warning(f"[PLUGIN WARNING] {self.display_name} stats refresh: {e}")
 
     def _refresh_paint_tab(self, army_id: int):
         """Build the aggregated paint list and push it to the Army Paints tab."""
@@ -529,7 +532,7 @@ class Plugin(PluginBase):
             self._ui.refresh_paint_list(enriched, army_name=army.name)
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} refresh paint tab: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} refresh paint tab: {e}")
 
     # ============================================================
     # DASHBOARD PROVIDER (ownership-aware)
@@ -549,7 +552,7 @@ class Plugin(PluginBase):
                 except Exception:
                     pass
         except Exception as e:
-            print(f"[ARMY V1] Dashboard provider failed: {e}")
+            log.error(f"[ARMY V1] Dashboard provider failed: {e}")
 
     def _cleanup_dashboard_provider(self):
         """Only unregister if we still own the provider slot."""

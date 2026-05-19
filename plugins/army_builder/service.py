@@ -11,6 +11,9 @@ Cross-plugin integration:
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from typing import Optional
 
 from .models import (
@@ -96,7 +99,7 @@ class ArmyService:
                     reverse=f.sort_desc,
                 )
             except Exception as e:
-                print(f"[ARMY SERVICE] Sorting failed: {e}")
+                log.error(f"[ARMY SERVICE] Sorting failed: {e}")
         return armies
 
     def duplicate_army(self, army_id: int, new_name: Optional[str] = None) -> Army:
@@ -358,12 +361,12 @@ class ArmyService:
     def on_model_removed(self, model_id: int):
         """Called when model_tracker removes a model — nullify references."""
         self.repo.remove_model_links(model_id)
-        print(f"[ARMY SERVICE] Nullified model_id={model_id} links in army units")
+        log.debug(f"[ARMY SERVICE] Nullified model_id={model_id} links in army units")
 
     def on_paint_removed(self, paint_id: int):
         """Called when paint_tracker removes a paint — clean up direct links."""
         self.repo.remove_paint_links_everywhere(paint_id)
-        print(f"[ARMY SERVICE] Removed paint_id={paint_id} links from all army units")
+        log.debug(f"[ARMY SERVICE] Removed paint_id={paint_id} links from all army units")
 
     def get_units_using_model(self, model_id: int) -> list[ArmyUnit]:
         """Returns all army units referencing a given model_tracker model."""
@@ -412,7 +415,7 @@ class ArmyService:
                         for pid in model.linked_paint_ids:
                             _add(pid, unit.unit_name, "model")
                 except Exception as e:
-                    print(f"[ARMY SERVICE] model paint lookup failed: {e}")
+                    log.error(f"[ARMY SERVICE] model paint lookup failed: {e}")
 
         return [
             {
@@ -434,10 +437,10 @@ def register(context):
     Registers as "army_service" — accessible by any plugin via:
         context.services.get("army_service")
     """
-    print("[ARMY_BUILDER] Registering service...")
+    log.debug("[ARMY_BUILDER] Registering service...")
     db = context.services.get("db")
     repo = ArmyRepository(db)
     service = ArmyService(repo)
     context.services.register("army_service", service, override=True)
-    print("[ARMY_BUILDER] Service registered as 'army_service'")
+    log.debug("[ARMY_BUILDER] Service registered as 'army_service'")
     return service

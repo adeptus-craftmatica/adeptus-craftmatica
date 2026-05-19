@@ -9,6 +9,9 @@ No other plugin depends on this service — dependency arrows point inward.
 
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import os
 import shutil
 from datetime import datetime, timezone
@@ -113,7 +116,7 @@ class ProjectService:
                 project.enabled_systems.append(EnabledSystem.LINKS)
                 self._repo.update_project(project)
         except Exception as e:
-            print(f"[PROJECT SVC] Auto-enable LINKS: {e}")
+            log.error(f"[PROJECT SVC] Auto-enable LINKS: {e}")
 
         # Auto-link paints when a model is linked
         if entity_type == EntityType.MODEL:
@@ -143,10 +146,10 @@ class ProjectService:
                     notes="auto-linked from model",
                 ))
             if paint_ids:
-                print(f"[PROJECT SVC] Auto-linked {len(paint_ids)} paint(s) "
-                      f"from model {model_id} to project {project_id}")
+                log.debug(f"[PROJECT SVC] Auto-linked {len(paint_ids)} paint(s) "
+                          f"from model {model_id} to project {project_id}")
         except Exception as e:
-            print(f"[PROJECT SVC] Auto-link paints for model {model_id}: {e}")
+            log.error(f"[PROJECT SVC] Auto-link paints for model {model_id}: {e}")
 
     def unlink_entity(self, project_id: int, entity_type: str,
                       entity_id: int) -> bool:
@@ -213,7 +216,7 @@ class ProjectService:
                 return svc.get_scheme(entity_id) if svc else None
 
         except Exception as e:
-            print(f"[PROJECT SVC] resolve_one({entity_type}, {entity_id}): {e}")
+            log.error(f"[PROJECT SVC] resolve_one({entity_type}, {entity_id}): {e}")
         return None
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -414,7 +417,7 @@ class ProjectService:
             else:
                 session.duration_minutes = 1
         except Exception as e:
-            print(f"[PROJECT SVC] end_session duration calc: {e}")
+            log.error(f"[PROJECT SVC] end_session duration calc: {e}")
             session.duration_minutes = 1
 
         session.notes               = notes
@@ -589,7 +592,7 @@ class ProjectService:
                 if os.path.isfile(image_path):
                     os.remove(image_path)
             except Exception as e:
-                print(f"[PROJECT SVC] Could not delete gallery image file: {e}")
+                log.error(f"[PROJECT SVC] Could not delete gallery image file: {e}")
         return True
 
     def delete_project(self, project_id: int) -> bool:
@@ -713,7 +716,7 @@ class ProjectService:
                 return ReqStatus.OK
 
         except Exception as e:
-            print(f"[PROJECT SVC] resolve_requirement_stock: {e}")
+            log.error(f"[PROJECT SVC] resolve_requirement_stock: {e}")
 
         return ReqStatus.UNKNOWN
 
@@ -733,5 +736,5 @@ class ProjectService:
                 svc = self._svc("tool_service")
                 return svc.get_all_tools() if svc else []
         except Exception as e:
-            print(f"[PROJECT SVC] get_all_items_for_type({item_type}): {e}")
+            log.error(f"[PROJECT SVC] get_all_items_for_type({item_type}): {e}")
         return []

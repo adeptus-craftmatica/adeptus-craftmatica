@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger(__name__)
+
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
@@ -71,7 +74,7 @@ class SettingsDialog(QDialog):
         registry = self.context.services.get("settings_registry")
 
         if not registry:
-            print("[SETTINGS WARNING] No registry found")
+            log.warning("[SETTINGS WARNING] No registry found")
             return
 
         for name, factory in registry.get_pages():
@@ -79,7 +82,7 @@ class SettingsDialog(QDialog):
                 widget = factory(self.context)
                 self.register_page(name, widget)
             except Exception as e:
-                print(f"[SETTINGS ERROR] Failed to load page '{name}': {e}")
+                log.error(f"[SETTINGS ERROR] Failed to load page '{name}': {e}")
 
     # ----------------------------
     # Public API

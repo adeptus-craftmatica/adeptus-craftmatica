@@ -8,5 +8,7 @@
     "ui": true,
     "category": "hobby",
     "dependencies": [],
+    "optional_dependencies": ["army_builder", "paint_tracker"],
+    "_note_optional_deps": "If army_builder (v1) or paint_tracker are loaded, their services are shared. Both v1 and v2 of army_builder should not run simultaneously with separate service instances.",
     "events": ["army_created", "army_updated", "army_deleted"]
 }

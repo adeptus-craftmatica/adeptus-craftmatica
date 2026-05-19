@@ -3,6 +3,9 @@
 
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.contracts.dashboard_dto import (
     CommandStat, ProjectCard as DashProjectCard, Notification,
     QuickAction, Severity, Recommendation, NavigationTarget,
@@ -63,7 +66,7 @@ class ProjectDashboardProvider:
             ]
             return cards
         except Exception as e:
-            print(f"[PROJECT PROVIDER] get_command_stats: {e}")
+            log.error(f"[PROJECT PROVIDER] get_command_stats: {e}")
             return []
 
     # ── ProjectCard (recent active projects) ──────────────────────────────────
@@ -150,7 +153,7 @@ class ProjectDashboardProvider:
                     action_label   = "Open Project",
                 ))
         except Exception as e:
-            print(f"[PROJECT PROVIDER] get_project_cards: {e}")
+            log.error(f"[PROJECT PROVIDER] get_project_cards: {e}")
         return cards
 
     # ── Notifications ─────────────────────────────────────────────────────────
@@ -173,7 +176,7 @@ class ProjectDashboardProvider:
                         action_label   = "View Projects",
                     ))
         except Exception as e:
-            print(f"[PROJECT PROVIDER] get_notifications: {e}")
+            log.error(f"[PROJECT PROVIDER] get_notifications: {e}")
         return notes
 
     # ── QuickActions ──────────────────────────────────────────────────────────
@@ -292,5 +295,5 @@ class ProjectDashboardProvider:
                         action_label="Open Sessions",
                     ))
         except Exception as e:
-            print(f"[PROJECT PROVIDER] get_recommendations: {e}")
+            log.error(f"[PROJECT PROVIDER] get_recommendations: {e}")
         return recs

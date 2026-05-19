@@ -4,6 +4,9 @@ Iterative build — start with scaffold + campaigns page, add sections progressi
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import json
 import os
 import random
@@ -159,7 +162,7 @@ def _save_custom_preset(name: str) -> str:
             with open(_CUSTOM_PRESETS_FILE, "w", encoding="utf-8") as f:
                 json.dump(presets, f, indent=2, ensure_ascii=False)
         except Exception as e:
-            print(f"[CAMPAIGN V2] _save_custom_preset: {e}")
+            log.error(f"[CAMPAIGN V2] _save_custom_preset: {e}")
     # Ensure it's live in SYSTEMS for the rest of the session
     if preset_id not in SYSTEMS:
         SYSTEMS[preset_id] = GameSystem(
@@ -2858,7 +2861,7 @@ class CampaignV2UI(QWidget):
                 self._svc.update_encounter(self._enc_obj, name=name)
                 self._load_encounters()
             except Exception as e:
-                print(f"[ENCOUNTERS] name commit: {e}")
+                log.error(f"[ENCOUNTERS] name commit: {e}")
 
     def _on_enc_desc_commit(self):
         if not self._enc_obj:
@@ -2868,7 +2871,7 @@ class CampaignV2UI(QWidget):
             try:
                 self._svc.update_encounter(self._enc_obj, description=desc)
             except Exception as e:
-                print(f"[ENCOUNTERS] desc commit: {e}")
+                log.error(f"[ENCOUNTERS] desc commit: {e}")
 
     def _on_new_encounter(self):
         if not self._camp_id:

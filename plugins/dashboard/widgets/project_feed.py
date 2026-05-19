@@ -1,6 +1,9 @@
 """Project feed — scrollable list of ProjectCard DTOs."""
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import json
 
 from PySide6.QtCore import Qt, Signal
@@ -148,7 +151,7 @@ class ProjectFeedWidget(QWidget):
             # Re-render immediately using cached cards — no full refresh needed
             self._render(self._last_cards)
         except Exception as e:
-            print(f"[PROJECT FEED] toggle pin: {e}")
+            log.error(f"[PROJECT FEED] toggle pin: {e}")
 
     # ── private ───────────────────────────────────────────────────────────────
 

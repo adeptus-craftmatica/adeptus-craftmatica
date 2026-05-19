@@ -10,6 +10,10 @@ Tables:
   hobby_sessions      — timed work sessions
   project_gallery     — progress photos
 
+NOTE: Table names here intentionally lack a "project_tracker_" prefix (historical).
+They are unlikely to collide with other plugins but renaming would require a data
+migration — document before adding any new tables to this plugin.
+
 Uses the shared DatabaseService API:
   db.execute(sql, params) → cursor  (auto-commits)
   db.query(sql, params)   → list[sqlite3.Row]
@@ -17,10 +21,14 @@ Uses the shared DatabaseService API:
 
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import json
 from datetime import datetime, timezone
 from typing import Optional
 
+from core.migrations import SchemaManager
 from .models import (
     Project, ProjectLink, Milestone, ProjectNote, HobbySession,
     GalleryEntry, ProjectCategory, ProjectPriority, EnabledSystem,
@@ -34,9 +42,30 @@ def _now() -> str:
 
 
 class ProjectRepository:
+    _MIGRATIONS: list[str] = [
+        "ALTER TABLE projects           ADD COLUMN category                 TEXT    DEFAULT 'other'",
+        "ALTER TABLE projects           ADD COLUMN priority                 TEXT    DEFAULT 'medium'",
+        "ALTER TABLE projects           ADD COLUMN tags                     TEXT    DEFAULT '[]'",
+        "ALTER TABLE projects           ADD COLUMN enabled_systems          TEXT    DEFAULT '[]'",
+        "ALTER TABLE project_milestones ADD COLUMN priority                 TEXT    DEFAULT 'medium'",
+        "ALTER TABLE project_milestones ADD COLUMN linked_note_id           INTEGER",
+        "ALTER TABLE project_milestones ADD COLUMN estimated_effort_minutes INTEGER DEFAULT 0",
+        "ALTER TABLE project_milestones ADD COLUMN completion_notes         TEXT    DEFAULT ''",
+        "ALTER TABLE project_milestones ADD COLUMN is_focus                 INTEGER DEFAULT 0",
+        "ALTER TABLE project_milestones ADD COLUMN quantity_total           INTEGER DEFAULT 0",
+        "ALTER TABLE project_milestones ADD COLUMN quantity_done            INTEGER DEFAULT 0",
+        "ALTER TABLE hobby_sessions     ADD COLUMN linked_milestone_id      INTEGER",
+        "ALTER TABLE hobby_sessions     ADD COLUMN outcome                  TEXT    DEFAULT ''",
+        "ALTER TABLE hobby_sessions     ADD COLUMN next_action              TEXT    DEFAULT ''",
+        "ALTER TABLE hobby_sessions     ADD COLUMN is_active                INTEGER DEFAULT 0",
+        "ALTER TABLE hobby_sessions     ADD COLUMN actual_start_time        TEXT",
+        "ALTER TABLE project_gallery    ADD COLUMN progress_stage           TEXT    DEFAULT ''",
+    ]
+
     def __init__(self, db):
         self._db = db
         self._ensure_tables()
+        SchemaManager(db).migrate("project_tracker", self._MIGRATIONS)
 
     # ── Schema ────────────────────────────────────────────────────────────────
 
@@ -126,37 +155,6 @@ class ProjectRepository:
             )
         """)
 
-        # ── v2 migrations: ADD COLUMN (safe to run repeatedly — errors silently ignored) ──
-        _migrations = [
-            # projects
-            ("projects",           "category",                 "TEXT DEFAULT 'other'"),
-            ("projects",           "priority",                 "TEXT DEFAULT 'medium'"),
-            ("projects",           "tags",                     "TEXT DEFAULT '[]'"),
-            ("projects",           "enabled_systems",          "TEXT DEFAULT '[]'"),
-            # project_milestones
-            ("project_milestones", "priority",                 "TEXT DEFAULT 'medium'"),
-            ("project_milestones", "linked_note_id",           "INTEGER"),
-            ("project_milestones", "estimated_effort_minutes", "INTEGER DEFAULT 0"),
-            ("project_milestones", "completion_notes",         "TEXT DEFAULT ''"),
-            ("project_milestones", "is_focus",                 "INTEGER DEFAULT 0"),
-            ("project_milestones", "quantity_total",           "INTEGER DEFAULT 0"),
-            ("project_milestones", "quantity_done",            "INTEGER DEFAULT 0"),
-            # hobby_sessions
-            ("hobby_sessions",     "linked_milestone_id",      "INTEGER"),
-            ("hobby_sessions",     "outcome",                  "TEXT DEFAULT ''"),
-            ("hobby_sessions",     "next_action",              "TEXT DEFAULT ''"),
-            ("hobby_sessions",     "is_active",                "INTEGER DEFAULT 0"),
-            ("hobby_sessions",     "actual_start_time",        "TEXT"),
-            # project_gallery
-            ("project_gallery",    "progress_stage",           "TEXT DEFAULT ''"),
-        ]
-        for table, column, col_def in _migrations:
-            try:
-                self._db.execute(
-                    f"ALTER TABLE {table} ADD COLUMN {column} {col_def}"
-                )
-            except Exception:
-                pass   # column already exists — safe to ignore
 
     # ─────────────────────────────────────────────────────────────────────────
     # Projects CRUD
@@ -255,7 +253,7 @@ class ProjectRepository:
             link.id = cur.lastrowid
             link.created_at = now
         except Exception as e:
-            print(f"[PROJECT REPO] add_link: {e}")
+            log.error(f"[PROJECT REPO] add_link: {e}")
         return link
 
     def remove_link(self, project_id: int, entity_type: str, entity_id: int) -> bool:

@@ -4,15 +4,26 @@ Paint Tracker Repository
 
 from __future__ import annotations
 from typing import Optional
+
+from core.migrations import SchemaManager
 from .models import Paint, PaintFilter
 
 
 class PaintRepository:
     TABLE_NAME = "paint_tracker_paints"
 
+    _MIGRATIONS: list[str] = [
+        "ALTER TABLE paint_tracker_paints ADD COLUMN quantity         INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE paint_tracker_paints ADD COLUMN level            TEXT",
+        "ALTER TABLE paint_tracker_paints ADD COLUMN notes            TEXT",
+        "ALTER TABLE paint_tracker_paints ADD COLUMN is_favorite      INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE paint_tracker_paints ADD COLUMN notify_low_stock INTEGER NOT NULL DEFAULT 1",
+    ]
+
     def __init__(self, db):
         self.db = db
         self._ensure_schema()
+        SchemaManager(db).migrate("paint_tracker", self._MIGRATIONS)
 
     # ============================================================
     # SCHEMA
@@ -35,13 +46,6 @@ class PaintRepository:
             )
         """)
 
-        # 🔥 Backward compatibility (add columns if missing)
-        self._ensure_quantity_column()
-        self._ensure_level_column()
-        self._ensure_notes_column()
-        self._ensure_favorite_column()
-        self._ensure_notify_low_stock_column()
-
         # Indexes
         self.db.execute(f"""
             CREATE INDEX IF NOT EXISTS idx_paint_brand 
@@ -52,77 +56,6 @@ class PaintRepository:
             CREATE INDEX IF NOT EXISTS idx_paint_type 
             ON {self.TABLE_NAME}(type)
         """)
-
-    def _ensure_quantity_column(self):
-        """Add quantity column if it doesn't exist"""
-        try:
-            columns = self.db.query(f"PRAGMA table_info({self.TABLE_NAME})")
-            column_names = [col["name"] for col in columns]
-
-            if "quantity" not in column_names:
-                print("[DB] Adding quantity column...")
-                self.db.execute(f"""
-                    ALTER TABLE {self.TABLE_NAME}
-                    ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1
-                """)
-        except Exception as e:
-            print(f"[DB WARNING] Failed to ensure quantity column: {e}")
-
-    def _ensure_level_column(self):
-        """Add level column if it doesn't exist"""
-        try:
-            columns = self.db.query(f"PRAGMA table_info({self.TABLE_NAME})")
-            column_names = [col["name"] for col in columns]
-
-            if "level" not in column_names:
-                print("[DB] Adding level column...")
-                self.db.execute(f"""
-                    ALTER TABLE {self.TABLE_NAME}
-                    ADD COLUMN level TEXT
-                """)
-        except Exception as e:
-            print(f"[DB WARNING] Failed to ensure level column: {e}")
-
-    def _ensure_notes_column(self):
-        """Add notes column if it doesn't exist"""
-        try:
-            columns = self.db.query(f"PRAGMA table_info({self.TABLE_NAME})")
-            column_names = [col["name"] for col in columns]
-
-            if "notes" not in column_names:
-                print("[DB] Adding notes column...")
-                self.db.execute(f"""
-                    ALTER TABLE {self.TABLE_NAME}
-                    ADD COLUMN notes TEXT
-                """)
-        except Exception as e:
-            print(f"[DB WARNING] Failed to ensure notes column: {e}")
-
-    def _ensure_favorite_column(self):
-        """Add is_favorite column if it doesn't exist (default FALSE)."""
-        try:
-            columns = self.db.query(f"PRAGMA table_info({self.TABLE_NAME})")
-            if "is_favorite" not in [col["name"] for col in columns]:
-                print("[DB] Adding is_favorite column...")
-                self.db.execute(f"""
-                    ALTER TABLE {self.TABLE_NAME}
-                    ADD COLUMN is_favorite INTEGER NOT NULL DEFAULT 0
-                """)
-        except Exception as e:
-            print(f"[DB WARNING] Failed to ensure is_favorite column: {e}")
-
-    def _ensure_notify_low_stock_column(self):
-        """Add notify_low_stock column if it doesn't exist (default TRUE)."""
-        try:
-            columns = self.db.query(f"PRAGMA table_info({self.TABLE_NAME})")
-            if "notify_low_stock" not in [col["name"] for col in columns]:
-                print("[DB] Adding notify_low_stock column...")
-                self.db.execute(f"""
-                    ALTER TABLE {self.TABLE_NAME}
-                    ADD COLUMN notify_low_stock INTEGER NOT NULL DEFAULT 1
-                """)
-        except Exception as e:
-            print(f"[DB WARNING] Failed to ensure notify_low_stock column: {e}")
 
     # ============================================================
     # CRUD

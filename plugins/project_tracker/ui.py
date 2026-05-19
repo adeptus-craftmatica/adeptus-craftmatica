@@ -9,6 +9,9 @@ Two-pane layout:
 
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import os
 import shutil
 import uuid
@@ -1867,7 +1870,7 @@ class EntityPickerDialog(QDialog):
                 return fn(days=365)
             return fn()
         except Exception as e:
-            print(f"[LINKS PICKER] fetch {self._et}: {e}")
+            log.error(f"[LINKS PICKER] fetch {self._et}: {e}")
             return []
 
     def _populate(self):
@@ -4312,7 +4315,7 @@ class GalleryTab(QWidget):
             if svc and self._project_id:
                 return str(svc.gallery_dir(self._project_id))
         except Exception as e:
-            print(f"[GALLERY TAB] Could not get gallery dir: {e}")
+            log.error(f"[GALLERY TAB] Could not get gallery dir: {e}")
         return None
 
 
@@ -4485,7 +4488,7 @@ class ProjectDetailPanel(QWidget):
 
             self._go_to_note(note)
         except Exception as exc:
-            print(f"[PROJECT] _on_note_navigate error: {exc}")
+            log.error(f"[PROJECT] _on_note_navigate error: {exc}")
 
     def _go_to_note(self, note) -> None:
         """Switch to the Notes tab and open *note* in the editor."""

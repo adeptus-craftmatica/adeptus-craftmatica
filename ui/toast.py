@@ -21,6 +21,9 @@ Levels: "success" | "error" | "warning" | "info" | "celebration"
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from typing import Callable, Optional
 
 from PySide6.QtCore import (
@@ -137,7 +140,7 @@ class _Toast(QFrame):
                 try:
                     _fn()
                 except Exception as e:
-                    print(f"[TOAST ACTION] {e}")
+                    log.error(f"[TOAST ACTION] {e}")
                 self._dismiss()
 
             act_btn = QPushButton(action_label)

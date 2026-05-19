@@ -6,6 +6,9 @@ Right pane : scrollable detail — header fields, step cards, linked models
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QColor, QPixmap
 from PySide6.QtWidgets import (
@@ -23,7 +26,7 @@ try:
     _CHROMA_AVAILABLE = True
 except Exception as _chroma_import_err:
     import traceback as _tb
-    print(f"[PAINT SCHEME] Chroma Codex failed to import: {_chroma_import_err}")
+    log.error(f"[PAINT SCHEME] Chroma Codex failed to import: {_chroma_import_err}")
     _tb.print_exc()
     _CHROMA_AVAILABLE = False
     _ChromaCodexWidget = None
@@ -162,7 +165,7 @@ class StepDialog(QDialog):
         try:
             self._paints = paint_svc.get_all_paints()
         except Exception as e:
-            print(f"[SCHEME UI] Failed to load paints: {e}")
+            log.error(f"[SCHEME UI] Failed to load paints: {e}")
             self._paints = []
         self._populate_paint_list(self._paints)
 
@@ -267,7 +270,7 @@ class ModelPickerDialog(QDialog):
         except Exception:
             try: self._models = model_svc.get_all_models()
             except Exception as e:
-                print(f"[SCHEME UI] Model load error: {e}")
+                log.error(f"[SCHEME UI] Model load error: {e}")
         self._populate(self._models)
 
     def _populate(self, models: list):
@@ -663,7 +666,7 @@ class SchemeUI(QWidget):
         try:
             schemes = svc.search_schemes(self._current_filter())
         except Exception as e:
-            print(f"[SCHEME UI] refresh_scheme_list: {e}"); return
+            log.error(f"[SCHEME UI] refresh_scheme_list: {e}"); return
 
         step_counts = {}
         for s in schemes:
@@ -1029,7 +1032,7 @@ class SchemeUI(QWidget):
         try:
             projects = proj_svc.get_projects_for_entity("scheme", scheme_id)
         except Exception as e:
-            print(f"[SCHEME UI] _refresh_linked_projects: {e}")
+            log.error(f"[SCHEME UI] _refresh_linked_projects: {e}")
             self._linked_projects_section.set_empty("Could not load projects.")
             return
 

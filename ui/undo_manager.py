@@ -24,6 +24,9 @@ Nothing else in the codebase needs to know about this module.
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import time
 from collections import deque
 from dataclasses import dataclass, field
@@ -92,7 +95,7 @@ class UndoManager:
             action.undo_fn()
             return action.label
         except Exception as e:
-            print(f"[UNDO] Failed to reverse '{action.label}': {e}")
+            log.error(f"[UNDO] Failed to reverse '{action.label}': {e}")
             return None
 
     def clear(self) -> None:

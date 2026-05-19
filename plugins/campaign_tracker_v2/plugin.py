@@ -7,6 +7,9 @@ ownership pattern as army_builder_v2.
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.plugin_base import PluginBase
 from PySide6.QtCore import QTimer
 
@@ -65,6 +68,11 @@ class Plugin(PluginBase):
 
         # ── Dashboard provider ─────────────────────────────────────────────
         self._register_dashboard_provider()
+        # FIXME: dashboard_registry may not exist yet when this plugin activates
+        # because plugin load order is not guaranteed beyond core plugins.
+        # Re-register once the event loop has processed all activate() calls.
+        # Long-term fix: emit a "dashboard_registry_ready" event from the
+        # dashboard plugin and subscribe to it here instead.
         QTimer.singleShot(380, self._register_dashboard_provider)
 
         # ── Event subscriptions ────────────────────────────────────────────
@@ -78,12 +86,12 @@ class Plugin(PluginBase):
             if not self._ui_widget:
                 return
             campaign_id = p.get("project_id")
-            print(f"[CAMPAIGN V2] _nav: target={target!r} project_id={campaign_id!r}")
+            log.debug(f"[CAMPAIGN V2] _nav: target={target!r} project_id={campaign_id!r}")
             if campaign_id is not None:
                 try:
                     self._ui_widget._open_campaign(int(campaign_id))
                 except Exception as e:
-                    print(f"[CAMPAIGN V2] _open_campaign failed: {e}")
+                    log.error(f"[CAMPAIGN V2] _open_campaign failed: {e}")
             else:
                 self._ui_widget.refresh()
 
@@ -116,7 +124,7 @@ class Plugin(PluginBase):
             registry.register_provider("campaign_tracker", provider)
             self.context.event_bus.emit("dashboard_provider_updated", {})
         except Exception as e:
-            print(f"[CAMPAIGN V2] dashboard register: {e}")
+            log.error(f"[CAMPAIGN V2] dashboard register: {e}")
 
     def _cleanup_dashboard_provider(self):
         try:

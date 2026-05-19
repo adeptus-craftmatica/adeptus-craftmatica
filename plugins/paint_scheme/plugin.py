@@ -7,6 +7,9 @@ the Paint Scheme plugin.
 
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.plugin_base import PluginBase
 from .ui import SchemeUI
 
@@ -28,22 +31,22 @@ class Plugin(PluginBase):
     # ============================================================
 
     def activate(self):
-        print(f"[PLUGIN] {self.display_name} activating...")
+        log.debug(f"[PLUGIN] {self.display_name} activating...")
 
         self._resolve_services()
         self._init_ui()
         self._register_events()
 
-        print(f"[PLUGIN] {self.display_name} activated")
+        log.debug(f"[PLUGIN] {self.display_name} activated")
 
     def deactivate(self):
-        print(f"[PLUGIN] {self.display_name} deactivating...")
+        log.debug(f"[PLUGIN] {self.display_name} deactivating...")
 
         self._unsubscribe_all()
         self._ui = None
         self._service = None
 
-        print(f"[PLUGIN] {self.display_name} deactivated")
+        log.debug(f"[PLUGIN] {self.display_name} deactivated")
 
     def get_ui(self):
         return self._ui
@@ -55,7 +58,7 @@ class Plugin(PluginBase):
     def _resolve_services(self):
         self._service = self.context.services.get("scheme_service")
         if not self._service:
-            print("[PLUGIN WARNING] scheme_service not available yet — UI will operate in degraded mode")
+            log.warning("[PLUGIN WARNING] scheme_service not available yet — UI will operate in degraded mode")
 
     def _init_ui(self):
         self._ui = SchemeUI(self.context)
@@ -111,7 +114,7 @@ class Plugin(PluginBase):
             self.context.event_bus.emit("scheme_added", {"scheme": scheme})
             self._refresh_ui()
         except Exception as e:
-            print(f"[PLUGIN ERROR] scheme_add_requested failed: {e}")
+            log.error(f"[PLUGIN ERROR] scheme_add_requested failed: {e}")
             self._ui_error(str(e))
 
     def _on_scheme_update_requested(self, payload: dict):
@@ -123,7 +126,7 @@ class Plugin(PluginBase):
             self.context.event_bus.emit("scheme_updated", {"scheme": scheme})
             self._refresh_ui()
         except Exception as e:
-            print(f"[PLUGIN ERROR] scheme_update_requested failed: {e}")
+            log.error(f"[PLUGIN ERROR] scheme_update_requested failed: {e}")
             self._ui_error(str(e))
 
     def _on_scheme_delete_requested(self, payload: dict):
@@ -135,7 +138,7 @@ class Plugin(PluginBase):
                 self.context.event_bus.emit("scheme_deleted", {"scheme_id": scheme_id})
                 self._refresh_ui()
         except Exception as e:
-            print(f"[PLUGIN ERROR] scheme_delete_requested failed: {e}")
+            log.error(f"[PLUGIN ERROR] scheme_delete_requested failed: {e}")
             self._ui_error(str(e))
 
     # ============================================================
@@ -154,7 +157,7 @@ class Plugin(PluginBase):
             )
             self._refresh_scheme_detail(step.scheme_id)
         except Exception as e:
-            print(f"[PLUGIN ERROR] scheme_step_add_requested failed: {e}")
+            log.error(f"[PLUGIN ERROR] scheme_step_add_requested failed: {e}")
             self._ui_error(str(e))
 
     def _on_step_update_requested(self, payload: dict):
@@ -165,7 +168,7 @@ class Plugin(PluginBase):
             step = svc.update_step(step_id, **kwargs)
             self._refresh_scheme_detail(step.scheme_id)
         except Exception as e:
-            print(f"[PLUGIN ERROR] scheme_step_update_requested failed: {e}")
+            log.error(f"[PLUGIN ERROR] scheme_step_update_requested failed: {e}")
             self._ui_error(str(e))
 
     def _on_step_delete_requested(self, payload: dict):
@@ -179,7 +182,7 @@ class Plugin(PluginBase):
             if scheme_id:
                 self._refresh_scheme_detail(scheme_id)
         except Exception as e:
-            print(f"[PLUGIN ERROR] scheme_step_delete_requested failed: {e}")
+            log.error(f"[PLUGIN ERROR] scheme_step_delete_requested failed: {e}")
             self._ui_error(str(e))
 
     def _on_steps_reordered(self, payload: dict):
@@ -190,7 +193,7 @@ class Plugin(PluginBase):
             svc.reorder_steps(scheme_id, ordered_ids)
             self._refresh_scheme_detail(scheme_id)
         except Exception as e:
-            print(f"[PLUGIN ERROR] scheme_steps_reordered failed: {e}")
+            log.error(f"[PLUGIN ERROR] scheme_steps_reordered failed: {e}")
             self._ui_error(str(e))
 
     # ============================================================
@@ -211,7 +214,7 @@ class Plugin(PluginBase):
 
             self._refresh_scheme_detail(scheme_id)
         except Exception as e:
-            print(f"[PLUGIN ERROR] scheme_model_link_changed failed: {e}")
+            log.error(f"[PLUGIN ERROR] scheme_model_link_changed failed: {e}")
             self._ui_error(str(e))
 
     # ============================================================
@@ -227,12 +230,12 @@ class Plugin(PluginBase):
             svc = self._get_service()
             if hasattr(svc, "repo"):
                 svc.repo.null_out_paint_id(paint_id)
-                print(f"[PLUGIN] Nulled paint_id={paint_id} from scheme steps")
+                log.debug(f"[PLUGIN] Nulled paint_id={paint_id} from scheme steps")
                 # Refresh detail pane if currently open
                 if self._ui:
                     self._ui.refresh_current_scheme()
         except Exception as e:
-            print(f"[PLUGIN ERROR] paint_removed handler failed: {e}")
+            log.error(f"[PLUGIN ERROR] paint_removed handler failed: {e}")
 
     def _on_model_removed(self, payload: dict):
         """When a model is deleted from model_tracker, remove all its scheme links."""
@@ -243,11 +246,11 @@ class Plugin(PluginBase):
             svc = self._get_service()
             if hasattr(svc, "repo"):
                 svc.repo.remove_all_links_for_model(model_id)
-                print(f"[PLUGIN] Removed all scheme links for model_id={model_id}")
+                log.debug(f"[PLUGIN] Removed all scheme links for model_id={model_id}")
                 if self._ui:
                     self._ui.refresh_current_scheme()
         except Exception as e:
-            print(f"[PLUGIN ERROR] model_removed handler failed: {e}")
+            log.error(f"[PLUGIN ERROR] model_removed handler failed: {e}")
 
     # ============================================================
     # UI HELPERS

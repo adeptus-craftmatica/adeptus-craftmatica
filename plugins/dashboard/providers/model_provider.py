@@ -1,6 +1,9 @@
 """Model Tracker dashboard provider."""
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.contracts.dashboard_dto import (
     CommandStat, ProjectCard, Notification, QuickAction, Severity, Recommendation,
 )
@@ -48,7 +51,7 @@ class ModelDashboardProvider:
 
             return cards
         except Exception as e:
-            print(f"[MODEL PROVIDER] get_command_stats: {e}")
+            log.error(f"[MODEL PROVIDER] get_command_stats: {e}")
             return []
 
     def get_project_cards(self) -> list[ProjectCard]:
@@ -73,7 +76,7 @@ class ModelDashboardProvider:
                     action_label   = "View Models",
                 ))
         except Exception as e:
-            print(f"[MODEL PROVIDER] get_notifications: {e}")
+            log.error(f"[MODEL PROVIDER] get_notifications: {e}")
         return notes
 
     def get_recommendations(self) -> list[Recommendation]:
@@ -119,7 +122,7 @@ class ModelDashboardProvider:
                     action_label="View Models",
                 ))
         except Exception as e:
-            print(f"[MODEL PROVIDER] get_recommendations: {e}")
+            log.error(f"[MODEL PROVIDER] get_recommendations: {e}")
         return recs
 
     def get_quick_actions(self) -> list[QuickAction]:

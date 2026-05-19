@@ -1,6 +1,9 @@
 """Dashboard provider for Materials Tracker 2.0."""
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.contracts.dashboard_dto import (
     CommandStat,
     ProjectCard,
@@ -58,7 +61,7 @@ class MaterialsDashboardProviderV2:
                 ),
             ]
         except Exception as e:
-            print(f"[MATERIALS V2 PROVIDER] get_command_stats: {e}")
+            log.error(f"[MATERIALS V2 PROVIDER] get_command_stats: {e}")
             return []
 
     # ── Notifications ─────────────────────────────────────────────────────────
@@ -97,7 +100,7 @@ class MaterialsDashboardProviderV2:
                     action_label   = "View",
                 ))
         except Exception as e:
-            print(f"[MATERIALS V2 PROVIDER] get_notifications: {e}")
+            log.error(f"[MATERIALS V2 PROVIDER] get_notifications: {e}")
         return notes
 
     # ── QuickActions ──────────────────────────────────────────────────────────
@@ -152,7 +155,7 @@ class MaterialsDashboardProviderV2:
                     icon           = "⚠️",
                 ))
         except Exception as e:
-            print(f"[MATERIALS V2 PROVIDER] get_recommendations: {e}")
+            log.error(f"[MATERIALS V2 PROVIDER] get_recommendations: {e}")
         return recs
 
     # ── Stubs ─────────────────────────────────────────────────────────────────

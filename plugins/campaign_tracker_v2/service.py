@@ -6,6 +6,10 @@ methods (compendium, gallery).
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
+
 from typing import Optional
 
 
@@ -20,6 +24,7 @@ class CampaignV2Service:
         self._assets          = asset_repo
         self._quests          = quest_repo
         self._custom_monsters = custom_monster_repo
+        self._db              = v2_repo._db
 
     # ── Campaigns ─────────────────────────────────────────────────────────────
 
@@ -43,31 +48,18 @@ class CampaignV2Service:
     def update_campaign(self, campaign_id: int, **kwargs):
         return self._svc.update_campaign(campaign_id, **kwargs)
 
-    def delete_campaign(self, campaign_id: int):
-        try:
-            self._gallery.delete_for_campaign(campaign_id)
-        except Exception:
-            pass
-        try:
+    def delete_campaign(self, campaign_id: int) -> None:
+        with self._db.transaction():
+            if self._gallery:
+                self._gallery.delete_for_campaign(campaign_id)
             self._repo.delete_compendium_for_campaign(campaign_id)
-        except Exception:
-            pass
-        try:
             if self._assets:
                 self._assets.delete_for_campaign(campaign_id)
-        except Exception:
-            pass
-        try:
             if self._quests:
                 self._quests.delete_for_campaign(campaign_id)
-        except Exception:
-            pass
-        try:
             if self._custom_monsters:
                 self._custom_monsters.delete_for_campaign(campaign_id)
-        except Exception:
-            pass
-        return self._svc.delete_campaign(campaign_id)
+            self._svc.delete_campaign(campaign_id)
 
     # ── Characters ────────────────────────────────────────────────────────────
 
@@ -193,7 +185,7 @@ class CampaignV2Service:
                 setattr(encounter, k, v)
             return self._svc.update_encounter(encounter)
         except Exception as e:
-            print(f"[CAMPAIGN V2] update_encounter: {e}")
+            log.error(f"[CAMPAIGN V2] update_encounter: {e}")
 
     def delete_encounter(self, enc_id: int):
         return self._svc.delete_encounter(enc_id)
@@ -233,7 +225,7 @@ class CampaignV2Service:
             self._svc.update_encounter_monster(m)
             return True
         except Exception as e:
-            print(f"[CAMPAIGN V2] update_monster: {e}")
+            log.error(f"[CAMPAIGN V2] update_monster: {e}")
             return False
 
     # ── Players ───────────────────────────────────────────────────────────────
@@ -348,6 +340,12 @@ class CampaignV2Service:
         return self._gallery.delete_image(entry_id)
 
     # ── Statistics ────────────────────────────────────────────────────────────
+
+    def count_sessions_by_campaign(self) -> dict:
+        return self._svc.count_sessions_by_campaign()
+
+    def count_characters_by_campaign(self) -> dict:
+        return self._svc.count_characters_by_campaign()
 
     def get_campaign_stats(self, campaign_id: int) -> dict:
         try:

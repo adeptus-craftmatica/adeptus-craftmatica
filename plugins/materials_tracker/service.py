@@ -3,6 +3,9 @@ Materials Tracker — Service Layer (business logic)
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from typing import Optional
 
 from .models import Material, MaterialFilter, MaterialStatistics, ValidationError
@@ -85,7 +88,7 @@ class MaterialService:
                     reverse=f.sort_desc,
                 )
             except Exception as e:
-                print(f"[MATERIAL SERVICE] Sort failed: {e}")
+                log.error(f"[MATERIAL SERVICE] Sort failed: {e}")
         return materials
 
     # ── Statistics ────────────────────────────────────────────────────────────
@@ -147,9 +150,9 @@ class MaterialService:
 # ── Auto-registration ──────────────────────────────────────────────────────────
 
 def register(context):
-    print("[MATERIALS_TRACKER] Registering service...")
+    log.debug("[MATERIALS_TRACKER] Registering service...")
     repo    = context.services.get("material_repository")
     service = MaterialService(repo)
     context.services.register("material_service", service, override=True)
-    print("[MATERIALS_TRACKER] Service registered")
+    log.debug("[MATERIALS_TRACKER] Service registered")
     return service

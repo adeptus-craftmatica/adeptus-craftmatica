@@ -14,6 +14,9 @@ Structure:
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import json
 import os
 import random
@@ -4456,7 +4459,7 @@ class _AssetsTab(QWidget):
                     new_paths.append(dest)
                 except Exception as e:
                     new_paths.append(f)
-                    print(f"[CAMPAIGN ASSETS] Could not copy {f}: {e}")
+                    log.error(f"[CAMPAIGN ASSETS] Could not copy {f}: {e}")
             files = new_paths
 
         for f in files:

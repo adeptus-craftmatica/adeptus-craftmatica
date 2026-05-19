@@ -5,6 +5,9 @@ Lifecycle controller: resolves services, registers events, owns the UI.
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.plugin_base import PluginBase
 from .models import ValidationError
 
@@ -27,7 +30,7 @@ class Plugin(PluginBase):
         self._resolve_services()
         self._init_ui()
         self._register_events()
-        print(f"[CAMPAIGN_TRACKER] Plugin activated")
+        log.debug(f"[CAMPAIGN_TRACKER] Plugin activated")
 
     def deactivate(self):
         self._unsubscribe_all()

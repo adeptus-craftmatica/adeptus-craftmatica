@@ -1,6 +1,9 @@
 """Campaign Tracker v2 dashboard provider."""
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.contracts.dashboard_dto import (
     CommandStat, ProjectCard, Notification, QuickAction,
     Severity, Recommendation,
@@ -25,17 +28,10 @@ class CampaignDashboardProviderV2:
                            in _ACTIVE_STATUSES]
             active = len(active_list)
 
-            total_sessions = 0
-            total_chars    = 0
-            for c in campaigns:
-                try:
-                    total_sessions += len(self._svc.get_sessions(c.id))
-                except Exception:
-                    pass
-                try:
-                    total_chars += len(self._svc.get_characters(c.id))
-                except Exception:
-                    pass
+            session_counts = self._svc.count_sessions_by_campaign()
+            char_counts    = self._svc.count_characters_by_campaign()
+            total_sessions = sum(session_counts.values())
+            total_chars    = sum(char_counts.values())
 
             cards = [
                 CommandStat(
@@ -64,7 +60,7 @@ class CampaignDashboardProviderV2:
                 ))
             return cards
         except Exception as e:
-            print(f"[CAMPAIGN V2 PROVIDER] get_command_stats: {e}")
+            log.error(f"[CAMPAIGN V2 PROVIDER] get_command_stats: {e}")
             return []
 
     # ── Project cards ─────────────────────────────────────────────────────────
@@ -78,10 +74,11 @@ class CampaignDashboardProviderV2:
                          if (getattr(c, "status", "") or "").lower()
                          in _ACTIVE_STATUSES]
 
+            session_counts = self._svc.count_sessions_by_campaign()
             for c in active[:6]:       # cap to 6 to avoid flooding the feed
                 try:
+                    n_sessions = session_counts.get(c.id, 0)
                     sessions   = self._svc.get_sessions(c.id)
-                    n_sessions = len(sessions)
                     characters = self._svc.get_characters(c.id)
                     n_chars    = len(characters)
                     n_pcs      = sum(
@@ -125,7 +122,7 @@ class CampaignDashboardProviderV2:
                 except Exception:
                     pass
         except Exception as e:
-            print(f"[CAMPAIGN V2 PROVIDER] get_project_cards: {e}")
+            log.error(f"[CAMPAIGN V2 PROVIDER] get_project_cards: {e}")
         return cards
 
     # ── Notifications ─────────────────────────────────────────────────────────
@@ -166,7 +163,7 @@ class CampaignDashboardProviderV2:
                     action_label   = "Open",
                 ))
         except Exception as e:
-            print(f"[CAMPAIGN V2 PROVIDER] get_recommendations: {e}")
+            log.error(f"[CAMPAIGN V2 PROVIDER] get_recommendations: {e}")
         return recs
 
     # ── Quick actions ─────────────────────────────────────────────────────────

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class EventBus:
     def __init__(self):
@@ -26,7 +29,7 @@ class EventBus:
         _SENSITIVE = ("pat", "token", "secret", "password")
         safe = {k: "***" if any(s in k.lower() for s in _SENSITIVE) else v
                 for k, v in payload.items()} if isinstance(payload, dict) else payload
-        print(f"[EVENT] {event_name} -> {safe}")
+        log.debug(f"[EVENT] {event_name} -> {safe}")
 
         for callback in list(self._subscribers.get(event_name, [])):
             callback(payload)

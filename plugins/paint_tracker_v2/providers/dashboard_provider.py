@@ -1,6 +1,9 @@
 """Dashboard provider for Paint Tracker 2.0."""
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.contracts.dashboard_dto import (
     CommandStat,
     Notification,
@@ -47,7 +50,7 @@ class PaintDashboardProvider:
                 ),
             ]
         except Exception as e:
-            print(f"[PAINT V2 PROVIDER] get_command_stats: {e}")
+            log.error(f"[PAINT V2 PROVIDER] get_command_stats: {e}")
             return []
 
     # ── Notifications ─────────────────────────────────────────────────────────
@@ -67,7 +70,7 @@ class PaintDashboardProvider:
                     action_label="View",
                 ))
         except Exception as e:
-            print(f"[PAINT V2 PROVIDER] get_notifications: {e}")
+            log.error(f"[PAINT V2 PROVIDER] get_notifications: {e}")
         return notes
 
     # ── QuickActions ──────────────────────────────────────────────────────────
@@ -125,7 +128,7 @@ class PaintDashboardProvider:
                     icon="⚠️",
                 ))
         except Exception as e:
-            print(f"[PAINT V2 PROVIDER] get_recommendations: {e}")
+            log.error(f"[PAINT V2 PROVIDER] get_recommendations: {e}")
         return recs
 
     # ── Paint Intel (called directly by dashboard paint intel section) ────────

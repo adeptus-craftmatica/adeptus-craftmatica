@@ -1265,7 +1265,7 @@ class ArmyBuilderV2UI(QWidget):
                 from .gallery_repository import GalleryRepository
                 self._gallery_repo = GalleryRepository(db)
         except Exception as e:
-            print(f"[ARMY V2 UI] gallery repo init: {e}")
+            log.error(f"[ARMY V2 UI] gallery repo init: {e}")
 
         self._build()
         self._apply_theme()
@@ -1823,7 +1823,7 @@ class ArmyBuilderV2UI(QWidget):
             if self._current_army_id:
                 self._load_army(self._current_army_id)
         except Exception as e:
-            print(f"[ARMY V2 UI] refresh: {e}")
+            log.error(f"[ARMY V2 UI] refresh: {e}")
 
     def apply_preset(self, preset: str):
         if preset == "new":
@@ -2146,7 +2146,7 @@ class ArmyBuilderV2UI(QWidget):
                     f"  {count} photo{'s' if count != 1 else ''}"
                 )
         except Exception as e:
-            print(f"[ARMY V2 UI] load_army: {e}")
+            log.error(f"[ARMY V2 UI] load_army: {e}")
 
     # ── Builder ────────────────────────────────────────────────────────────────
 
@@ -2415,7 +2415,7 @@ class ArmyBuilderV2UI(QWidget):
             self._paints_army_lbl.setText(f"Paints for: {army.name}")
             self._render_paints()
         except Exception as e:
-            print(f"[ARMY V2 UI] refresh_paints_tab: {e}")
+            log.error(f"[ARMY V2 UI] refresh_paints_tab: {e}")
 
     def _render_paints(self, *_):
         search     = self._paints_search.text().strip().lower()
@@ -2536,7 +2536,7 @@ class ArmyBuilderV2UI(QWidget):
                 f"  {count} photo{'s' if count != 1 else ''}"
             )
         except Exception as e:
-            print(f"[ARMY V2 UI] load_gallery: {e}")
+            log.error(f"[ARMY V2 UI] load_gallery: {e}")
             self._gallery_entries = []
 
         self._render_gallery()
@@ -2715,7 +2715,7 @@ class ArmyBuilderV2UI(QWidget):
             self._render_dist_box(self._stats_system_box, stats.game_system_distribution)
             self._render_dist_box(self._stats_faction_box, stats.faction_distribution)
         except Exception as e:
-            print(f"[ARMY V2 UI] update_stats: {e}")
+            log.error(f"[ARMY V2 UI] update_stats: {e}")
 
     def _make_stat_card(self, label: str, value: str, sub: str) -> QFrame:
         card = QFrame()
@@ -3131,7 +3131,7 @@ class ArmyBuilderV2UI(QWidget):
                 }}
             """)
         except Exception as e:
-            print(f"[ARMY V2 UI] theme error: {e}")
+            log.error(f"[ARMY V2 UI] theme error: {e}")
 
     def _apply_dialog_theme(self, dlg: QDialog):
         if not self._ctx:

@@ -4,6 +4,9 @@ Redesigned with paint-pot style circular swatches and a premium feel.
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import re
 import csv
 import os
@@ -2223,7 +2226,7 @@ class PaintTrackerV2UI(QWidget):
             self._filtered = self._apply_filter(self._paints, self._active_filter)
             self._update_views()
         except Exception as e:
-            print(f"[PAINT V2 UI] refresh: {e}")
+            log.error(f"[PAINT V2 UI] refresh: {e}")
 
     def _update_views(self):
         empty_message = (
@@ -2257,7 +2260,7 @@ class PaintTrackerV2UI(QWidget):
                             if name not in usage[paint_id]:
                                 usage[paint_id].append(name)
         except Exception as e:
-            print(f"[PAINT V2 UI] usage map: {e}")
+            log.error(f"[PAINT V2 UI] usage map: {e}")
         return usage
 
     def _service(self, name: str):
@@ -2301,7 +2304,7 @@ class PaintTrackerV2UI(QWidget):
                     for t in tools
                 ]
             except Exception as e:
-                print(f"[PAINT V2 UI] shopping tools: {e}")
+                log.error(f"[PAINT V2 UI] shopping tools: {e}")
 
         material_svc = self._service("material_service")
         if material_svc:
@@ -2318,7 +2321,7 @@ class PaintTrackerV2UI(QWidget):
                     for m in materials
                 ]
             except Exception as e:
-                print(f"[PAINT V2 UI] shopping materials: {e}")
+                log.error(f"[PAINT V2 UI] shopping materials: {e}")
 
         model_svc = self._service("model_service")
         if model_svc:
@@ -2335,7 +2338,7 @@ class PaintTrackerV2UI(QWidget):
                     for m in models
                 ]
             except Exception as e:
-                print(f"[PAINT V2 UI] shopping models: {e}")
+                log.error(f"[PAINT V2 UI] shopping models: {e}")
 
         return sources
 
@@ -2378,7 +2381,7 @@ class PaintTrackerV2UI(QWidget):
             try:
                 result = self._svc.find_paints_by_color(color_hex, paints=result)
             except Exception as e:
-                print(f"[PAINT V2 UI] color filter: {e}")
+                log.error(f"[PAINT V2 UI] color filter: {e}")
 
         return self._sort_paints(result)
 
@@ -2677,7 +2680,7 @@ class PaintTrackerV2UI(QWidget):
             self._ctx.event_bus.emit("paint_updated", {"id": paint.id, "_silent": True})
             self.refresh()
         except Exception as e:
-            print(f"[PAINT V2 UI] toggle fav: {e}")
+            log.error(f"[PAINT V2 UI] toggle fav: {e}")
 
     def _on_filter_changed(self, state: dict):
         self._active_filter = state

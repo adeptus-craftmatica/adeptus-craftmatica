@@ -7,6 +7,9 @@ is ever visible to the dashboard at a time.
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.plugin_base import PluginBase
 from PySide6.QtCore import QTimer
 
@@ -132,7 +135,7 @@ class Plugin(PluginBase):
                 except Exception:
                     pass
         except Exception as e:
-            print(f"[MATERIALS V2] Dashboard provider failed: {e}")
+            log.error(f"[MATERIALS V2] Dashboard provider failed: {e}")
 
     def _make_refresh_handler(self):
         def _handler(payload=None):

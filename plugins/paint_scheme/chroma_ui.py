@@ -4,6 +4,9 @@ Chroma Codex UI — Intelligent Paint Planning Interface
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import json
 from typing import Optional
 
@@ -522,7 +525,7 @@ class _PrimaryPickerDialog(QDialog):
         try:
             self._all_paints = paint_svc.get_all_paints()
         except Exception as e:
-            print(f"[CHROMA] Paint load: {e}")
+            log.error(f"[CHROMA] Paint load: {e}")
         self._populate_paint_list(self._all_paints)
 
     def _populate_paint_list(self, paints: list):
@@ -1391,7 +1394,7 @@ class ChromaCodexWidget(QWidget):
             try:
                 self._repo = _ChromaRepo(db)
             except Exception as e:
-                print(f"[CHROMA UI] Repo init failed: {e}")
+                log.error(f"[CHROMA UI] Repo init failed: {e}")
 
     # ── Construction ─────────────────────────────────────────────────────────
 
@@ -1879,7 +1882,7 @@ class ChromaCodexWidget(QWidget):
                 })
                 linked += 1
             except Exception as e:
-                print(f"[CHROMA UI] Link paint {pid} failed: {e}")
+                log.error(f"[CHROMA UI] Link paint {pid} failed: {e}")
 
         if self._current_scheme_id and self._repo:
             try:

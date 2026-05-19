@@ -11,6 +11,9 @@ All data arrives via display_* / load_* method calls from the plugin.
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from PySide6.QtCore import Qt, QSignalBlocker, QEvent
 from PySide6.QtGui import QColor, QFont, QKeyEvent
 from PySide6.QtWidgets import (
@@ -1274,7 +1277,7 @@ class ArmyBuilderUI(QWidget):
         try:
             projects = proj_svc.get_projects_for_entity("army", army_id)
         except Exception as e:
-            print(f"[ARMY UI] _refresh_army_projects: {e}")
+            log.error(f"[ARMY UI] _refresh_army_projects: {e}")
             self._army_projects_section.set_empty("Could not load projects.")
             return
 
@@ -1551,7 +1554,7 @@ class ArmyBuilderUI(QWidget):
                 label = f"{m.name}  ({m.game_system})"
                 self.unit_model_combo.addItem(label, m.id)
         except Exception as e:
-            print(f"[ARMY BUILDER UI] Could not load models: {e}")
+            log.error(f"[ARMY BUILDER UI] Could not load models: {e}")
 
     def _open_paint_link_dialog(self):
         dialog = PaintLinkDialog(self.context, self._unit_linked_paint_ids, parent=self)

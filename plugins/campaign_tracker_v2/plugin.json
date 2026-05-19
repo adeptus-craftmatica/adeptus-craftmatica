@@ -9,6 +9,8 @@
   "ui": true,
   "category": "hobby",
   "dependencies": [],
+  "optional_dependencies": ["campaign_tracker"],
+  "_note_optional_deps": "If campaign_tracker (v1) is loaded, its campaign_service is shared. If not, v2 creates its own. Both plugins should not run simultaneously with separate service instances against the same database.",
   "events": {
     "emits": [],
     "listens": []

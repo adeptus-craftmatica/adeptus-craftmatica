@@ -4,15 +4,21 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Optional
 
+from core.migrations import SchemaManager
 from .models import CalendarEvent
 
 _TABLE = "calendar_events"
 
 
 class CalendarRepository:
+    _MIGRATIONS: list[str] = [
+        "ALTER TABLE calendar_events ADD COLUMN event_category TEXT NOT NULL DEFAULT 'Hobby Session'",
+    ]
+
     def __init__(self, db):
         self.db = db
         self._ensure_schema()
+        SchemaManager(db).migrate("calendar", self._MIGRATIONS)
 
     # ── Schema ─────────────────────────────────────────────────────────────────
 
@@ -42,14 +48,6 @@ class CalendarRepository:
                 created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        # Backward-compat migration — add event_category if it doesn't exist yet
-        try:
-            self.db.execute(
-                f"ALTER TABLE {_TABLE} ADD COLUMN "
-                f"event_category TEXT NOT NULL DEFAULT 'Hobby Session'"
-            )
-        except Exception:
-            pass  # Column already present — SQLite raises on duplicate ADD COLUMN
         self.db.execute(
             f"CREATE INDEX IF NOT EXISTS idx_cal_date   ON {_TABLE}(event_date)"
         )

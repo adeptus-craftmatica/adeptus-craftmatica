@@ -4,6 +4,9 @@ Clean card grid with stock-level indicators, type icons, and inline quick-add.
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 import csv
 import os
 from datetime import datetime
@@ -816,7 +819,7 @@ class MaterialsTrackerV2UI(QWidget):
             self._update_brand_filter()
             self._apply_filters()
         except Exception as e:
-            print(f"[MATERIALS V2 UI] refresh: {e}")
+            log.error(f"[MATERIALS V2 UI] refresh: {e}")
 
     def handle_quick_create(self):
         if not self._quick_add.is_expanded():
@@ -1446,7 +1449,7 @@ class MaterialsTrackerV2UI(QWidget):
                 }}
             """)
         except Exception as e:
-            print(f"[MATERIALS V2 UI] theme error: {e}")
+            log.error(f"[MATERIALS V2 UI] theme error: {e}")
 
     def _apply_dialog_theme(self, dlg: QDialog):
         if not self._ctx:

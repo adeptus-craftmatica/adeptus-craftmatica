@@ -12,6 +12,9 @@ Cross-plugin integration:
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from core.plugin_base import PluginBase
 from .ui import ModelUI
 from .models import ValidationError, ModelFilter
@@ -37,7 +40,7 @@ class Plugin(PluginBase):
     # ============================================================
 
     def activate(self):
-        print(f"[PLUGIN] {self.display_name} activating...")
+        log.debug(f"[PLUGIN] {self.display_name} activating...")
 
         self._resolve_services()
         self._register_settings()
@@ -46,15 +49,15 @@ class Plugin(PluginBase):
         self._register_events()
         self._initial_load()
 
-        print(f"[PLUGIN] {self.display_name} activated")
+        log.debug(f"[PLUGIN] {self.display_name} activated")
 
     def deactivate(self):
-        print(f"[PLUGIN] {self.display_name} deactivating...")
+        log.debug(f"[PLUGIN] {self.display_name} deactivating...")
         self._unsubscribe_all()
         self._ui = None
         self._service = None
         self._settings = None
-        print(f"[PLUGIN] {self.display_name} deactivated")
+        log.debug(f"[PLUGIN] {self.display_name} deactivated")
 
     def get_ui(self):
         return self._ui
@@ -94,7 +97,7 @@ class Plugin(PluginBase):
             if default_status:
                 self._ui.status_combo.setCurrentText(default_status)
         except Exception as e:
-            print(f"[PLUGIN WARNING] {self.display_name}: Failed to apply settings: {e}")
+            log.warning(f"[PLUGIN WARNING] {self.display_name}: Failed to apply settings: {e}")
 
     def _initial_load(self):
         try:
@@ -102,7 +105,7 @@ class Plugin(PluginBase):
                 "filter": ModelFilter()
             })
         except Exception as e:
-            print(f"[PLUGIN WARNING] {self.display_name}: Initial load failed: {e}")
+            log.warning(f"[PLUGIN WARNING] {self.display_name}: Initial load failed: {e}")
 
     # ============================================================
     # EVENT SUBSCRIPTIONS
@@ -170,7 +173,7 @@ class Plugin(PluginBase):
             if self._ui:
                 self._ui._show_error(str(e))
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} add failed: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} add failed: {e}")
             if self._ui:
                 self._ui._show_error(str(e))
 
@@ -205,7 +208,7 @@ class Plugin(PluginBase):
             if self._ui:
                 self._ui._show_error(str(e))
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} update failed: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} update failed: {e}")
             if self._ui:
                 self._ui._show_error(str(e))
 
@@ -224,7 +227,7 @@ class Plugin(PluginBase):
             self._refresh()
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} remove failed: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} remove failed: {e}")
             if self._ui:
                 self._ui._show_error(str(e))
 
@@ -235,7 +238,7 @@ class Plugin(PluginBase):
             if model and self._ui:
                 self._ui.populate_form(model)
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} edit request failed: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} edit request failed: {e}")
 
     def _on_filter_changed(self, payload: dict):
         if not self._ui:
@@ -255,7 +258,7 @@ class Plugin(PluginBase):
             self._ui.update_statistics(stats)
 
         except Exception as e:
-            print(f"[PLUGIN ERROR] {self.display_name} filter failed: {e}")
+            log.error(f"[PLUGIN ERROR] {self.display_name} filter failed: {e}")
             if self._ui:
                 self._ui._show_error(f"Filter error: {e}")
 
@@ -274,7 +277,7 @@ class Plugin(PluginBase):
                 self._ui._linked_paint_ids.remove(paint_id)
                 self._ui._update_linked_paints_label()
         except Exception as e:
-            print(f"[PLUGIN WARNING] {self.display_name} paint_removed cleanup failed: {e}")
+            log.warning(f"[PLUGIN WARNING] {self.display_name} paint_removed cleanup failed: {e}")
 
     # ============================================================
     # HELPERS
@@ -285,7 +288,7 @@ class Plugin(PluginBase):
             self._settings.set("model_tracker.default_game_system", game_system)
             self._settings.set("model_tracker.default_status", status)
         except Exception as e:
-            print(f"[PLUGIN WARNING] {self.display_name}: Failed to persist defaults: {e}")
+            log.warning(f"[PLUGIN WARNING] {self.display_name}: Failed to persist defaults: {e}")
 
     def _refresh(self):
         """Re-apply the current filter to refresh the table."""

@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from core.migrations import SchemaManager
+
 
 @dataclass
 class CampaignGalleryEntry:
@@ -22,9 +24,14 @@ class CampaignGalleryEntry:
 class CampaignGalleryRepository:
     _TABLE = "campaign_gallery_v2"
 
+    _MIGRATIONS: list[str] = [
+        "ALTER TABLE campaign_gallery_v2 ADD COLUMN stage TEXT NOT NULL DEFAULT ''",
+    ]
+
     def __init__(self, db):
         self._db = db
         self._init_table()
+        SchemaManager(db).migrate("campaign_tracker_v2.gallery", self._MIGRATIONS)
 
     def _init_table(self):
         self._db.execute(f"""
@@ -41,13 +48,6 @@ class CampaignGalleryRepository:
             f"CREATE INDEX IF NOT EXISTS idx_{self._TABLE}_campaign "
             f"ON {self._TABLE} (campaign_id)"
         )
-        # migrate: add stage column to older tables
-        try:
-            self._db.execute(
-                f"ALTER TABLE {self._TABLE} ADD COLUMN stage TEXT NOT NULL DEFAULT ''"
-            )
-        except Exception:
-            pass
 
     # ── Queries ───────────────────────────────────────────────────────────────
 

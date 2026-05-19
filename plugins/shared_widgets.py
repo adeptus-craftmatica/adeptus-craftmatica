@@ -28,8 +28,9 @@ from PySide6.QtWidgets import (
 
 # ── Cross-plugin relationship widgets ────────────────────────────────────────
 
-# Map plugin_id → (icon, display_name) for navigation labels
-_PLUGIN_META: dict[str, tuple[str, str]] = {
+# Fallback map plugin_id → (icon, display_name) used when the PluginManager
+# is not available.  Prefer _get_plugin_meta() which reads live manifests.
+_PLUGIN_META_FALLBACK: dict[str, tuple[str, str]] = {
     "paint_tracker":    ("🎨", "Paint Tracker"),
     "model_tracker":    ("🤖", "Model Tracker"),
     "army_builder":     ("⚔",  "Army Builder"),
@@ -38,6 +39,35 @@ _PLUGIN_META: dict[str, tuple[str, str]] = {
     "project_tracker":  ("📋", "Projects"),
     "paint_scheme":     ("🎭", "Paint Schemes"),
 }
+
+# Keep the old name as an alias so callers that import it directly still work.
+_PLUGIN_META = _PLUGIN_META_FALLBACK
+
+
+def _get_plugin_meta(plugin_id: str) -> tuple[str, str]:
+    """
+    Return ``(icon, display_name)`` for *plugin_id*.
+
+    Reads ``display_name`` / ``name`` from the plugin's ``plugin.json`` manifest
+    so callers stay accurate when a plugin is renamed without editing this file.
+    Icons fall back to ``_PLUGIN_META_FALLBACK`` (manifests don't carry icons yet).
+    """
+    import json
+    import pathlib
+    try:
+        manifest_path = pathlib.Path(__file__).parent / plugin_id / "plugin.json"
+        if manifest_path.exists():
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            name = manifest.get("display_name") or manifest.get("name", plugin_id)
+            # Re-use the icon from the fallback dict if available
+            icon = _PLUGIN_META_FALLBACK.get(plugin_id, ("🔌",))[0]
+            return (icon, name)
+    except Exception:
+        pass
+    fallback = _PLUGIN_META_FALLBACK.get(plugin_id)
+    if fallback:
+        return fallback
+    return ("🔌", plugin_id.replace("_", " ").title())
 
 
 class LinkedEntityChip(QFrame):
@@ -140,7 +170,7 @@ class LinkedEntityChip(QFrame):
 
         # ── Navigate arrow ────────────────────────────────────────────────────
         if navigable:
-            _, pname = _PLUGIN_META.get(plugin_id, ("", plugin_id))
+            _, pname = _get_plugin_meta(plugin_id)
             nav_btn = QPushButton("→")
             nav_btn.setObjectName("chipNavBtn")
             nav_btn.setFixedSize(22, 22)

@@ -3,6 +3,8 @@
 from __future__ import annotations
 import json
 from typing import Any, Optional
+import logging
+log = logging.getLogger(__name__)
 
 
 class SettingsService:
@@ -77,7 +79,7 @@ class SettingsService:
 
         _SENSITIVE = ("pat", "token", "secret", "password")
         display = "***" if any(s in key.lower() for s in _SENSITIVE) else value
-        print(f"[SETTINGS] Set: {key} = {display}")
+        log.debug(f"[SETTINGS] Set: {key} = {display}")
 
     def get(self, key: str, default: Optional[Any] = None) -> Any:
         """
@@ -132,7 +134,7 @@ class SettingsService:
 
         self._cache.pop(key, None)
 
-        print(f"[SETTINGS] Deleted: {key}")
+        log.debug(f"[SETTINGS] Deleted: {key}")
 
     # ----------------------------
     # Defaults
@@ -146,7 +148,7 @@ class SettingsService:
         """
         if key not in self._defaults:
             self._defaults[key] = value
-            print(f"[SETTINGS] Default registered: {key} = {value}")
+            log.debug(f"[SETTINGS] Default registered: {key} = {value}")
 
     def register_defaults(self, defaults: dict[str, Any]):
         """Bulk register defaults"""
@@ -194,7 +196,7 @@ class SettingsService:
     # ----------------------------
 
     def debug_dump(self):
-        print("\n=== SETTINGS DUMP ===")
+        log.debug("\n=== SETTINGS DUMP ===")
 
         rows = self.db.query(f"""
             SELECT key, value FROM {self.TABLE_NAME}
@@ -202,6 +204,6 @@ class SettingsService:
         """)
 
         for row in rows:
-            print(f"{row['key']} = {row['value']}")
+            log.debug(f"{row['key']} = {row['value']}")
 
-        print("======================\n")
+        log.debug("======================\n")

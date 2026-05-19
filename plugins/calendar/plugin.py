@@ -18,6 +18,9 @@ Auto-timeline philosophy:
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from PySide6.QtCore import QTimer
 
 from core.plugin_base import PluginBase
@@ -41,7 +44,7 @@ class Plugin(PluginBase):
     # ── Lifecycle ──────────────────────────────────────────────────────────────
 
     def activate(self):
-        print(f"[PLUGIN] {self.display_name} activating...")
+        log.debug(f"[PLUGIN] {self.display_name} activating...")
 
         self._init_service()
         self._init_ui()
@@ -51,10 +54,10 @@ class Plugin(PluginBase):
 
         QTimer.singleShot(200, self._initial_refresh)
 
-        print(f"[PLUGIN] {self.display_name} activated")
+        log.debug(f"[PLUGIN] {self.display_name} activated")
 
     def deactivate(self):
-        print(f"[PLUGIN] {self.display_name} deactivating...")
+        log.debug(f"[PLUGIN] {self.display_name} deactivating...")
 
         if self._refresh_timer is not None:
             try:
@@ -75,7 +78,7 @@ class Plugin(PluginBase):
         self._ui      = None
         self._service = None
 
-        print(f"[PLUGIN] {self.display_name} deactivated")
+        log.debug(f"[PLUGIN] {self.display_name} deactivated")
 
     def get_ui(self):
         return self._ui
@@ -154,7 +157,7 @@ class Plugin(PluginBase):
             try:
                 self._subscribe(event, handler)
             except Exception as e:
-                print(f"[CALENDAR] Failed to subscribe to '{event}': {e}")
+                log.error(f"[CALENDAR] Failed to subscribe to '{event}': {e}")
 
     def _subscribe(self, event: str, handler):
         self.context.event_bus.subscribe(event, handler)
@@ -202,7 +205,7 @@ class Plugin(PluginBase):
                 duration_minutes = 0,
             )
         except Exception as e:
-            print(f"[CALENDAR] Failed to create timeline event '{title}': {e}")
+            log.error(f"[CALENDAR] Failed to create timeline event '{title}': {e}")
 
     # ── Event handlers — Paint Tracker ─────────────────────────────────────────
 
@@ -223,7 +226,7 @@ class Plugin(PluginBase):
             )
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_paint_added error: {e}")
+            log.error(f"[CALENDAR] _on_paint_added error: {e}")
 
     def _on_paint_updated(self, payload: dict):
         try:
@@ -240,7 +243,7 @@ class Plugin(PluginBase):
                 )
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_paint_updated error: {e}")
+            log.error(f"[CALENDAR] _on_paint_updated error: {e}")
 
     # ── Event handlers — Model Tracker ─────────────────────────────────────────
 
@@ -261,7 +264,7 @@ class Plugin(PluginBase):
                 )
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_model_added error: {e}")
+            log.error(f"[CALENDAR] _on_model_added error: {e}")
 
     def _on_model_updated(self, payload: dict):
         try:
@@ -281,7 +284,7 @@ class Plugin(PluginBase):
                     )
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_model_updated error: {e}")
+            log.error(f"[CALENDAR] _on_model_updated error: {e}")
 
     # ── Event handlers — Army Builder ──────────────────────────────────────────
 
@@ -303,13 +306,13 @@ class Plugin(PluginBase):
                 )
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_army_created error: {e}")
+            log.error(f"[CALENDAR] _on_army_created error: {e}")
 
     def _on_army_updated(self, payload: dict):
         try:
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_army_updated error: {e}")
+            log.error(f"[CALENDAR] _on_army_updated error: {e}")
 
     # ── Event handlers — Campaign Tracker ──────────────────────────────────────
 
@@ -341,13 +344,13 @@ class Plugin(PluginBase):
                 )
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_campaign_created error: {e}")
+            log.error(f"[CALENDAR] _on_campaign_created error: {e}")
 
     def _on_campaign_updated(self, payload: dict):
         try:
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_campaign_updated error: {e}")
+            log.error(f"[CALENDAR] _on_campaign_updated error: {e}")
 
     def _on_battle_logged(self, payload: dict):
         try:
@@ -377,7 +380,7 @@ class Plugin(PluginBase):
             })
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_battle_logged error: {e}")
+            log.error(f"[CALENDAR] _on_battle_logged error: {e}")
 
     # ── Event handlers — Tool Tracker ──────────────────────────────────────────
 
@@ -397,7 +400,7 @@ class Plugin(PluginBase):
                 )
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_tool_added error: {e}")
+            log.error(f"[CALENDAR] _on_tool_added error: {e}")
 
     # ── Event handlers — Materials Tracker ────────────────────────────────────
 
@@ -417,7 +420,7 @@ class Plugin(PluginBase):
                 )
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_material_added error: {e}")
+            log.error(f"[CALENDAR] _on_material_added error: {e}")
 
     # ── Event handlers — Project Tracker ──────────────────────────────────────
 
@@ -465,7 +468,7 @@ class Plugin(PluginBase):
             )
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_project_session_log error: {e}")
+            log.error(f"[CALENDAR] _on_project_session_log error: {e}")
 
     def _on_project_session_end(self, payload: dict):
         try:
@@ -521,7 +524,7 @@ class Plugin(PluginBase):
             )
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_project_session_end error: {e}")
+            log.error(f"[CALENDAR] _on_project_session_end error: {e}")
 
     # ── Event handlers — settings ──────────────────────────────────────────────
 
@@ -529,7 +532,7 @@ class Plugin(PluginBase):
         try:
             self._schedule_refresh()
         except Exception as e:
-            print(f"[CALENDAR] _on_settings_changed error: {e}")
+            log.error(f"[CALENDAR] _on_settings_changed error: {e}")
 
     # ── Refresh helpers ────────────────────────────────────────────────────────
 
@@ -538,7 +541,7 @@ class Plugin(PluginBase):
             try:
                 self._ui.refresh()
             except Exception as e:
-                print(f"[CALENDAR] _initial_refresh error: {e}")
+                log.error(f"[CALENDAR] _initial_refresh error: {e}")
 
     def _schedule_refresh(self, delay_ms: int = 300):
         """Debounced refresh — cancels any pending timer and restarts it."""

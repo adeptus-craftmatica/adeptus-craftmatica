@@ -11,6 +11,9 @@ Cross-plugin integration:
 """
 from __future__ import annotations
 
+import logging
+log = logging.getLogger(__name__)
+
 from typing import Optional
 
 from .models import Model, ModelFilter, ModelStatistics, ValidationError
@@ -123,7 +126,7 @@ class ModelService:
                     reverse=f.sort_desc,
                 )
             except Exception as e:
-                print(f"[MODEL SERVICE] Sorting failed: {e}")
+                log.error(f"[MODEL SERVICE] Sorting failed: {e}")
         return models
 
     # ============================================================
@@ -181,7 +184,7 @@ class ModelService:
         Cleans up all model → paint links for that paint_id.
         """
         self.repo.remove_paint_link_everywhere(paint_id)
-        print(f"[MODEL SERVICE] Removed paint link for paint_id={paint_id} from all models")
+        log.debug(f"[MODEL SERVICE] Removed paint link for paint_id={paint_id} from all models")
 
     def get_models_using_paint(self, paint_id: int) -> list[Model]:
         """Returns all models that reference a given paint (for cross-plugin queries)."""
@@ -222,10 +225,10 @@ def register(context):
     so any other plugin can call:
         context.services.get("model_service")
     """
-    print("[MODEL_TRACKER] Registering service...")
+    log.debug("[MODEL_TRACKER] Registering service...")
     db = context.services.get("db")
     repo = ModelRepository(db)
     service = ModelService(repo)
     context.services.register("model_service", service, override=True)
-    print("[MODEL_TRACKER] Service registered as 'model_service'")
+    log.debug("[MODEL_TRACKER] Service registered as 'model_service'")
     return service
