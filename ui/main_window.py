@@ -308,6 +308,8 @@ class MainWindow(QMainWindow):
         "campaign_tracker_v2":    ["campaign_tracker"],
         "tool_tracker":           ["tool_tracker_v2"],
         "tool_tracker_v2":        ["tool_tracker"],
+        "model_tracker":          ["model_tracker_v2"],
+        "model_tracker_v2":       ["model_tracker"],
     }
 
     def _navigate_to_plugin(self, plugin_id: str) -> None:
