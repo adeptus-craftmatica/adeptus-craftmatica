@@ -1,0 +1,14 @@
+{
+    "name": "Tool Tracker 2.0",
+    "id": "tool_tracker_v2",
+    "version": "1.0.0",
+    "description": "Professional toolkit manager — card grid, condition tracking, project linking and smart restocking recommendations.",
+    "author": "The Fabricator",
+    "entry": "plugin",
+    "ui": true,
+    "category": "hobby",
+    "dependencies": [],
+    "optional_dependencies": ["tool_tracker"],
+    "_note_optional_deps": "If tool_tracker (v1) is loaded, its tool_service is shared. Both v1 and v2 should not run simultaneously with separate service instances.",
+    "events": ["tool_added", "tool_updated", "tool_removed"]
+}
