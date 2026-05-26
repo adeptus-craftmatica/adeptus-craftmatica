@@ -1,0 +1,16 @@
+{
+  "id": "dashboard_v2",
+  "name": "Dashboard 2.0",
+  "version": "2.0.0",
+  "description": "Professional adaptive dashboard — beautiful, feature-rich, and customizable. Powered by your installed plugins.",
+  "author": "The Fabricator",
+  "entry": "plugin",
+  "ui": true,
+  "category": "core",
+  "dependencies": [],
+  "optional_dependencies": [
+    "paint_tracker", "model_tracker", "army_builder",
+    "campaign_tracker", "tool_tracker", "materials_tracker",
+    "project_tracker", "calendar"
+  ]
+}

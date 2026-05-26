@@ -1,0 +1,13 @@
+{
+  "id": "paint_scheme_v2",
+  "name": "Paint Schemes 2.0",
+  "version": "2.0.0",
+  "description": "Professional paint scheme manager — recipe builder, step-by-step guides, and model linking.",
+  "author": "The Fabricator",
+  "entry": "plugin",
+  "ui": true,
+  "category": "hobby",
+  "dependencies": [],
+  "optional_dependencies": ["paint_scheme"],
+  "events": ["scheme_added", "scheme_updated", "scheme_deleted"]
+}

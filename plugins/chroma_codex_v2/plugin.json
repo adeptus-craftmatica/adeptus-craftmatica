@@ -1,0 +1,12 @@
+{
+  "id": "chroma_codex_v2",
+  "name": "Chroma Codex 2.0",
+  "version": "2.0.0",
+  "description": "Intelligent paint planning engine — generate palette recommendations from any primary colour using colour theory, with full paint-collection matching.",
+  "author": "The Fabricator",
+  "entry": "plugin",
+  "ui": true,
+  "category": "hobby",
+  "dependencies": [],
+  "optional_dependencies": ["paint_scheme", "paint_tracker", "project_tracker"]
+}
