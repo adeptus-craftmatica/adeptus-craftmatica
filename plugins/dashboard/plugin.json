@@ -6,7 +6,7 @@
     "author": "The Fabricator",
     "entry": "plugin",
     "ui": true,
-    "category": "core",
+    "category": "hobby",
     "dependencies": [],
     "events": [
         "dashboard_navigate",

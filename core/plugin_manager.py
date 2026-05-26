@@ -55,13 +55,8 @@ class PluginManager:
         for plugin_name in load_order:
             plugin_path, data = manifests[plugin_name]
 
-            # Core plugins (category == "core" or explicitly "dashboard") are
-            # never disabled, even if they appear in the disabled list.
-            is_core = (
-                data.get("category") == "core"
-                or data.get("id") == "dashboard"
-                or plugin_name == "dashboard"
-            )
+            # Core plugins (category == "core") are never disabled.
+            is_core = data.get("category") == "core"
             if not is_core and plugin_name in disabled:
                 log.debug(f"[PLUGIN] Skipping disabled plugin: {plugin_name}")
                 continue

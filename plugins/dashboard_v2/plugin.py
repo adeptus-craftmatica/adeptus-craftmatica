@@ -151,7 +151,7 @@ class Plugin(PluginBase):
     def _setup_providers(self):
         registry = self.context.services.try_get("dashboard_registry")
         if not registry:
-            log.warning("[DASHBOARD V2] dashboard_registry not found — skipping providers")
+            log.debug("[DASHBOARD V2] dashboard_registry not available yet — providers skipped")
             return
 
         _PROVIDER_MAP = [

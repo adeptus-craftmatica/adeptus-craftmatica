@@ -355,12 +355,8 @@ class PluginManagerDialog(QDialog):
             )
             current_label = saved_labels.get(pid, "")
 
-            # Core check: dashboard pid, or manifest category == "core"
-            is_core = (
-                pid == "dashboard"
-                or manifest_data.get("category") == "core"
-                or manifest_data.get("id") == "dashboard"
-            )
+            # Core check: manifest category == "core"
+            is_core = manifest_data.get("category") == "core"
 
             is_enabled = pid not in saved_disabled
 
