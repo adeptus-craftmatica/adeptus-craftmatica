@@ -45,23 +45,23 @@ from PySide6.QtWidgets import (
 # ── Design system ─────────────────────────────────────────────────────────────
 
 _C = {
-    "bg_deep":     "#0c0c0c",
-    "bg_base":     "#121212",
-    "bg_card":     "#1a1a1a",
-    "bg_raised":   "#1f1f1f",
-    "bg_input":    "#252525",
-    "bg_hover":    "#2a2a2a",
-    "bg_active":   "#2f2f2f",
-    "border_lo":   "#1c1c1c",
-    "border":      "#2a2a2a",
-    "border_hi":   "#3a3a3a",
-    "text_hi":     "#f2f2f2",
-    "text_mid":    "#c2c2c2",
-    "text_lo":     "#848484",
-    "text_dim":    "#484848",
+    "bg_deep":     "#141414",
+    "bg_base":     "#1c1c1c",
+    "bg_card":     "#1e1e1e",
+    "bg_raised":   "#212121",
+    "bg_input":    "#2a2a2a",
+    "bg_hover":    "#2e2e2e",
+    "bg_active":   "#333333",
+    "border_lo":   "#282828",
+    "border":      "#363636",
+    "border_hi":   "#484848",
+    "text_hi":     "#f0f0f0",
+    "text_mid":    "#d8d8d8",
+    "text_lo":     "#909090",
+    "text_dim":    "#606060",
     "accent":      "#0078d4",
     "accent_hi":   "#1a8ee8",
-    "accent_lo":   "#0a2a4a",
+    "accent_lo":   "#0f4a7a",
     "accent_text": "#60b0ff",
     "danger":      "#e05555",
     "danger_hi":   "#eb6868",
@@ -107,11 +107,11 @@ _SETTINGS_HIDDEN_KEY = "dashboard_v2.hidden_widgets"
 _SCROLL_SS = f"""
     QScrollArea {{ background: transparent; border: none; }}
     QScrollBar:vertical {{
-        background: {_C['bg_deep']}; width: 5px; margin: 0;
+        background: transparent; width: 5px; margin: 0;
         border-radius: 3px;
     }}
     QScrollBar::handle:vertical {{
-        background: {_C['border_hi']}; border-radius: 3px; min-height: 20px;
+        background: {_C['border']}; border-radius: 3px; min-height: 20px;
     }}
     QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
 """
@@ -285,7 +285,7 @@ class _DashWidget(QFrame):
             QFrame#dashCardHdr {{
                 background: {_C['bg_raised']};
                 border-radius: {_R['lg']} {_R['lg']} 0 0;
-                border-bottom: 1px solid {_C['border_lo']};
+                border-bottom: 1px solid {_C['border']};
             }}
         """)
         hl = QHBoxLayout(hdr)
@@ -440,8 +440,8 @@ class _StatsStripWidget(QFrame):
         self.setObjectName("statsStrip")
         self.setStyleSheet(f"""
             QFrame#statsStrip {{
-                background: {_C['bg_deep']};
-                border-bottom: 1px solid {_C['border_lo']};
+                background: {_C['bg_base']};
+                border-bottom: 1px solid {_C['border']};
             }}
         """)
         self.setFixedHeight(106)
@@ -1085,8 +1085,8 @@ _TAB_STYLE = f"""
         alignment: left;
     }}
     QTabBar {{
-        background: {_C['bg_deep']};
-        border-bottom: 1px solid {_C['border_lo']};
+        background: {_C['bg_card']};
+        border-bottom: 1px solid {_C['border']};
     }}
     QTabBar::tab {{
         background: transparent;
@@ -1151,7 +1151,7 @@ class DashboardV2UI(QWidget):
     def _build_header(self) -> QFrame:
         hdr = QFrame()
         hdr.setFixedHeight(68)
-        hdr.setStyleSheet(f"background: {_C['bg_deep']}; border: none;")
+        hdr.setStyleSheet(f"background: {_C['bg_card']}; border-bottom: 1px solid {_C['border']};")
 
         lay = QVBoxLayout(hdr)
         lay.setContentsMargins(20, 8, 20, 8)
@@ -1172,6 +1172,10 @@ class DashboardV2UI(QWidget):
         )
         top.addWidget(title)
         top.addStretch()
+
+        self._customize_btn = _ghost_btn("⚙  Customize")
+        self._customize_btn.clicked.connect(self.customize_clicked)
+        top.addWidget(self._customize_btn)
 
         self._refresh_btn = _ghost_btn("↻  Refresh")
         self._refresh_btn.clicked.connect(self.refresh_clicked)
@@ -1226,11 +1230,30 @@ class DashboardV2UI(QWidget):
         #   3. Activity  — activity feed
         #   4. Paint Intel (only if paint_service loaded)
         #   5. Recommendations (always last)
-        self._tabs.addTab(self._build_overview_tab(),      "⚡ Overview")
-        self._tabs.addTab(self._build_projects_tab(),      "📁 Projects")
-        self._tabs.addTab(self._build_activity_tab(),      "📜 Activity")
-        self._build_intel_tab()                            # conditional
-        self._tabs.addTab(self._build_recs_tab(),          "💡 Recommendations")
+
+        # Build all tab (widget, label) pairs first so set_tab_visible can re-insert them
+        self._all_tabs: list[tuple[str, QWidget]] = []
+
+        overview_tab = self._build_overview_tab()
+        self._all_tabs.append(("⚡ Overview", overview_tab))
+        self._tabs.addTab(overview_tab, "⚡ Overview")
+
+        projects_tab = self._build_projects_tab()
+        self._all_tabs.append(("📁 Projects", projects_tab))
+        self._tabs.addTab(projects_tab, "📁 Projects")
+
+        activity_tab = self._build_activity_tab()
+        self._all_tabs.append(("📜 Activity", activity_tab))
+        self._tabs.addTab(activity_tab, "📜 Activity")
+
+        intel_tab = self._build_intel_tab()
+        if intel_tab is not None:
+            self._all_tabs.append(("🎨 Paint Intel", intel_tab))
+            self._tabs.addTab(intel_tab, "🎨 Paint Intel")
+
+        recs_tab = self._build_recs_tab()
+        self._all_tabs.append(("💡 Recommendations", recs_tab))
+        self._tabs.addTab(recs_tab, "💡 Recommendations")
 
     def _build_overview_tab(self) -> QWidget:
         """
@@ -1289,15 +1312,15 @@ class DashboardV2UI(QWidget):
 
         return page
 
-    def _build_intel_tab(self):
-        """Only adds the Paint Intel tab if paint_service is available."""
+    def _build_intel_tab(self) -> QWidget | None:
+        """Only builds the Paint Intel tab if paint_service is available. Returns the page or None."""
         paint_available = (
             self._ctx.services.try_get("paint_service") is not None
             if self._ctx else False
         )
         if not paint_available:
             self._paint_intel_widget = _PaintIntelWidget()  # keep ref for refresh
-            return
+            return None
 
         page = QWidget()
         page.setStyleSheet(f"background: {_C['bg_base']};")
@@ -1309,7 +1332,7 @@ class DashboardV2UI(QWidget):
         self._paint_intel_widget.action_requested.connect(self.action_requested)
         lay.addWidget(self._paint_intel_widget)
 
-        self._tabs.addTab(page, "🎨 Paint Intel")
+        return page
 
     def _build_recs_tab(self) -> QWidget:
         page = QWidget()
@@ -1364,6 +1387,373 @@ class DashboardV2UI(QWidget):
     def refresh_calendar(self, today_events, week_events, milestones, overdue):
         self._calendar_widget.refresh(today_events, week_events, milestones, overdue)
 
-    def open_customize_dialog(self):
-        """Reserved for future tab-visibility customisation."""
-        pass
+    def set_tab_visible(self, label: str, visible: bool):
+        """Show or hide a tab by its label text, preserving master order when re-showing."""
+        if visible:
+            # Check if it's already visible
+            for i in range(self._tabs.count()):
+                if self._tabs.tabText(i) == label:
+                    return  # already present
+            # Find the widget in the master list
+            target_widget = None
+            target_idx_in_all = -1
+            for idx, (lbl, wgt) in enumerate(self._all_tabs):
+                if lbl == label:
+                    target_widget = wgt
+                    target_idx_in_all = idx
+                    break
+            if target_widget is None:
+                return
+            # Find the insertion position: insert before the first currently-visible
+            # tab that comes AFTER this one in the master list
+            insert_pos = self._tabs.count()  # default: append
+            for idx_all, (lbl_all, _) in enumerate(self._all_tabs):
+                if idx_all <= target_idx_in_all:
+                    continue
+                for tab_i in range(self._tabs.count()):
+                    if self._tabs.tabText(tab_i) == lbl_all:
+                        insert_pos = tab_i
+                        break
+                else:
+                    continue
+                break
+            self._tabs.insertTab(insert_pos, target_widget, label)
+        else:
+            for i in range(self._tabs.count()):
+                if self._tabs.tabText(i) == label:
+                    self._tabs.removeTab(i)
+                    return
+
+    def open_customize_dialog(
+        self,
+        hidden_tabs: list[str],
+        all_actions: list = None,
+        hidden_actions: list[str] = None,
+        all_stats: list = None,
+        hidden_cards: list[str] = None,
+        display_name: str = "",
+    ) -> dict | None:
+        """
+        Show the full multi-tab Customize Dashboard dialog.
+        Returns a dict with keys hidden_tabs, hidden_actions, hidden_cards, display_name
+        on accept, or None on cancel.
+        """
+        if hidden_tabs is None:
+            hidden_tabs = []
+        if all_actions is None:
+            all_actions = []
+        if hidden_actions is None:
+            hidden_actions = []
+        if all_stats is None:
+            all_stats = []
+        if hidden_cards is None:
+            hidden_cards = []
+
+        hidden_tabs_set    = set(hidden_tabs)
+        hidden_actions_set = set(hidden_actions)
+        hidden_cards_set   = set(hidden_cards)
+
+        # ── Shared checkbox stylesheet ─────────────────────────────────────────
+        _CB_SS = f"""
+            QCheckBox {{
+                color: {_C['text_hi']};
+                font-size: {_FS['base']};
+                background: transparent;
+                spacing: 8px;
+                padding: 4px 0;
+            }}
+            QCheckBox::indicator {{
+                width: 16px;
+                height: 16px;
+                border: 1px solid {_C['border_hi']};
+                border-radius: {_R['xs']};
+                background: {_C['bg_input']};
+            }}
+            QCheckBox::indicator:checked {{
+                background: {_C['accent']};
+                border-color: {_C['accent']};
+            }}
+            QCheckBox::indicator:disabled {{
+                background: {_C['bg_hover']};
+                border-color: {_C['border']};
+            }}
+        """
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Customize Dashboard")
+        dlg.setModal(True)
+        dlg.setMinimumWidth(500)
+        dlg.setMinimumHeight(520)
+        dlg.setStyleSheet(f"""
+            QDialog {{
+                background: {_C['bg_base']};
+                color: {_C['text_hi']};
+            }}
+            QLabel {{
+                color: {_C['text_hi']};
+                font-size: {_FS['base']};
+                background: transparent;
+            }}
+            QLineEdit {{
+                background: {_C['bg_input']};
+                color: {_C['text_hi']};
+                border: 1px solid {_C['border_hi']};
+                border-radius: {_R['base']};
+                padding: 6px 10px;
+                font-size: {_FS['base']};
+            }}
+            QLineEdit:focus {{
+                border-color: {_C['accent']};
+            }}
+        """)
+
+        root_lay = QVBoxLayout(dlg)
+        root_lay.setContentsMargins(0, 0, 0, 0)
+        root_lay.setSpacing(0)
+
+        # ── Inner tab widget ──────────────────────────────────────────────────
+        inner_tabs = QTabWidget()
+        inner_tabs.setTabBar(_WideTabBar())
+        inner_tabs.setStyleSheet(_TAB_STYLE)
+        inner_tabs.tabBar().setExpanding(False)
+        root_lay.addWidget(inner_tabs, stretch=1)
+
+        # helper: build a tab page with the right bg + padding
+        def _tab_page() -> tuple[QWidget, QVBoxLayout]:
+            page = QWidget()
+            page.setStyleSheet(f"background: {_C['bg_base']};")
+            lay = QVBoxLayout(page)
+            lay.setContentsMargins(16, 14, 16, 14)
+            lay.setSpacing(10)
+            return page, lay
+
+        # helper: build a scrollable checkbox list
+        def _checkbox_scroll_tab(
+            items: list,
+            id_fn,
+            label_fn,
+            source_fn,
+            hidden_set: set,
+        ) -> tuple[QWidget, list[tuple[object, QCheckBox]]]:
+            """
+            Returns (tab_page_widget, list_of_(item, checkbox)_pairs).
+            """
+            page, lay = _tab_page()
+
+            if not items:
+                lay.addWidget(
+                    _empty_state("No items available yet.\nInstall plugins to populate this list.")
+                )
+                lay.addStretch()
+                return page, []
+
+            # Select All / Clear All row
+            btn_row = QHBoxLayout()
+            btn_row.addStretch()
+            sel_all_btn = _ghost_btn("Select All")
+            clr_all_btn = _ghost_btn("Clear All")
+            btn_row.addWidget(sel_all_btn)
+            btn_row.addWidget(clr_all_btn)
+            lay.addLayout(btn_row)
+
+            # Scroll area
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            scroll.setStyleSheet(_SCROLL_SS)
+
+            body = QWidget()
+            body.setStyleSheet("background: transparent;")
+            body_lay = QVBoxLayout(body)
+            body_lay.setContentsMargins(0, 0, 4, 0)
+            body_lay.setSpacing(2)
+
+            cb_pairs: list[tuple[object, QCheckBox]] = []
+            for item in items:
+                row_w = QWidget()
+                row_w.setStyleSheet("background: transparent;")
+                row_lay = QHBoxLayout(row_w)
+                row_lay.setContentsMargins(4, 0, 4, 0)
+                row_lay.setSpacing(0)
+
+                cb_text = label_fn(item)
+                cb = QCheckBox(cb_text)
+                cb.setStyleSheet(_CB_SS)
+                cb.setChecked(id_fn(item) not in hidden_set)
+                row_lay.addWidget(cb, stretch=1)
+
+                src = source_fn(item)
+                if src:
+                    src_lbl = QLabel(src)
+                    src_lbl.setStyleSheet(
+                        f"color: {_C['text_dim']}; font-size: {_FS['xs']}; "
+                        f"background: transparent; padding-right: 4px;"
+                    )
+                    row_lay.addWidget(src_lbl)
+
+                body_lay.addWidget(row_w)
+                cb_pairs.append((item, cb))
+
+            body_lay.addStretch()
+            scroll.setWidget(body)
+            lay.addWidget(scroll, stretch=1)
+
+            # Wire select/clear all
+            def _set_all(checked: bool):
+                for _, cb in cb_pairs:
+                    cb.setChecked(checked)
+
+            sel_all_btn.clicked.connect(lambda: _set_all(True))
+            clr_all_btn.clicked.connect(lambda: _set_all(False))
+
+            return page, cb_pairs
+
+        # ── Tab 1: Profile ─────────────────────────────────────────────────────
+        profile_page, profile_lay = _tab_page()
+
+        name_lbl = QLabel("Display Name")
+        name_lbl.setStyleSheet(
+            f"color: {_C['text_mid']}; font-size: {_FS['sm']}; font-weight: 600; "
+            f"background: transparent;"
+        )
+        profile_lay.addWidget(name_lbl)
+
+        from PySide6.QtWidgets import QLineEdit
+        name_edit = QLineEdit()
+        name_edit.setText(display_name)
+        name_edit.setPlaceholderText("e.g. Jon")
+        profile_lay.addWidget(name_edit)
+
+        name_note = QLabel("Used in the dashboard greeting")
+        name_note.setStyleSheet(
+            f"color: {_C['text_dim']}; font-size: {_FS['xs']}; "
+            f"font-style: italic; background: transparent;"
+        )
+        profile_lay.addWidget(name_note)
+        profile_lay.addStretch()
+
+        inner_tabs.addTab(profile_page, "👤 Profile")
+
+        # ── Tab 2: Quick Actions ───────────────────────────────────────────────
+        def _action_id(a):
+            return getattr(a, "event", "") or ""
+
+        def _action_label(a):
+            icon  = getattr(a, "icon",  "")
+            label = getattr(a, "label", str(a))
+            return f"{icon}  {label}" if icon else label
+
+        def _action_source(a):
+            return getattr(a, "plugin_id", "") or getattr(a, "source", "") or ""
+
+        actions_page, actions_cb_pairs = _checkbox_scroll_tab(
+            items=all_actions,
+            id_fn=_action_id,
+            label_fn=_action_label,
+            source_fn=_action_source,
+            hidden_set=hidden_actions_set,
+        )
+        inner_tabs.addTab(actions_page, "⚡ Quick Actions")
+
+        # ── Tab 3: Stats Cards ─────────────────────────────────────────────────
+        def _stat_id(s):
+            return getattr(s, "card_id", "") or ""
+
+        def _stat_label(s):
+            icon  = getattr(s, "icon",  "")
+            label = getattr(s, "label", str(s))
+            value = getattr(s, "value", "")
+            parts = [p for p in [icon, label, value] if p]
+            if icon and label:
+                return f"{icon}  {label}  {value}".strip() if value else f"{icon}  {label}"
+            return "  ".join(parts) if parts else str(s)
+
+        def _stat_source(s):
+            return getattr(s, "plugin_id", "") or getattr(s, "source", "") or ""
+
+        stats_page, stats_cb_pairs = _checkbox_scroll_tab(
+            items=all_stats,
+            id_fn=_stat_id,
+            label_fn=_stat_label,
+            source_fn=_stat_source,
+            hidden_set=hidden_cards_set,
+        )
+        inner_tabs.addTab(stats_page, "📊 Stats Cards")
+
+        # ── Tab 4: Tabs ────────────────────────────────────────────────────────
+        tabs_page, tabs_lay = _tab_page()
+
+        heading = QLabel("Choose which tabs to show:")
+        heading.setStyleSheet(
+            f"color: {_C['text_mid']}; font-size: {_FS['sm']}; "
+            f"background: transparent; padding-bottom: 4px;"
+        )
+        tabs_lay.addWidget(heading)
+
+        tab_checkboxes: list[tuple[str, QCheckBox]] = []
+        for (lbl, _) in self._all_tabs:
+            cb = QCheckBox(lbl)
+            cb.setStyleSheet(_CB_SS)
+            if lbl == "⚡ Overview":
+                cb.setChecked(True)
+                cb.setEnabled(False)
+            else:
+                cb.setChecked(lbl not in hidden_tabs_set)
+            tabs_lay.addWidget(cb)
+            tab_checkboxes.append((lbl, cb))
+
+        tabs_lay.addStretch()
+        inner_tabs.addTab(tabs_page, "🗂 Tabs")
+
+        # ── Bottom button row ─────────────────────────────────────────────────
+        btn_frame = QFrame()
+        btn_frame.setStyleSheet(
+            f"background: {_C['bg_card']}; border-top: 1px solid {_C['border']};"
+        )
+        btn_frame_lay = QHBoxLayout(btn_frame)
+        btn_frame_lay.setContentsMargins(16, 10, 16, 10)
+        btn_frame_lay.setSpacing(8)
+        btn_frame_lay.addStretch()
+
+        cancel_btn = _ghost_btn("Cancel")
+        cancel_btn.clicked.connect(dlg.reject)
+        btn_frame_lay.addWidget(cancel_btn)
+
+        save_btn = QPushButton("Save Changes")
+        save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {_C['accent']};
+                color: {_C['text_hi']};
+                border: none;
+                border-radius: {_R['sm']};
+                padding: 7px 20px;
+                font-size: {_FS['base']};
+                font-weight: 600;
+            }}
+            QPushButton:hover {{
+                background: {_C['accent_hi']};
+            }}
+            QPushButton:pressed {{
+                background: {_C['accent_lo']};
+            }}
+        """)
+        save_btn.clicked.connect(dlg.accept)
+        btn_frame_lay.addWidget(save_btn)
+
+        root_lay.addWidget(btn_frame)
+
+        # ── Execute dialog ────────────────────────────────────────────────────
+        if dlg.exec() != QDialog.Accepted:
+            return None
+
+        new_hidden_tabs    = [lbl for lbl, cb in tab_checkboxes if not cb.isChecked()]
+        new_hidden_actions = [_action_id(item) for item, cb in actions_cb_pairs if not cb.isChecked()]
+        new_hidden_cards   = [_stat_id(item) for item, cb in stats_cb_pairs if not cb.isChecked()]
+
+        return {
+            "hidden_tabs":    new_hidden_tabs,
+            "hidden_actions": new_hidden_actions,
+            "hidden_cards":   new_hidden_cards,
+            "display_name":   name_edit.text(),
+        }

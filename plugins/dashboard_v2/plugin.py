@@ -106,6 +106,15 @@ class Plugin(PluginBase):
 
         self._register_events()
 
+        # Bootstrap dashboard_registry if no other plugin has registered it yet
+        if not self.context.services.try_get("dashboard_registry"):
+            try:
+                from plugins.dashboard.service import register as _reg_registry
+                _reg_registry(self.context)
+                log.info("[DASHBOARD V2] Created dashboard_registry")
+            except Exception as e:
+                log.error(f"[DASHBOARD V2] Could not create registry: {e}")
+
         # Defer until all other plugins have registered their services
         QTimer.singleShot(200, self._deferred_setup)
 
@@ -133,6 +142,7 @@ class Plugin(PluginBase):
         self._setup_providers()
         self._update_greeting()
         self._do_refresh()
+        self._apply_tab_visibility()
 
     def _update_greeting(self):
         if not self._ui:
@@ -244,51 +254,77 @@ class Plugin(PluginBase):
     def _do_refresh(self):
         if not self._ui:
             return
+
+        # Self stats always work regardless of registry
+        try:
+            self_stats = self._get_self_stats()
+        except Exception as e:
+            log.error(f"[DASHBOARD V2] self_stats: {e}")
+            self_stats = []
+
         registry = self.context.services.try_get("dashboard_registry")
-        if not registry:
-            return
 
         # Stats
+        hidden_cards = set(self._load_json_list("dashboard_v2.hidden_cards"))
+        registry_stats = []
+        if registry:
+            try:
+                registry_stats = registry.get_all_command_stats()
+                self._last_stats = self_stats + registry_stats
+            except Exception as e:
+                log.error(f"[DASHBOARD V2] registry stats: {e}")
+                self._last_stats = self_stats
+        else:
+            self._last_stats = self_stats
         try:
-            all_stats = self._get_self_stats() + registry.get_all_command_stats()
-            self._last_stats = all_stats
-            self._ui.refresh_stats(all_stats)
+            visible_stats = [
+                s for s in self._last_stats
+                if getattr(s, "card_id", "") not in hidden_cards
+            ]
+            self._ui.refresh_stats(visible_stats)
         except Exception as e:
-            log.error(f"[DASHBOARD V2] stats: {e}")
+            log.error(f"[DASHBOARD V2] refresh_stats: {e}")
 
         # Projects
-        project_cards = []
-        try:
-            project_cards = registry.get_all_projects()
-            self._ui.refresh_projects(project_cards)
-        except Exception as e:
-            log.error(f"[DASHBOARD V2] projects: {e}")
+        if registry:
+            try:
+                self._ui.refresh_projects(registry.get_all_projects())
+            except Exception as e:
+                log.error(f"[DASHBOARD V2] projects: {e}")
 
         # Quick actions
-        try:
-            self._ui.refresh_quick_actions(registry.get_all_quick_actions())
-        except Exception as e:
-            log.error(f"[DASHBOARD V2] quick_actions: {e}")
+        if registry:
+            try:
+                hidden_actions = set(self._load_json_list("dashboard_v2.hidden_actions"))
+                all_qa = registry.get_all_quick_actions()
+                visible_qa = [
+                    a for a in all_qa
+                    if getattr(a, "event", "") not in hidden_actions
+                ]
+                self._ui.refresh_quick_actions(visible_qa)
+            except Exception as e:
+                log.error(f"[DASHBOARD V2] quick_actions: {e}")
 
         # Notifications
-        notifications = []
-        try:
-            notifications = registry.get_all_notifications()
-            self._ui.refresh_notifications(notifications)
-        except Exception as e:
-            log.error(f"[DASHBOARD V2] notifications: {e}")
+        if registry:
+            try:
+                self._ui.refresh_notifications(registry.get_all_notifications())
+            except Exception as e:
+                log.error(f"[DASHBOARD V2] notifications: {e}")
 
         # Recommendations
-        try:
-            self._ui.refresh_recommendations(registry.get_all_recommendations())
-        except Exception as e:
-            log.error(f"[DASHBOARD V2] recommendations: {e}")
+        if registry:
+            try:
+                self._ui.refresh_recommendations(registry.get_all_recommendations())
+            except Exception as e:
+                log.error(f"[DASHBOARD V2] recommendations: {e}")
 
         # Paint intel
-        try:
-            self._refresh_paint_intel(registry)
-        except Exception as e:
-            log.error(f"[DASHBOARD V2] paint_intel: {e}")
+        if registry:
+            try:
+                self._refresh_paint_intel(registry)
+            except Exception as e:
+                log.error(f"[DASHBOARD V2] paint_intel: {e}")
 
         # Activity feed
         try:
@@ -330,8 +366,54 @@ class Plugin(PluginBase):
     # ── Customize ──────────────────────────────────────────────────────────────
 
     def _open_customize(self):
-        if self._ui:
-            self._ui.open_customize_dialog()
+        if not self._ui:
+            return
+        settings = self.context.services.get("settings")
+        registry = self.context.services.try_get("dashboard_registry")
+
+        all_actions: list = []
+        all_stats: list = list(self._last_stats)
+        if registry:
+            try:
+                all_actions = registry.get_all_quick_actions()
+            except Exception:
+                pass
+            try:
+                for s in registry.get_all_command_stats():
+                    if s not in all_stats:
+                        all_stats.append(s)
+            except Exception:
+                pass
+
+        result = self._ui.open_customize_dialog(
+            hidden_tabs    = self._load_json_list("dashboard_v2.hidden_tabs"),
+            all_actions    = all_actions,
+            hidden_actions = self._load_json_list("dashboard_v2.hidden_actions"),
+            all_stats      = all_stats,
+            hidden_cards   = self._load_json_list("dashboard_v2.hidden_cards"),
+            display_name   = settings.get("user.display_name", "") if settings else "",
+        )
+        if result is None:
+            return
+        if settings:
+            settings.set("dashboard_v2.hidden_tabs",    json.dumps(result["hidden_tabs"]))
+            settings.set("dashboard_v2.hidden_actions", json.dumps(result["hidden_actions"]))
+            settings.set("dashboard_v2.hidden_cards",   json.dumps(result["hidden_cards"]))
+            name = result["display_name"].strip()
+            if name:
+                settings.set("user.display_name", name)
+        self._apply_tab_visibility()
+        self._update_greeting()
+        self._schedule_refresh(100)
+
+    def _apply_tab_visibility(self):
+        if not self._ui:
+            return
+        hidden = set(self._load_json_list("dashboard_v2.hidden_tabs"))
+        if not hasattr(self._ui, '_all_tabs'):
+            return
+        for label, _ in self._ui._all_tabs:
+            self._ui.set_tab_visible(label, label not in hidden)
 
     # ── Self stats (hobby engagement) ─────────────────────────────────────────
 

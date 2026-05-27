@@ -573,11 +573,6 @@ class MainWindow(QMainWindow):
         ordered = [pid for pid in saved_order if pid in widget_by_id]
         ordered += [pid for pid in all_ids if pid not in ordered]
 
-        # Ensure dashboard is always first
-        if "dashboard" in ordered and ordered[0] != "dashboard":
-            ordered.remove("dashboard")
-            ordered.insert(0, "dashboard")
-
         # Remove all tabs and re-insert in desired order
         self.tabs.blockSignals(True)
         while self.tabs.count():
@@ -604,12 +599,8 @@ class MainWindow(QMainWindow):
             if pid:
                 widget_by_id[pid] = w
 
-        # Ensure dashboard is always first
         ordered = [pid for pid in order if pid in widget_by_id]
         ordered += [pid for pid in widget_by_id if pid not in ordered]
-        if "dashboard" in ordered and ordered[0] != "dashboard":
-            ordered.remove("dashboard")
-            ordered.insert(0, "dashboard")
 
         # Rebuild tabs
         self.tabs.blockSignals(True)

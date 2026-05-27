@@ -43,29 +43,29 @@ from .import_registry import ImportRegistry
 # ── Design system ──────────────────────────────────────────────────────────────
 _C = {
     # Background scale (darkest → lightest surface)
-    "bg_deep":    "#0c0c0c",
-    "bg_base":    "#121212",
-    "bg_card":    "#1a1a1a",
-    "bg_raised":  "#1f1f1f",
-    "bg_input":   "#252525",
-    "bg_hover":   "#2a2a2a",
-    "bg_active":  "#2f2f2f",
+    "bg_deep":    "#141414",
+    "bg_base":    "#1c1c1c",
+    "bg_card":    "#1e1e1e",
+    "bg_raised":  "#212121",
+    "bg_input":   "#2a2a2a",
+    "bg_hover":   "#2e2e2e",
+    "bg_active":  "#333333",
 
     # Border scale
-    "border_lo":  "#1c1c1c",
-    "border":     "#2a2a2a",
-    "border_hi":  "#3a3a3a",
+    "border_lo":  "#282828",
+    "border":     "#363636",
+    "border_hi":  "#484848",
 
     # Text scale
-    "text_hi":    "#f2f2f2",
-    "text_mid":   "#c2c2c2",
-    "text_lo":    "#848484",
-    "text_dim":   "#484848",
+    "text_hi":    "#f0f0f0",
+    "text_mid":   "#d8d8d8",
+    "text_lo":    "#909090",
+    "text_dim":   "#606060",
 
     # Accent (Windows-blue, matches app theme)
     "accent":     "#0078d4",
     "accent_hi":  "#1a8ee8",
-    "accent_lo":  "#0a2a4a",
+    "accent_lo":  "#0f4a7a",
     "accent_text":"#60b0ff",
 
     # Semantic
@@ -129,6 +129,7 @@ def _combo_ss() -> str:
         QComboBox:focus {{ border-color: {_C['accent']}; }}
         QComboBox:hover {{ border-color: {_C['border_hi']}; }}
         QComboBox::drop-down {{ border: none; width: 22px; }}
+        QComboBox::down-arrow {{ image: none; width: 0; height: 0; }}
         QComboBox QAbstractItemView {{
             background: {_C['bg_card']};
             color: {_C['text_hi']};
@@ -1025,7 +1026,8 @@ class _QuickAddBar(QWidget):
 
         self._sys_combo = QComboBox()
         self._sys_combo.setEditable(True)
-        self._sys_combo.addItems([""] + COMMON_GAME_SYSTEMS)
+        self._sys_combo.addItems(COMMON_GAME_SYSTEMS)
+        self._sys_combo.setCurrentIndex(-1)
         self._sys_combo.setMinimumWidth(160)
         self._sys_combo.lineEdit().setPlaceholderText("Game System *")
         self._sys_combo.setStyleSheet(_combo_ss())
@@ -1107,7 +1109,7 @@ class _QuickAddBar(QWidget):
         current = self._sys_combo.currentText()
         self._sys_combo.blockSignals(True)
         self._sys_combo.clear()
-        self._sys_combo.addItems([""] + systems)
+        self._sys_combo.addItems([s for s in systems if s])
         self._sys_combo.setCurrentText(current)
         self._sys_combo.blockSignals(False)
 
@@ -1413,6 +1415,7 @@ class _EditDialog(QDialog):
         self._sys_combo = QComboBox()
         self._sys_combo.setEditable(True)
         self._sys_combo.addItems(COMMON_GAME_SYSTEMS)
+        self._sys_combo.setCurrentIndex(-1)
         self._sys_combo.setCurrentText(self._model.game_system)
         self._sys_combo.setStyleSheet(_combo_ss())
         form.addRow("Game System *", self._sys_combo)

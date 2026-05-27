@@ -36,23 +36,23 @@ from PySide6.QtWidgets import (
 # Matches dashboard_v2 so the two plugins feel native to the same app.
 
 _C = {
-    "bg_deep":     "#0c0c0c",
-    "bg_base":     "#121212",
-    "bg_card":     "#1a1a1a",
-    "bg_raised":   "#1f1f1f",
-    "bg_input":    "#252525",
-    "bg_hover":    "#2a2a2a",
-    "bg_active":   "#2f2f2f",
-    "border_lo":   "#1c1c1c",
-    "border":      "#2a2a2a",
-    "border_hi":   "#3a3a3a",
-    "text_hi":     "#f2f2f2",
-    "text_mid":    "#c2c2c2",
-    "text_lo":     "#848484",
-    "text_dim":    "#484848",
+    "bg_deep":     "#141414",
+    "bg_base":     "#1c1c1c",
+    "bg_card":     "#1e1e1e",
+    "bg_raised":   "#212121",
+    "bg_input":    "#2a2a2a",
+    "bg_hover":    "#2e2e2e",
+    "bg_active":   "#333333",
+    "border_lo":   "#282828",
+    "border":      "#363636",
+    "border_hi":   "#484848",
+    "text_hi":     "#f0f0f0",
+    "text_mid":    "#d8d8d8",
+    "text_lo":     "#909090",
+    "text_dim":    "#606060",
     "accent":      "#0078d4",
     "accent_hi":   "#1a8ee8",
-    "accent_lo":   "#0a2a4a",
+    "accent_lo":   "#0f4a7a",
     "accent_text": "#60b0ff",
     "danger":      "#e05555",
     "danger_hi":   "#eb6868",
@@ -447,6 +447,7 @@ class _EventDialog(QDialog):
             f"QDateEdit:focus, QTimeEdit:focus{{"
             f"  border-color:{_C['accent']};}}"
             f"QComboBox::drop-down{{border:none; width:18px;}}"
+            f"QComboBox::down-arrow{{image:none; width:0; height:0;}}"
             f"QComboBox QAbstractItemView{{background:{_C['bg_raised']}; color:{_C['text_hi']};"
             f"  border:1px solid {_C['border']}; selection-background-color:{_C['accent']};}}"
             f"QCheckBox{{color:{_C['text_mid']}; font-size:{_FS['base']};}}"
@@ -548,7 +549,7 @@ class _EventDialog(QDialog):
         pri_col.addWidget(_label("Priority", "sm", "text_lo"))
         self._priority = QComboBox()
         self._priority.setFixedHeight(34)
-        self._priority.addItems(["3 — Normal", "2 — Important", "1 — Urgent"])
+        self._priority.addItems(["Normal", "Important", "Urgent"])
         pri_col.addWidget(self._priority)
         pri_row.addLayout(pri_col)
 

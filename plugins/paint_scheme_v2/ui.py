@@ -25,23 +25,23 @@ from plugins.paint_scheme.models import TECHNIQUES, SchemeFilter
 # ── Design system (matches model_tracker_v2) ──────────────────────────────────
 
 _C = {
-    "bg_deep":    "#0c0c0c",
-    "bg_base":    "#121212",
-    "bg_card":    "#1a1a1a",
-    "bg_raised":  "#1f1f1f",
-    "bg_input":   "#252525",
-    "bg_hover":   "#2a2a2a",
-    "bg_active":  "#2f2f2f",
-    "border_lo":  "#1c1c1c",
-    "border":     "#2a2a2a",
-    "border_hi":  "#3a3a3a",
-    "text_hi":    "#f2f2f2",
-    "text_mid":   "#c2c2c2",
-    "text_lo":    "#848484",
-    "text_dim":   "#484848",
+    "bg_deep":    "#141414",
+    "bg_base":    "#1c1c1c",
+    "bg_card":    "#1e1e1e",
+    "bg_raised":  "#212121",
+    "bg_input":   "#2a2a2a",
+    "bg_hover":   "#2e2e2e",
+    "bg_active":  "#333333",
+    "border_lo":  "#282828",
+    "border":     "#363636",
+    "border_hi":  "#484848",
+    "text_hi":    "#f0f0f0",
+    "text_mid":   "#d8d8d8",
+    "text_lo":    "#909090",
+    "text_dim":   "#606060",
     "accent":     "#0078d4",
     "accent_hi":  "#1a8ee8",
-    "accent_lo":  "#0a2a4a",
+    "accent_lo":  "#0f4a7a",
     "accent_text":"#60b0ff",
     "danger":     "#e05555",
     "danger_hi":  "#eb6868",
@@ -93,6 +93,7 @@ def _input_ss() -> str:
         f"QLineEdit:focus, QTextEdit:focus, QComboBox:focus"
         f" {{ border-color: {_C['accent']}; background: {_C['bg_hover']}; }}"
         f"QComboBox::drop-down {{ border: none; width: 22px; }}"
+        f"QComboBox::down-arrow {{ image: none; width: 0; height: 0; }}"
         f"QComboBox QAbstractItemView {{"
         f" background: {_C['bg_card']}; color: {_C['text_hi']};"
         f" border: 1px solid {_C['border']};"
@@ -104,7 +105,7 @@ def _primary_btn_ss(small: bool = False) -> str:
     pad = "4px 12px" if small else "6px 18px"
     fs  = _FS["sm"] if small else _FS["base"]
     return (
-        f"QPushButton {{ background: {_C['accent']}; color: #fff; border: none;"
+        f"QPushButton {{ background: {_C['accent']}; color: {_C['text_hi']}; border: none;"
         f" border-radius: {_R['sm']}; padding: {pad}; font-size: {fs}; font-weight: 600; }}"
         f"QPushButton:hover {{ background: {_C['accent_hi']}; }}"
         f"QPushButton:disabled {{ background: {_C['bg_hover']}; color: {_C['text_dim']}; }}"
@@ -128,7 +129,7 @@ def _danger_btn_ss(small: bool = False) -> str:
         f"QPushButton {{ background: {_C['danger_lo']}; color: {_C['danger']};"
         f" border: 1px solid {_C['danger_lo']}; border-radius: {_R['sm']};"
         f" padding: {pad}; font-size: {fs}; }}"
-        f"QPushButton:hover {{ background: {_C['danger']}; color: #fff;"
+        f"QPushButton:hover {{ background: {_C['danger']}; color: {_C['text_hi']};"
         f" border-color: {_C['danger']}; }}"
     )
 
@@ -579,7 +580,8 @@ class _SchemeDialog(QDialog):
         self._gs = QComboBox()
         self._gs.setEditable(True)
         self._gs.setSizeAdjustPolicy(QComboBox.AdjustToContents)
-        self._gs.addItems(COMMON_GAME_SYSTEMS)
+        self._gs.addItems([gs for gs in COMMON_GAME_SYSTEMS if gs])
+        self._gs.setCurrentIndex(-1)
         self._gs.setStyleSheet(_input_ss())
         gs_col.addWidget(self._gs)
         gs_row.addLayout(gs_col, 1)

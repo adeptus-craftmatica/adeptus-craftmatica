@@ -1,0 +1,8 @@
+{
+  "id": "project_tracker_v2",
+  "name": "Projects 2.0",
+  "version": "2.0.0",
+  "entry": "plugin",
+  "description": "Premium project tracker — milestones, sessions, gallery, requirements, and linked entities. Polished v2 interface.",
+  "dependencies": []
+}
