@@ -68,6 +68,32 @@ PROJECT_ICONS = ["📁","⚔","🛡","🤖","🧙","🐉","🏰","🚀","💀","
 
 # ── Reusable helpers ───────────────────────────────────────────────────────────
 
+def _style_combo(cb: QComboBox) -> QComboBox:
+    """Apply arrow-free styling matching the other v2 plugins exactly."""
+    cb.setStyleSheet(f"""
+        QComboBox {{
+            background: {_C['bg_input']};
+            color: {_C['text_hi']};
+            border: 1px solid {_C['border']};
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: {_FS['base']};
+        }}
+        QComboBox:focus {{ border-color: {_C['accent']}; }}
+        QComboBox:hover {{ border-color: {_C['border_hi']}; }}
+        QComboBox::drop-down {{ border: none; width: 22px; }}
+        QComboBox::down-arrow {{ image: none; width: 0; height: 0; }}
+        QComboBox QAbstractItemView {{
+            background: {_C['bg_card']};
+            color: {_C['text_hi']};
+            border: 1px solid {_C['border']};
+            selection-background-color: {_C['accent_lo']};
+            selection-color: {_C['accent_text']};
+            outline: none;
+        }}
+    """)
+    return cb
+
 def _sep() -> QFrame:
     f = QFrame(); f.setFrameShape(QFrame.Shape.HLine); f.setFixedHeight(1)
     f.setStyleSheet(f"background:{_C['border_lo']};border:none;"); return f
@@ -367,22 +393,18 @@ class _SidebarPanel(QWidget):
         sl.addWidget(self._search_edit)
         root.addWidget(sw)
 
-        # ── Filter — QPushButton + QMenu (no native QComboBox) ────────────────
+        # ── Filter — QComboBox (matches all other v2 dropdowns) ──────────────
         self._filter_labels = ["All Projects","Active","On Hold","Completed","Archived"]
         self._filter_vals   = ["","active","on_hold","completed","archived"]
         fw = QWidget(); fw.setObjectName("sidebarFilter")
         fw.setStyleSheet(f"QWidget#sidebarFilter{{background:{_C['bg_deep']};}}")
         fl = QHBoxLayout(fw); fl.setContentsMargins(12,4,12,10)
-        self._filter_btn = QPushButton(f"{self._filter_labels[0]}  ▾")
-        self._filter_btn.setFixedHeight(30)
-        self._filter_btn.setStyleSheet(
-            f"QPushButton{{background:{_C['bg_raised']};color:{_C['text_hi']};"
-            f"border:1px solid {_C['border_hi']};border-radius:{_R['base']};"
-            f"font-size:{_FS['sm']};font-weight:400;text-align:left;padding:0 10px;}}"
-            f"QPushButton:hover{{border-color:{_C['accent']};}}"
-            f"QPushButton:pressed{{background:{_C['bg_input']};}}")
-        self._filter_btn.clicked.connect(self._show_filter_menu)
-        fl.addWidget(self._filter_btn)
+        self._filter_combo = _style_combo(QComboBox())
+        for label in self._filter_labels:
+            self._filter_combo.addItem(label)
+        self._filter_combo.setCurrentIndex(0)
+        self._filter_combo.currentIndexChanged.connect(self._on_filter_combo)
+        fl.addWidget(self._filter_combo)
         root.addWidget(fw)
 
         root.addWidget(_sep())
@@ -398,24 +420,9 @@ class _SidebarPanel(QWidget):
     def _on_search(self, t:str):
         self._search=t.lower(); self._refilter()
 
-    def _show_filter_menu(self):
-        menu = QMenu(self)
-        menu.setStyleSheet(
-            f"QMenu{{background:{_C['bg_raised']};color:{_C['text_hi']};"
-            f"border:1px solid {_C['border_hi']};border-radius:{_R['base']};padding:4px;}}"
-            f"QMenu::item{{padding:8px 16px;font-size:{_FS['sm']};}}"
-            f"QMenu::item:selected{{background:{_C['accent']};color:{_C['text_hi']};"
-            f"border-radius:{_R['sm']};}}")
-        for i, label in enumerate(self._filter_labels):
-            act = menu.addAction(label)
-            act.setData(i)
-        chosen = menu.exec(self._filter_btn.mapToGlobal(
-            self._filter_btn.rect().bottomLeft()))
-        if chosen:
-            idx = chosen.data()
-            self._filter_btn.setText(f"{self._filter_labels[idx]}  ▾")
-            val = self._filter_vals[idx]
-            self._ctx.event_bus.emit("project_filter_changed",{"status":val or None})
+    def _on_filter_combo(self, idx: int):
+        val = self._filter_vals[idx]
+        self._ctx.event_bus.emit("project_filter_changed", {"status": val or None})
 
     def _refilter(self):
         for pid,card in self._cards.items():
@@ -1244,18 +1251,21 @@ class _DetailPanel(QWidget):
         self._act_edit.triggered.connect(self._on_edit)
         self._act_delete.triggered.connect(self._on_delete)
 
-        self._menu_btn = QPushButton("Actions  ▾"); self._menu_btn.hide()
-        self._menu_btn.setFixedHeight(28)
-        self._menu_btn.setToolTip("Project actions")
-        self._menu_btn.setStyleSheet(
-            f"QPushButton{{background:{_C['bg_raised']};color:{_C['text_mid']};"
-            f"border:1px solid {_C['border_hi']};border-radius:{_R['base']};"
-            f"font-size:{_FS['sm']};font-weight:500;padding:0 10px;}}"
-            f"QPushButton:hover{{background:{_C['bg_hover']};color:{_C['text_hi']};"
-            f"border-color:{_C['accent']};}}"
-            f"QPushButton:pressed{{background:{_C['bg_input']};}}")
-        self._menu_btn.clicked.connect(self._show_proj_menu)
-        hl.addWidget(self._menu_btn)
+        self._menu_combo = _style_combo(QComboBox())
+        self._menu_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self._menu_combo.addItem("Actions")
+        self._menu_combo.addItem("Edit Project")
+        self._menu_combo.addItem("Delete Project")
+        self._menu_combo.setCurrentIndex(0)
+        self._menu_combo.setMinimumWidth(140)
+        self._menu_combo.setToolTip("Project actions")
+        self._menu_combo.currentIndexChanged.connect(self._on_actions_combo)
+        try:
+            self._menu_combo.view().setMinimumWidth(160)
+        except Exception:
+            pass
+        self._menu_combo.hide()
+        hl.addWidget(self._menu_combo)
         root.addWidget(self._hdr)
 
         # ── Live session banner ────────────────────────────────────────────
@@ -1333,7 +1343,7 @@ class _DetailPanel(QWidget):
             f"font-weight:600;padding:2px 10px;}}"
             f"QPushButton:hover{{background:{_rgba(sc,0.25)};}}")
         self._status_btn.show()
-        self._menu_btn.show()
+        self._menu_combo.show()
 
         # Live session banner
         active=next((s for s in sessions if s.is_active),None)
@@ -1355,7 +1365,7 @@ class _DetailPanel(QWidget):
         self._project=None
         self._hdr_icon.setText("📁"); self._hdr_name.setText("Select a project")
         self._hdr_sub.setText("")
-        self._status_btn.hide(); self._menu_btn.hide()
+        self._status_btn.hide(); self._menu_combo.hide()
         self._banner.stop(); self._stack.setCurrentIndex(1)
 
     def navigate_to_tab(self, tab:str, item_id=None):
@@ -1389,9 +1399,16 @@ class _DetailPanel(QWidget):
         self._ctx.event_bus.emit("project_v2_status_changed",
                                  {"id":self._project.id,"status":new_st})
 
-    def _show_proj_menu(self):
-        self._proj_menu.exec(self._menu_btn.mapToGlobal(
-            self._menu_btn.rect().bottomLeft()))
+    def _on_actions_combo(self, idx: int):
+        if idx == 0:
+            return
+        self._menu_combo.blockSignals(True)
+        self._menu_combo.setCurrentIndex(0)
+        self._menu_combo.blockSignals(False)
+        if idx == 1:
+            self._on_edit()
+        elif idx == 2:
+            self._on_delete()
 
     def _on_end_session(self):
         if not self._project: return
@@ -1437,7 +1454,7 @@ class _ProjectDialog(QDialog):
 
         # ── Game System ─────────────────────────────────────────────────────
         lay.addWidget(_lbl("Game System")); lay.addSpacing(5)
-        self._game=QComboBox(); self._game.setEditable(True)
+        self._game=_style_combo(QComboBox()); self._game.setEditable(True)
         self._game.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self._game.lineEdit().setPlaceholderText("Select or type a game system…")
         for g in GAME_SYSTEMS[1:]:
@@ -1454,7 +1471,7 @@ class _ProjectDialog(QDialog):
         ]:
             col=QVBoxLayout(); col.setSpacing(5)
             col.addWidget(_lbl(label))
-            cb=QComboBox()
+            cb=_style_combo(QComboBox())
             for disp,val in items_fn():
                 cb.addItem(disp,val)
             col.addWidget(cb); setattr(self,attr,cb); row2.addLayout(col)
@@ -1578,7 +1595,7 @@ class _MilestoneDialog(QDialog):
         self._desc=QTextEdit(); self._desc.setFixedHeight(58); lay.addWidget(self._desc)
         row=QHBoxLayout(); row.setSpacing(12)
         pl=QVBoxLayout(); pl.setSpacing(4); pl.addWidget(_lbl("Priority"))
-        self._pri=QComboBox()
+        self._pri=_style_combo(QComboBox())
         for k in ProjectPriority.ALL: self._pri.addItem(ProjectPriority.LABELS[k],k)
         pl.addWidget(self._pri); row.addLayout(pl)
         dl=QVBoxLayout(); dl.setSpacing(4); dl.addWidget(_lbl("Due Date"))
@@ -1636,7 +1653,7 @@ class _LogSessionDialog(QDialog):
         lay.addWidget(self._dur)
         if self._milestones:
             lay.addWidget(_lbl("Linked Milestone"))
-            self._ms=QComboBox(); self._ms.addItem("No milestone",None)
+            self._ms=_style_combo(QComboBox()); self._ms.addItem("No milestone",None)
             for m in self._milestones:
                 if not m.is_complete: self._ms.addItem(m.title,m.id)
             lay.addWidget(self._ms)
@@ -1721,7 +1738,7 @@ class _GalleryDialog(QDialog):
             pv.setPixmap(px)
         lay.addWidget(pv)
         lay.addWidget(_lbl("Stage"))
-        self._stage=QComboBox(); self._stage.addItem("No stage","")
+        self._stage=_style_combo(QComboBox()); self._stage.addItem("No stage","")
         for k in GalleryStage.ALL: self._stage.addItem(GalleryStage.LABELS[k],k)
         lay.addWidget(self._stage)
         lay.addWidget(_lbl("Title")); self._title=QLineEdit(); lay.addWidget(self._title)
@@ -1743,7 +1760,7 @@ class _ReqDialog(QDialog):
     def _build(self):
         lay=QVBoxLayout(self); lay.setSpacing(10); lay.setContentsMargins(20,18,20,18)
         lay.addWidget(_lbl("Item Type"))
-        self._type=QComboBox()
+        self._type=_style_combo(QComboBox())
         for k in ReqItemType.ALL: self._type.addItem(f"{ReqItemType.ICONS[k]}  {ReqItemType.LABELS[k]}",k)
         lay.addWidget(self._type)
         lay.addWidget(_lbl("Item Name *"))

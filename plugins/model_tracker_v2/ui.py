@@ -2355,6 +2355,9 @@ class ModelTrackerV2UI(QWidget):
                 border-top: 1px solid {_C['border']};
                 background: {_C['bg_base']};
             }}
+            QTabBar {{
+                background: {_C['bg_base']};
+            }}
             QTabBar::tab {{
                 background: transparent;
                 color: {_C['text_dim']};
@@ -2383,9 +2386,9 @@ class ModelTrackerV2UI(QWidget):
         self._pipeline_container.setWidgetResizable(True)
         self._pipeline_container.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self._pipeline_container.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self._pipeline_container.setStyleSheet(f"QScrollArea {{ border: none; background: {_C['bg_deep']}; }}")
+        self._pipeline_container.setStyleSheet(f"QScrollArea {{ border: none; background: {_C['bg_base']}; }}")
         self._pipeline_widget = QWidget()
-        self._pipeline_widget.setStyleSheet(f"background: {_C['bg_deep']};")
+        self._pipeline_widget.setStyleSheet(f"background: {_C['bg_base']};")
         self._pipeline_layout = QHBoxLayout(self._pipeline_widget)
         self._pipeline_layout.setContentsMargins(14, 14, 14, 14)
         self._pipeline_layout.setSpacing(10)
