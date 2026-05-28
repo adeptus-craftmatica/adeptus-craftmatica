@@ -257,6 +257,39 @@ def _label(text: str, size_key: str = "base", color_key: str = "text_mid",
     return lbl
 
 
+# ── Display format helpers ────────────────────────────────────────────────────
+
+def _fmt_time(time_str: str, settings) -> str:
+    """Format a stored HH:MM string using calendar.time_format setting."""
+    if not time_str:
+        return "All day"
+    fmt = settings.get("calendar.time_format", "HH:mm") if settings else "HH:mm"
+    if fmt == "hh:mm AP":
+        try:
+            h, m = map(int, time_str.split(":"))
+            period = "AM" if h < 12 else "PM"
+            h12 = h % 12 or 12
+            return f"{h12}:{m:02d} {period}"
+        except Exception:
+            pass
+    return time_str
+
+
+def _fmt_date_short(d, settings) -> str:
+    """Format a date for compact event-row display using calendar.date_format setting."""
+    fmt = settings.get("calendar.date_format", "dd MMM yyyy") if settings else "dd MMM yyyy"
+    dow = d.strftime("%a ")
+    if fmt == "dd/MM/yyyy":
+        return dow + d.strftime("%d/%m/%y")
+    if fmt == "MM/dd/yyyy":
+        return dow + d.strftime("%m/%d/%y")
+    if fmt == "yyyy-MM-dd":
+        return dow + d.strftime("%Y-%m-%d")
+    if fmt == "d MMMM yyyy":
+        return dow + f"{d.day} {d.strftime('%B')}"
+    return d.strftime("%a %d %b")
+
+
 class _SectionHeader(QWidget):
     """Section title with optional count badge and collapse toggle."""
 
@@ -315,11 +348,16 @@ class _EventRow(QFrame):
     edit_requested     = Signal(int)   # event_id
     delete_requested   = Signal(int)   # event_id
 
-    def __init__(self, event, show_date: bool = False, parent=None):
+    def __init__(self, event, show_date: bool = False, context=None, parent=None):
         super().__init__(parent)
         self._ev = event
+        _s = context.services.try_get("settings") if context else None
         self.setObjectName("EventRow")
-        self.setFixedHeight(46)
+        self.setMinimumHeight(46)
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum,
+        )
         self.setStyleSheet(
             f"QFrame#EventRow{{background:{_C['bg_card']}; border:1px solid {_C['border']};"
             f"border-radius:{_R['sm']}; margin:1px 0;}}"
@@ -327,10 +365,10 @@ class _EventRow(QFrame):
         )
 
         outer = QHBoxLayout(self)
-        outer.setContentsMargins(0, 0, 8, 0)
+        outer.setContentsMargins(0, 0, 8, 6)
         outer.setSpacing(0)
 
-        # Colored left bar
+        # Colored left bar — stretches to full row height
         bar = QFrame()
         bar.setFixedWidth(4)
         clr = event.color() if not event.completed else _C["text_dim"]
@@ -339,7 +377,7 @@ class _EventRow(QFrame):
         )
         outer.addWidget(bar)
 
-        # Icon
+        # Icon — vertically centred
         icon_lbl = _label(event.icon(), "base")
         icon_lbl.setFixedWidth(28)
         icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -347,29 +385,30 @@ class _EventRow(QFrame):
 
         # Text block
         txt = QVBoxLayout()
-        txt.setContentsMargins(4, 4, 4, 4)
-        txt.setSpacing(1)
+        txt.setContentsMargins(4, 6, 4, 6)
+        txt.setSpacing(2)
 
         title_color  = _C["text_dim"] if event.completed else _C["text_hi"]
         title_weight = "400" if event.completed else "500"
         title_style  = "line-through " if event.completed else ""
         title_lbl = QLabel(event.title)
+        title_lbl.setWordWrap(True)
         title_lbl.setStyleSheet(
             f"color:{title_color}; font-size:{_FS['base']}; font-weight:{title_weight};"
             f" text-decoration:{title_style}; background:transparent; border:none;"
         )
-        title_lbl.setMaximumWidth(9999)
         txt.addWidget(title_lbl)
 
         meta_parts = []
         if show_date and event.event_date:
             try:
                 d = date.fromisoformat(event.event_date)
-                meta_parts.append(d.strftime("%a %d %b"))
+                meta_parts.append(_fmt_date_short(d, _s))
             except ValueError:
                 pass
-        if event.display_time() != "All day":
-            meta_parts.append(event.display_time())
+        _time_str = _fmt_time(event.time_start, _s)
+        if _time_str != "All day":
+            meta_parts.append(_time_str)
         dur = event.display_duration()
         if dur:
             meta_parts.append(dur)
@@ -380,13 +419,19 @@ class _EventRow(QFrame):
         elif event.is_today() and show_date:
             meta_parts.insert(0, "Today")
 
-        meta_lbl = _label(" · ".join(meta_parts), "xs", "text_lo")
-        meta_lbl.setWordWrap(False)
-        txt.addWidget(meta_lbl)
+        if meta_parts:
+            meta_lbl = _label(" · ".join(meta_parts), "xs", "text_lo")
+            meta_lbl.setWordWrap(True)
+            txt.addWidget(meta_lbl)
 
         outer.addLayout(txt, stretch=1)
 
-        # Action buttons
+        # Action buttons — top-aligned so they don't drift on tall rows
+        btn_col = QVBoxLayout()
+        btn_col.setContentsMargins(0, 6, 0, 0)
+        btn_col.setSpacing(3)
+        btn_col.setAlignment(Qt.AlignmentFlag.AlignTop)
+
         if not event.auto_generated:
             btn_check = QPushButton("✓" if not event.completed else "↩")
             btn_check.setFixedSize(26, 26)
@@ -398,7 +443,7 @@ class _EventRow(QFrame):
             )
             btn_check.setToolTip("Mark complete" if not event.completed else "Reopen")
             btn_check.clicked.connect(lambda: self.complete_requested.emit(self._ev.id))
-            outer.addWidget(btn_check)
+            btn_col.addWidget(btn_check)
 
         btn_edit = QPushButton("✎")
         btn_edit.setFixedSize(26, 26)
@@ -409,7 +454,7 @@ class _EventRow(QFrame):
         )
         btn_edit.setToolTip("Edit event")
         btn_edit.clicked.connect(lambda: self.edit_requested.emit(self._ev.id))
-        outer.addWidget(btn_edit)
+        btn_col.addWidget(btn_edit)
 
         btn_del = QPushButton("✕")
         btn_del.setFixedSize(26, 26)
@@ -420,7 +465,9 @@ class _EventRow(QFrame):
         )
         btn_del.setToolTip("Delete event")
         btn_del.clicked.connect(lambda: self.delete_requested.emit(self._ev.id))
-        outer.addWidget(btn_del)
+        btn_col.addWidget(btn_del)
+
+        outer.addLayout(btn_col)
 
 
 # ── Event Dialog ──────────────────────────────────────────────────────────────
@@ -429,10 +476,11 @@ class _EventDialog(QDialog):
     """Add / edit a CalendarEvent. Progressive disclosure: basic → advanced."""
 
     def __init__(self, service, prefill: dict | None = None, event_id: int | None = None,
-                 parent=None):
+                 context=None, parent=None):
         super().__init__(parent)
         self._service  = service
         self._event_id = event_id
+        self._context  = context
         self._advanced_visible = False
         self.setWindowTitle("Edit Event" if event_id else "New Event")
         self.setMinimumWidth(440)
@@ -477,7 +525,10 @@ class _EventDialog(QDialog):
         self._date = QDateEdit()
         self._date.setCalendarPopup(True)
         self._date.setFixedHeight(34)
-        self._date.setDisplayFormat("dd MMM yyyy")
+        _s = context.services.try_get("settings") if context else None
+        _date_fmt = (_s.get("calendar.date_format", "dd MMM yyyy") if _s else "dd MMM yyyy")
+        _time_fmt = (_s.get("calendar.time_format", "HH:mm") if _s else "HH:mm")
+        self._date.setDisplayFormat(_date_fmt)
         date_col.addWidget(self._date)
         dt_row.addLayout(date_col, stretch=2)
 
@@ -486,7 +537,7 @@ class _EventDialog(QDialog):
         time_col.addWidget(_label("Time (optional)", "sm", "text_lo"))
         self._time_check = QCheckBox("Set time")
         self._time = QTimeEdit()
-        self._time.setDisplayFormat("HH:mm")
+        self._time.setDisplayFormat(_time_fmt)
         self._time.setFixedHeight(34)
         self._time.setEnabled(False)
         self._time_check.toggled.connect(self._time.setEnabled)
@@ -684,8 +735,7 @@ class _EventDialog(QDialog):
 
         stype    = self._session_type.currentText()
         dur      = self._duration.value()
-        pri_text = self._priority.currentText()
-        priority = int(pri_text[0])
+        priority = 3 - self._priority.currentIndex()
         rec_data = self._recurrence.currentData()
         is_rec   = rec_data != "none"
 
@@ -779,7 +829,7 @@ class _TodayView(QWidget):
             )
             il.addWidget(sec)
             for ev in overdue:
-                row = _EventRow(ev, show_date=True)
+                row = _EventRow(ev, show_date=True, context=self._context)
                 self._connect_row(row)
                 il.addWidget(row)
             il.addSpacing(6)
@@ -794,7 +844,7 @@ class _TodayView(QWidget):
         il.addWidget(sec_p)
         if planned:
             for ev in planned:
-                row = _EventRow(ev)
+                row = _EventRow(ev, context=self._context)
                 self._connect_row(row)
                 il.addWidget(row)
         else:
@@ -826,7 +876,7 @@ class _TodayView(QWidget):
                 except ValueError:
                     pass
                 for ev in by_date[d_iso]:
-                    row = _EventRow(ev)
+                    row = _EventRow(ev, context=self._context)
                     self._connect_row(row)
                     il.addWidget(row)
             il.addSpacing(6)
@@ -841,7 +891,7 @@ class _TodayView(QWidget):
             sec_a.set_count(len(activity))
             il.addWidget(sec_a)
             for ev in activity:
-                row = _EventRow(ev)
+                row = _EventRow(ev, context=self._context)
                 self._connect_row(row)
                 il.addWidget(row)
             il.addSpacing(6)
@@ -870,7 +920,7 @@ class _TodayView(QWidget):
             "title", "session_type", "event_date", "time_start", "duration_minutes",
             "notes", "priority", "tags", "is_recurring", "recurrence_rule",
         )}
-        dlg = _EventDialog(self._service, prefill=data, event_id=event_id, parent=self)
+        dlg = _EventDialog(self._service, prefill=data, event_id=event_id, context=self._context, parent=self)
         if dlg.exec():
             self.refresh_needed.emit()
 
@@ -975,7 +1025,7 @@ class _AgendaView(QWidget):
             il.addWidget(date_hdr)
 
             for ev in by_date[d_iso]:
-                row = _EventRow(ev)
+                row = _EventRow(ev, context=self._context)
                 row.complete_requested.connect(self._toggle_complete)
                 row.edit_requested.connect(self._edit_event)
                 row.delete_requested.connect(self._delete_event)
@@ -1000,7 +1050,7 @@ class _AgendaView(QWidget):
             "title", "session_type", "event_date", "time_start", "duration_minutes",
             "notes", "priority", "tags", "is_recurring", "recurrence_rule",
         )}
-        dlg = _EventDialog(self._service, prefill=data, event_id=event_id, parent=self)
+        dlg = _EventDialog(self._service, prefill=data, event_id=event_id, context=self._context, parent=self)
         if dlg.exec():
             self.refresh_needed.emit()
 
@@ -1012,7 +1062,7 @@ class _AgendaView(QWidget):
 # ── Week View ─────────────────────────────────────────────────────────────────
 
 class _WeekView(QWidget):
-    """7-column week view with stacked event chips per day."""
+    """7-column week view. Click a day → side panel with events + Add button."""
 
     refresh_needed = Signal()
 
@@ -1021,6 +1071,7 @@ class _WeekView(QWidget):
         self._service  = service
         self._context  = context
         self._ref_date = date.today()
+        self._selected = date.today().isoformat()
         self.setStyleSheet(f"background:{_C['bg_base']};")
 
         root = QVBoxLayout(self)
@@ -1060,7 +1111,12 @@ class _WeekView(QWidget):
 
         root.addWidget(nav)
 
-        # Columns container (scrollable vertically)
+        # Body: columns (left) + side panel (right)
+        body = QHBoxLayout()
+        body.setContentsMargins(8, 8, 8, 8)
+        body.setSpacing(8)
+
+        # Columns scroll area
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
@@ -1074,10 +1130,59 @@ class _WeekView(QWidget):
         self._cols_widget = QWidget()
         self._cols_widget.setStyleSheet(f"background:{_C['bg_base']};")
         self._cols_layout = QHBoxLayout(self._cols_widget)
-        self._cols_layout.setContentsMargins(8, 8, 8, 8)
+        self._cols_layout.setContentsMargins(0, 0, 0, 0)
         self._cols_layout.setSpacing(6)
         scroll.setWidget(self._cols_widget)
-        root.addWidget(scroll)
+        body.addWidget(scroll, stretch=3)
+
+        # Side panel
+        self._side_panel = QFrame()
+        self._side_panel.setMinimumWidth(220)
+        self._side_panel.setMaximumWidth(300)
+        self._side_panel.setStyleSheet(
+            f"QFrame{{background:{_C['bg_card']}; border:1px solid {_C['border']};"
+            f"border-radius:{_R['base']};}}"
+        )
+        side_v = QVBoxLayout(self._side_panel)
+        side_v.setContentsMargins(10, 10, 10, 10)
+        side_v.setSpacing(6)
+
+        self._side_date_lbl = _label("", "base", "text_hi", bold=True)
+        side_v.addWidget(self._side_date_lbl)
+        side_v.addWidget(_hline())
+
+        side_scroll = QScrollArea()
+        side_scroll.setWidgetResizable(True)
+        side_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        side_scroll.setStyleSheet(
+            f"QScrollArea{{background:transparent; border:none;}}"
+            f"QScrollBar:vertical{{background:transparent; width:4px; margin:0;}}"
+            f"QScrollBar::handle:vertical{{background:{_C['border_hi']}; border-radius:2px;}}"
+            f"QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical{{height:0;}}"
+        )
+        self._side_inner = QWidget()
+        self._side_inner.setStyleSheet("background:transparent;")
+        self._side_inner_layout = QVBoxLayout(self._side_inner)
+        self._side_inner_layout.setContentsMargins(0, 0, 0, 0)
+        self._side_inner_layout.setSpacing(3)
+        side_scroll.setWidget(self._side_inner)
+        side_v.addWidget(side_scroll)
+
+        self._side_add_btn = QPushButton("+ Add Event")
+        self._side_add_btn.setFixedHeight(30)
+        self._side_add_btn.setStyleSheet(
+            f"QPushButton{{background:{_C['accent']}; color:#fff; border:none;"
+            f"border-radius:{_R['sm']}; font-size:{_FS['sm']}; font-weight:600;}}"
+            f"QPushButton:hover{{background:{_C['accent_hi']};}}"
+        )
+        self._side_add_btn.clicked.connect(self._add_for_selected)
+        side_v.addWidget(self._side_add_btn)
+
+        body.addWidget(self._side_panel, stretch=1)
+
+        body_widget = QWidget()
+        body_widget.setLayout(body)
+        root.addWidget(body_widget)
 
     def _nav_btn(self, text: str) -> QPushButton:
         btn = QPushButton(text)
@@ -1099,63 +1204,81 @@ class _WeekView(QWidget):
 
     def _goto_today(self):
         self._ref_date = date.today()
+        self._selected = date.today().isoformat()
         self.refresh()
 
+    def _day_clicked(self, d_iso: str):
+        self._selected = d_iso
+        self._refresh_side()
+        self._rebuild_cols()
+
     def refresh(self):
-        # Find Monday of the week
         monday = self._ref_date - timedelta(days=self._ref_date.weekday())
         sunday = monday + timedelta(days=6)
         iso_cal = monday.isocalendar()
         self._week_lbl.setText(
             f"Week {iso_cal.week}  ·  {monday.strftime('%d %b')} – {sunday.strftime('%d %b %Y')}"
         )
-
-        # Fetch events
         try:
-            events = self._service.get_events_for_week(iso_cal.year, iso_cal.week)
+            self._week_events = self._service.get_events_for_week(iso_cal.year, iso_cal.week)
         except Exception:
-            events = []
+            self._week_events = []
+        self._monday = monday
+        self._rebuild_cols()
+        self._refresh_side()
 
+    def _rebuild_cols(self):
         from collections import defaultdict
         by_date: dict[str, list] = defaultdict(list)
-        for ev in events:
+        for ev in getattr(self, "_week_events", []):
             by_date[ev.event_date].append(ev)
 
-        # Rebuild columns
         while self._cols_layout.count():
             item = self._cols_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
 
+        monday   = getattr(self, "_monday", self._ref_date - timedelta(days=self._ref_date.weekday()))
         today_iso = date.today().isoformat()
+
         for i in range(7):
-            d = monday + timedelta(days=i)
-            d_iso = d.isoformat()
+            d      = monday + timedelta(days=i)
+            d_iso  = d.isoformat()
             is_today = (d_iso == today_iso)
+            is_sel   = (d_iso == self._selected)
 
             col = QFrame()
+            col.setCursor(Qt.CursorShape.PointingHandCursor)
+            if is_sel:
+                bg     = _rgba(_C["accent"], 0.14)
+                border = _rgba(_C["accent"], 0.55)
+            elif is_today:
+                bg     = "#1e2d3d"
+                border = "#1a4a7a"
+            else:
+                bg     = _C["bg_card"]
+                border = _C["border"]
             col.setStyleSheet(
-                f"QFrame{{background:{'#1e2d3d' if is_today else _C['bg_card']};"
-                f"border:1px solid {'#1a4a7a' if is_today else _C['border']};"
+                f"QFrame{{background:{bg}; border:1px solid {border};"
                 f"border-radius:{_R['base']};}}"
+                f"QFrame:hover{{border-color:{_C['accent']};}}"
             )
             col_layout = QVBoxLayout(col)
             col_layout.setContentsMargins(6, 6, 6, 6)
             col_layout.setSpacing(3)
 
-            # Day header
             day_hdr = QLabel(f"{_DAY_NAMES[i]}\n{d.day}")
             day_hdr.setAlignment(Qt.AlignmentFlag.AlignCenter)
             day_hdr.setStyleSheet(
-                f"color:{_C['accent_text'] if is_today else _C['text_mid']};"
-                f"font-size:{_FS['sm']}; font-weight:{'600' if is_today else '400'};"
+                f"color:{_C['accent_text'] if (is_today or is_sel) else _C['text_mid']};"
+                f"font-size:{_FS['sm']}; font-weight:{'600' if (is_today or is_sel) else '400'};"
                 f"background:transparent; border:none; padding:2px 0;"
             )
             col_layout.addWidget(day_hdr)
             col_layout.addWidget(_hline())
 
             evs = by_date.get(d_iso, [])
-            for ev in evs[:8]:  # Cap at 8 chips per column
+            for ev in evs[:8]:
                 chip = QLabel(f"{ev.icon()} {ev.title}")
                 chip.setWordWrap(True)
                 chip.setMinimumHeight(22)
@@ -1167,13 +1290,84 @@ class _WeekView(QWidget):
                 col_layout.addWidget(chip)
 
             if len(evs) > 8:
-                more = _label(f"+{len(evs)-8} more", "xs", "text_dim")
-                col_layout.addWidget(more)
+                col_layout.addWidget(_label(f"+{len(evs)-8} more", "xs", "text_dim"))
             elif not evs:
                 col_layout.addWidget(_label("—", "xs", "text_dim"))
 
             col_layout.addStretch()
             self._cols_layout.addWidget(col, stretch=1)
+
+            def _make_click(iso):
+                def _handler(e=None):
+                    self._day_clicked(iso)
+                return _handler
+
+            col.mousePressEvent = _make_click(d_iso)
+
+    def _refresh_side(self):
+        while self._side_inner_layout.count():
+            item = self._side_inner_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        try:
+            d     = date.fromisoformat(self._selected)
+            label = d.strftime("%A, %d %B %Y")
+        except (ValueError, TypeError):
+            label = "Select a day"
+        self._side_date_lbl.setText(label)
+
+        try:
+            evs = self._service.get_events_for_date(date.fromisoformat(self._selected))
+        except Exception:
+            evs = []
+
+        if not evs:
+            self._side_inner_layout.addWidget(_label("No events.", "sm", "text_dim"))
+        else:
+            for ev in evs:
+                row = _EventRow(ev, context=self._context)
+                row.complete_requested.connect(self._toggle_complete)
+                row.edit_requested.connect(self._edit_event)
+                row.delete_requested.connect(self._delete_event)
+                self._side_inner_layout.addWidget(row)
+        self._side_inner_layout.addStretch()
+
+    def _add_for_selected(self):
+        dlg = _EventDialog(
+            self._service,
+            prefill={"event_date": self._selected},
+            context=self._context,
+            parent=self,
+        )
+        if dlg.exec():
+            self.refresh_needed.emit()
+
+    def _toggle_complete(self, event_id: int):
+        ev = self._service.get_event(event_id)
+        if ev:
+            if ev.completed:
+                self._service.uncomplete_event(event_id)
+            else:
+                self._service.complete_event(event_id)
+        self.refresh_needed.emit()
+
+    def _edit_event(self, event_id: int):
+        ev = self._service.get_event(event_id)
+        if not ev:
+            return
+        data = {k: getattr(ev, k) for k in (
+            "title", "session_type", "event_date", "time_start", "duration_minutes",
+            "notes", "priority", "tags", "is_recurring", "recurrence_rule",
+        )}
+        dlg = _EventDialog(self._service, prefill=data, event_id=event_id,
+                           context=self._context, parent=self)
+        if dlg.exec():
+            self.refresh_needed.emit()
+
+    def _delete_event(self, event_id: int):
+        self._service.delete_event(event_id)
+        self.refresh_needed.emit()
 
 
 # ── Month View ────────────────────────────────────────────────────────────────
@@ -1512,7 +1706,7 @@ class _MonthView(QWidget):
             self._side_inner_layout.addWidget(_label("No events.", "sm", "text_dim"))
         else:
             for ev in evs:
-                row = _EventRow(ev)
+                row = _EventRow(ev, context=self._context)
                 row.complete_requested.connect(self._toggle_complete)
                 row.edit_requested.connect(self._edit_event)
                 row.delete_requested.connect(self._delete_event)
@@ -1537,7 +1731,7 @@ class _MonthView(QWidget):
             "title", "session_type", "event_date", "time_start", "duration_minutes",
             "notes", "priority", "tags", "is_recurring", "recurrence_rule",
         )}
-        dlg = _EventDialog(self._service, prefill=data, event_id=event_id, parent=self)
+        dlg = _EventDialog(self._service, prefill=data, event_id=event_id, context=self._context, parent=self)
         if dlg.exec():
             self.refresh()
 
@@ -1679,6 +1873,19 @@ class CalendarV2UI(QWidget):
         self._search_btn.clicked.connect(self._toggle_search)
         row.addWidget(self._search_btn)
 
+        # Settings button
+        settings_btn = QPushButton("⚙")
+        settings_btn.setFixedSize(30, 30)
+        settings_btn.setToolTip("Calendar Settings")
+        settings_btn.setStyleSheet(
+            f"QPushButton{{background:{_C['bg_raised']}; border:1px solid {_C['border']};"
+            f"border-radius:{_R['sm']}; color:{_C['text_lo']}; font-size:{_FS['base']};}}"
+            f"QPushButton:hover{{background:{_C['bg_hover']}; color:{_C['text_hi']};"
+            f"border-color:{_C['border_hi']};}}"
+        )
+        settings_btn.clicked.connect(self._open_settings)
+        row.addWidget(settings_btn)
+
         # Add event button
         add_btn = QPushButton("+ Add Event")
         add_btn.setFixedHeight(30)
@@ -1780,6 +1987,8 @@ class CalendarV2UI(QWidget):
         self._agenda_view = _AgendaView(self._service, self._context)
 
         self._today_view.refresh_needed.connect(self.refresh)
+        self._week_view.refresh_needed.connect(self.refresh)
+        self._month_view.refresh_needed.connect(self.refresh)
         self._agenda_view.refresh_needed.connect(self.refresh)
 
         self._stack.addWidget(self._today_view)   # 0
@@ -1843,13 +2052,29 @@ class CalendarV2UI(QWidget):
             il.addWidget(_label("No events match your search.", "base", "text_lo"))
         else:
             for ev in events:
-                row = _EventRow(ev, show_date=True)
+                row = _EventRow(ev, show_date=True, context=self._context)
                 self._today_view._connect_row(row)
                 il.addWidget(row)
         il.addStretch()
 
+    def _open_settings(self):
+        from PySide6.QtWidgets import QDialog, QVBoxLayout
+        from .settings_page import CalendarV2SettingsPage
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Calendar 2.0 Settings")
+        dlg.setMinimumWidth(520)
+        dlg.setModal(True)
+        lay = QVBoxLayout(dlg)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+        page = CalendarV2SettingsPage(self._context, dlg)
+        page.saved.connect(dlg.accept)
+        page.saved.connect(self.refresh)
+        lay.addWidget(page)
+        dlg.exec()
+
     def _open_add_dialog(self, prefill: dict | None = None):
-        dlg = _EventDialog(self._service, prefill=prefill, parent=self)
+        dlg = _EventDialog(self._service, prefill=prefill, context=self._context, parent=self)
         if dlg.exec():
             self.refresh()
 
@@ -1859,7 +2084,7 @@ class CalendarV2UI(QWidget):
             return
         parsed = _parse_quick_add(text)
         # Open dialog pre-filled — user confirms before saving
-        dlg = _EventDialog(self._service, prefill=parsed, parent=self)
+        dlg = _EventDialog(self._service, prefill=parsed, context=self._context, parent=self)
         if dlg.exec():
             self._quick_add.clear()
             self.refresh()
@@ -1867,15 +2092,15 @@ class CalendarV2UI(QWidget):
     # ── Public API ────────────────────────────────────────────────────────────
 
     def refresh(self):
-        """Refresh stats strip + the currently visible view."""
+        """Refresh stats strip + all views."""
         try:
             stats = self._service.get_stats()
             self._stats_strip.update_stats(stats)
         except Exception as e:
             log.error(f"[CALENDAR V2 UI] Stats error: {e}")
 
-        views = [self._today_view, self._week_view, self._month_view, self._agenda_view]
-        try:
-            views[self._active_view].refresh()
-        except Exception as e:
-            log.error(f"[CALENDAR V2 UI] Refresh error: {e}")
+        for view in [self._today_view, self._week_view, self._month_view, self._agenda_view]:
+            try:
+                view.refresh()
+            except Exception as e:
+                log.error(f"[CALENDAR V2 UI] Refresh error: {e}")

@@ -88,6 +88,32 @@ class PluginBase(ABC):
         """
         return None
 
+    def get_commands(self, context) -> list:
+        """
+        Optional command palette hook.
+
+        Return a list of PaletteCommand instances to register in the command
+        palette.  Called once after all plugins have activated.  Returning []
+        (the default) is safe and requires no changes to existing plugins.
+
+        Example::
+
+            from ui.command_palette import PaletteCommand
+
+            def get_commands(self, context):
+                return [
+                    PaletteCommand(
+                        id="my_plugin.open_dialog",
+                        title="Open My Dialog",
+                        icon="🔧",
+                        description="Opens the main dialog for My Plugin",
+                        category="Plugin Commands",
+                        action=lambda: self._open_dialog(),
+                    )
+                ]
+        """
+        return []
+
     # ----------------------------
     # Helpers
     # ----------------------------

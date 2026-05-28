@@ -83,10 +83,10 @@ class Plugin(PluginBase):
         reg = self.context.services.try_get("settings_registry")
         if reg:
             try:
-                from plugins.calendar.settings_page import CalendarSettingsPage
-                reg.register_page("Calendar", lambda ctx: CalendarSettingsPage(ctx))
-            except Exception:
-                pass
+                from .settings_page import CalendarV2SettingsPage
+                reg.register_page("Calendar 2.0", lambda ctx: CalendarV2SettingsPage(ctx))
+            except Exception as e:
+                log.error(f"[CALENDAR V2] Failed to register settings page: {e}")
 
     # ── Event subscriptions ────────────────────────────────────────────────────
 

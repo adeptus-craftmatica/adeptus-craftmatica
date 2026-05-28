@@ -180,61 +180,97 @@ class MainWindow(QMainWindow):
     # ── Command palette ────────────────────────────────────────────────────────
 
     def _register_commands(self) -> None:
-        """Register all base navigation / create / tool commands in the palette."""
+        """Register all base navigation / create / tool / settings commands."""
         reg = CommandRegistry.instance()
 
         # ── Navigate ──────────────────────────────────────────────────────────
+        # fmt: (id, title, icon, plugin_id, description)
         nav_plugins = [
-            ("go_dashboard",       "Go to Dashboard",       "🏠", "dashboard"),
-            ("go_projects",        "Go to Projects",        "📋", "project_tracker"),
-            ("go_paints",          "Go to Paint Tracker",   "🎨", "paint_tracker"),
-            ("go_models",          "Go to Model Tracker",   "🗿", "model_tracker"),
-            ("go_campaigns",       "Go to Campaign Tracker","⚔", "campaign_tracker"),
-            ("go_army",            "Go to Army Builder",    "🛡", "army_builder"),
-            ("go_paint_scheme",    "Go to Paint Schemes",   "🖌", "paint_scheme"),
-            ("go_calendar",        "Go to Calendar",        "📅", "calendar"),
+            ("go_dashboard",    "Go to Dashboard",          "🏠", "dashboard",         "Switch to the Dashboard tab"),
+            ("go_projects",     "Go to Projects",           "📋", "project_tracker",   "View and manage hobby projects"),
+            ("go_paints",       "Go to Paint Tracker",      "🎨", "paint_tracker",     "Browse and manage your paint collection"),
+            ("go_models",       "Go to Model Tracker",      "🗿", "model_tracker",     "Track models and painting progress"),
+            ("go_campaigns",    "Go to Campaign Tracker",   "⚔", "campaign_tracker",  "Manage campaigns and narrative play"),
+            ("go_army",         "Go to Army Builder",       "🛡", "army_builder",      "Build and manage army lists"),
+            ("go_paint_scheme", "Go to Paint Schemes",      "🖌", "paint_scheme",      "Create and browse paint schemes"),
+            ("go_calendar",     "Go to Calendar",           "📅", "calendar",          "View your hobby schedule and sessions"),
+            ("go_materials",    "Go to Materials Tracker",  "🔩", "materials_tracker", "Track hobby materials and supplies"),
+            ("go_tools",        "Go to Tool Tracker",       "🔧", "tool_tracker",      "Manage your hobby tools and equipment"),
+            ("go_chroma_codex", "Go to Chroma Codex",       "🌈", "chroma_codex_v2",   "Explore colour palettes and schemes"),
+            ("go_dev_tools",    "Dev Tools",                "🛠", "dev_tools",         "Developer and debug utilities"),
         ]
-        for i, (cmd_id, title, icon, plugin_id) in enumerate(nav_plugins):
-            sc = f"Ctrl+{i + 1}" if i < 9 else ""
+        for i, (cmd_id, title, icon, plugin_id, desc) in enumerate(nav_plugins):
+            sc = f"Ctrl+{i + 1}" if i < 9 else ("Ctrl+0" if i == 9 else "")
             reg.register(PaletteCommand(
                 id=cmd_id, title=title, icon=icon,
+                description=desc,
                 category="Navigate",
+                source="Core",
                 shortcut=sc,
+                keywords=[plugin_id],
                 action=lambda pid=plugin_id: self._navigate_to_plugin(pid),
             ))
 
         # ── Create ────────────────────────────────────────────────────────────
+        # fmt: (id, title, icon, plugin_id, shortcut, description, keywords)
         create_cmds = [
-            ("new_project",  "New Project",   "📁", "project_tracker",  "Ctrl+N"),
-            ("add_paint",    "Add Paint",     "🎨", "paint_tracker",    ""),
-            ("new_campaign", "New Campaign",  "⚔", "campaign_tracker", ""),
-            ("new_army",     "New Army",      "🛡", "army_builder",     ""),
-            ("new_model",    "New Model",     "🗿", "model_tracker",    ""),
+            ("new_project",      "New Project",      "📁", "project_tracker",   "Ctrl+N", "Create a new hobby project",          ["create", "add", "project"]),
+            ("add_paint",        "Add Paint",        "🎨", "paint_tracker",     "",       "Add a paint to your collection",       ["new", "create", "paint"]),
+            ("new_campaign",     "New Campaign",     "⚔", "campaign_tracker",  "",       "Start a new campaign",                 ["create", "add", "campaign"]),
+            ("new_army",         "New Army",         "🛡", "army_builder",      "",       "Create a new army list",               ["create", "add", "army"]),
+            ("new_model",        "New Model",        "🗿", "model_tracker",     "",       "Add a model to your collection",       ["create", "add", "model"]),
+            ("new_material",     "New Material",     "🔩", "materials_tracker", "",       "Log a new material or supply",         ["create", "add", "material"]),
+            ("new_tool",         "New Tool",         "🔧", "tool_tracker",      "",       "Add a tool to your inventory",         ["create", "add", "tool"]),
+            ("new_paint_scheme", "New Paint Scheme", "🖌", "paint_scheme",      "",       "Design a new paint scheme",            ["create", "add", "scheme"]),
         ]
-        for cmd_id, title, icon, plugin_id, sc in create_cmds:
+        for cmd_id, title, icon, plugin_id, sc, desc, kw in create_cmds:
             reg.register(PaletteCommand(
                 id=cmd_id, title=title, icon=icon,
-                subtitle="Open creation dialog",
+                description=desc,
                 category="Create",
+                source="Core",
                 shortcut=sc,
+                keywords=kw,
                 action=lambda pid=plugin_id: self._quick_create_in(pid),
             ))
 
         # ── Tools ─────────────────────────────────────────────────────────────
         tool_cmds = [
-            ("open_settings",  "Settings",          "⚙",  self._open_settings,      ""),
-            ("open_theme",     "Theme Manager",     "🎨", self._open_theme_editor,  "Ctrl+Shift+T"),
-            ("open_plugins",   "Manage Plugins",    "🔌", self._open_plugin_manager,"Ctrl+Shift+P"),
-            ("open_export",    "Export / Reports",  "📤", self._open_export,         "Ctrl+E"),
-            ("open_github",    "The Forge",         "⚒",  self._open_forge,         "Ctrl+Shift+G"),
+            ("open_export",  "Export / Reports", "📤", self._open_export, "Ctrl+E",       "Export your collection data",        ["export", "report", "csv"]),
+            ("open_github",  "The Forge",        "⚒",  self._open_forge,  "Ctrl+Shift+G", "Browse the community library",       ["forge", "community", "github", "import"]),
         ]
-        for cmd_id, title, icon, action, sc in tool_cmds:
+        for cmd_id, title, icon, action, sc, desc, kw in tool_cmds:
             reg.register(PaletteCommand(
                 id=cmd_id, title=title, icon=icon,
+                description=desc,
                 category="Tools",
+                source="Core",
                 shortcut=sc,
+                keywords=kw,
                 action=action,
             ))
+
+        # ── Settings ──────────────────────────────────────────────────────────
+        settings_cmds = [
+            ("open_settings",         "Preferences",         "⚙",  self._open_settings,             "",             "Open application preferences",          ["settings", "config", "prefs"]),
+            ("open_theme",            "Theme Manager",       "🎨", self._open_theme_editor,          "Ctrl+Shift+T", "Open the active theme manager",          ["theme", "appearance", "colors", "dark"]),
+            ("open_theme_fabricator", "Theme Fabricator",    "⚒",  self._open_theme_fabricator_cmd,  "",             "Open the premium Theme Fabricator",      ["theme", "fabricator", "appearance"]),
+            ("open_theme_basic",      "Basic Theme Manager", "🎨", self._open_theme_basic_cmd,       "",             "Open the basic theme editor",            ["theme", "editor", "basic", "appearance"]),
+            ("open_plugins",          "Manage Plugins",      "🔌", self._open_plugin_manager,        "Ctrl+Shift+P", "Enable, disable, or reorder plugins",    ["plugins", "extensions", "addons"]),
+        ]
+        for cmd_id, title, icon, action, sc, desc, kw in settings_cmds:
+            reg.register(PaletteCommand(
+                id=cmd_id, title=title, icon=icon,
+                description=desc,
+                category="Settings",
+                source="Core",
+                shortcut=sc,
+                keywords=kw,
+                action=action,
+            ))
+
+        # Harvest plugin-provided commands after plugins finish activating
+        QTimer.singleShot(800, self._harvest_plugin_commands)
 
         # Build the Go menu now that tabs are loaded
         self._rebuild_go_menu()
@@ -299,33 +335,53 @@ class MainWindow(QMainWindow):
 
     # Fallback aliases: if a plugin isn't loaded, try its sibling version.
     _PLUGIN_ALIASES: dict[str, list[str]] = {
+        "dashboard":              ["dashboard_v2"],
+        "dashboard_v2":           ["dashboard"],
+        "project_tracker":        ["project_tracker_v2"],
+        "project_tracker_v2":     ["project_tracker"],
         "paint_tracker":          ["paint_tracker_v2"],
         "paint_tracker_v2":       ["paint_tracker"],
-        "materials_tracker":      ["materials_tracker_v2"],
-        "materials_tracker_v2":   ["materials_tracker"],
-        "army_builder":           ["army_builder_v2"],
-        "army_builder_v2":        ["army_builder"],
-        "campaign_tracker":       ["campaign_tracker_v2"],
-        "campaign_tracker_v2":    ["campaign_tracker"],
-        "tool_tracker":           ["tool_tracker_v2"],
-        "tool_tracker_v2":        ["tool_tracker"],
         "model_tracker":          ["model_tracker_v2"],
         "model_tracker_v2":       ["model_tracker"],
+        "campaign_tracker":       ["campaign_tracker_v2"],
+        "campaign_tracker_v2":    ["campaign_tracker"],
+        "army_builder":           ["army_builder_v2"],
+        "army_builder_v2":        ["army_builder"],
+        "paint_scheme":           ["paint_scheme_v2"],
+        "paint_scheme_v2":        ["paint_scheme"],
+        "calendar":               ["calendar_v2"],
+        "calendar_v2":            ["calendar"],
+        "materials_tracker":      ["materials_tracker_v2"],
+        "materials_tracker_v2":   ["materials_tracker"],
+        "tool_tracker":           ["tool_tracker_v2"],
+        "tool_tracker_v2":        ["tool_tracker"],
     }
 
     def _navigate_to_plugin(self, plugin_id: str) -> None:
         """Switch to the tab for the given plugin_id.
 
-        If the primary plugin is not loaded, tries registered aliases so that
-        commands like "Go to Paint Tracker" work whether v1 or v2 is active.
+        When both a v1 and v2 version of a plugin are loaded, v2 is preferred
+        so that commands always land on the user's active plugin version.
+        If the primary plugin is not loaded at all, aliases are tried as a
+        fallback so navigation degrades gracefully.
         """
         candidates = [plugin_id] + self._PLUGIN_ALIASES.get(plugin_id, [])
-        for pid in candidates:
-            for i in range(self.tabs.count()):
-                w = self.tabs.widget(i)
-                if w and w.property("plugin_id") == pid:
-                    self.tabs.setCurrentIndex(i)
-                    return
+
+        # Build a map of all loaded tabs that match any candidate
+        loaded: dict[str, int] = {}   # plugin_id → tab index
+        for i in range(self.tabs.count()):
+            w = self.tabs.widget(i)
+            if w:
+                pid = w.property("plugin_id")
+                if pid in candidates:
+                    loaded[pid] = i
+
+        if not loaded:
+            return
+
+        # Prefer v2 candidates; fall back to v1 / other aliases in order
+        v2_first = sorted(loaded.keys(), key=lambda p: (0 if p.endswith("_v2") else 1))
+        self.tabs.setCurrentIndex(loaded[v2_first[0]])
 
     def _go_to_tab(self, idx: int) -> None:
         if 0 <= idx < self.tabs.count():
@@ -993,6 +1049,38 @@ class MainWindow(QMainWindow):
                 s.set("app.theme_manager_mode", mode)
         except Exception:
             pass
+
+    def _open_theme_fabricator_cmd(self) -> None:
+        """Always open the Theme Fabricator regardless of mode setting."""
+        tm = self.context.services.get("theme_manager") if self.context else None
+        if not tm:
+            QMessageBox.warning(self, "Theme Manager", "Theme manager is not available.")
+            return
+        ThemeFabricatorDialog(self.context, self).exec()
+
+    def _open_theme_basic_cmd(self) -> None:
+        """Always open the Basic Theme Editor regardless of mode setting."""
+        tm = self.context.services.get("theme_manager") if self.context else None
+        if not tm:
+            QMessageBox.warning(self, "Theme Manager", "Theme manager is not available.")
+            return
+        ThemeEditorDialog(self.context, self).exec()
+
+    def _harvest_plugin_commands(self) -> None:
+        """Ask each loaded plugin for optional command palette entries."""
+        pm = self.context.services.try_get("plugin_manager") if self.context else None
+        if not pm:
+            return
+        reg = CommandRegistry.instance()
+        for plugin in getattr(pm, "plugins", []):
+            try:
+                cmds = plugin.get_commands(self.context)
+                for cmd in cmds:
+                    if not cmd.source:
+                        cmd.source = getattr(plugin, "name", plugin.plugin_id)
+                    reg.register(cmd)
+            except Exception as exc:
+                log.debug(f"[Palette] {plugin.plugin_id}.get_commands: {exc}")
 
     def _open_forge(self):
         dialog = TheForgeDialog(self.context, self)

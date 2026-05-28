@@ -68,7 +68,14 @@ class AppContext:
             "project_tracker.last_project_id": "",
             "project_tracker.status_filter": "",
             # Dashboard personalisation
-            "dashboard.pinned_projects": "[]",
+            "dashboard.pinned_projects":  "[]",
+            "command_palette.recent":     "[]",
+            "command_palette.freq":       "{}",
+            # Calendar v2 regional/display settings
+            "calendar.timezone":          "UTC",
+            "calendar.time_format":       "HH:mm",
+            "calendar.date_format":       "dd MMM yyyy",
+            "calendar.observe_dst":       True,
         })
 
         # 🔥 NEW: Register core settings pages dynamically

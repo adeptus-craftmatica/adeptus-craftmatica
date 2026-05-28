@@ -656,7 +656,14 @@ class TheForgeDialog(QDialog):
         self.setWindowTitle(f"The Forge  —  {sc}")
         self.setMinimumSize(960, 700)
         self.resize(1060, 800)
+        self._maximized_once = False
         self._build_ui()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self._maximized_once:
+            self._maximized_once = True
+            self.showMaximized()
 
     def _build_ui(self):
         root = QVBoxLayout(self)
