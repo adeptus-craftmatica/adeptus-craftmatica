@@ -16,6 +16,7 @@ from ui.toast import ToastManager
 from core.settings_dialog import SettingsDialog
 from ui.global_search import GlobalSearchPanel
 from ui.theme_editor import ThemeEditorDialog
+from ui.theme_fabricator import ThemeFabricatorDialog
 from ui.forge_dialog import TheForgeDialog
 from ui.plugin_manager_dialog import PluginManagerDialog
 from ui.command_palette import CommandPalette, CommandRegistry, PaletteCommand
@@ -715,6 +716,40 @@ class MainWindow(QMainWindow):
         theme_action = view_menu.addAction("Theme Manager…")
         theme_action.setShortcut(QKeySequence("Ctrl+Shift+T"))
         theme_action.triggered.connect(self._open_theme_editor)
+
+        # Theme Manager Mode sub-menu
+        mode_menu = view_menu.addMenu("Theme Manager Mode")
+        from PySide6.QtGui import QActionGroup
+        self._theme_mode_group = QActionGroup(self)
+        self._theme_mode_group.setExclusive(True)
+
+        self._tm_mode_fabricator = mode_menu.addAction("Theme Fabricator")
+        self._tm_mode_fabricator.setCheckable(True)
+        self._tm_mode_fabricator.triggered.connect(
+            lambda: self._set_theme_manager_mode("fabricator")
+        )
+        self._theme_mode_group.addAction(self._tm_mode_fabricator)
+
+        self._tm_mode_basic = mode_menu.addAction("Basic Theme Manager")
+        self._tm_mode_basic.setCheckable(True)
+        self._tm_mode_basic.triggered.connect(
+            lambda: self._set_theme_manager_mode("basic")
+        )
+        self._theme_mode_group.addAction(self._tm_mode_basic)
+
+        # Reflect persisted preference
+        _initial_mode = "fabricator"
+        try:
+            _s = self.context.services.get("settings") if self.context else None
+            if _s:
+                _initial_mode = _s.get("app.theme_manager_mode", "fabricator")
+        except Exception:
+            pass
+        if _initial_mode == "basic":
+            self._tm_mode_basic.setChecked(True)
+        else:
+            self._tm_mode_fabricator.setChecked(True)
+
         view_menu.addSeparator()
         plugins_action = view_menu.addAction("Manage Plugins…")
         plugins_action.setShortcut(QKeySequence("Ctrl+Shift+P"))
@@ -936,11 +971,28 @@ class MainWindow(QMainWindow):
     def _open_theme_editor(self):
         tm = self.context.services.get("theme_manager") if self.context else None
         if not tm:
-            from PySide6.QtWidgets import QMessageBox
             QMessageBox.warning(self, "Theme Manager", "Theme manager is not available.")
             return
-        dialog = ThemeEditorDialog(self.context, self)
+        mode = "fabricator"
+        try:
+            s = self.context.services.get("settings") if self.context else None
+            if s:
+                mode = s.get("app.theme_manager_mode", "fabricator")
+        except Exception:
+            pass
+        if mode == "basic":
+            dialog = ThemeEditorDialog(self.context, self)
+        else:
+            dialog = ThemeFabricatorDialog(self.context, self)
         dialog.exec()
+
+    def _set_theme_manager_mode(self, mode: str) -> None:
+        try:
+            s = self.context.services.get("settings") if self.context else None
+            if s:
+                s.set("app.theme_manager_mode", mode)
+        except Exception:
+            pass
 
     def _open_forge(self):
         dialog = TheForgeDialog(self.context, self)

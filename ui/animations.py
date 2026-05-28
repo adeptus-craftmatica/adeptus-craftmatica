@@ -293,3 +293,61 @@ def flash_error(widget: QWidget, duration: int = 500) -> None:
         )
     except Exception:
         pass
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Theme fade transition  (smooth apply overlay)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def theme_fade_transition(
+    parent: QWidget,
+    on_apply,
+    duration: int = 220,
+) -> None:
+    """
+    Briefly overlay *parent* with a semi-transparent black frame while a theme
+    change is applied.  Sequence: fade in → call on_apply() at peak → fade out.
+
+    Falls back to a direct call if the overlay cannot be created.
+    """
+    try:
+        from PySide6.QtWidgets import QFrame
+
+        overlay = QFrame(parent)
+        overlay.setStyleSheet("background:#000000; border:none;")
+        overlay.setGeometry(parent.rect())
+        overlay.raise_()
+        overlay.show()
+
+        eff = QGraphicsOpacityEffect(overlay)
+        eff.setOpacity(0.0)
+        overlay.setGraphicsEffect(eff)
+
+        fade_ms = max(60, duration // 2)
+
+        anim_in = QPropertyAnimation(eff, b"opacity", overlay)
+        anim_in.setStartValue(0.0)
+        anim_in.setEndValue(0.28)
+        anim_in.setDuration(fade_ms)
+        anim_in.setEasingCurve(QEasingCurve.OutCubic)
+
+        def _at_peak():
+            try:
+                on_apply()
+            except Exception:
+                pass
+            anim_out = QPropertyAnimation(eff, b"opacity", overlay)
+            anim_out.setStartValue(0.28)
+            anim_out.setEndValue(0.0)
+            anim_out.setDuration(fade_ms)
+            anim_out.setEasingCurve(QEasingCurve.InCubic)
+            anim_out.finished.connect(overlay.deleteLater)
+            _start(anim_out)
+
+        anim_in.finished.connect(_at_peak)
+        _start(anim_in)
+    except Exception:
+        try:
+            on_apply()
+        except Exception:
+            pass

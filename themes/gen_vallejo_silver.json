@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "id": "gen_vallejo_silver",
+    "name": "Vallejo Silver",
+    "author": "Paint Scheme Generator",
+    "builtin": false,
+    "generated_from": "Vallejo Silver"
+  },
+  "colors": {
+    "bg_deep": "#121212",
+    "bg_base": "#1A1B1B",
+    "bg_raised": "#222223",
+    "bg_input": "#2B2B2C",
+    "header_bg": "#0F0F10",
+    "card_bg": "#1D1D1E",
+    "sidebar_bg": "#141414",
+    "border": "#383839",
+    "border_hi": "#4C4C4D",
+    "text_hi": "#ECEDEE",
+    "text_mid": "#D7D9DA",
+    "text_lo": "#898C90",
+    "text_dim": "#5C5E60",
+    "accent": "#90B8DF",
+    "accent_hi": "#B8D1EA",
+    "accent_lo": "#2A2E32",
+    "danger": "#e05555",
+    "danger_hi": "#eb6868",
+    "danger_lo": "#2a1515",
+    "success": "#3dba6e",
+    "warning": "#e07800"
+  },
+  "typography": {
+    "font_family": "Segoe UI",
+    "font_mono": "Consolas",
+    "font_xs": 10,
+    "font_sm": 11,
+    "font_base": 12,
+    "font_lg": 13,
+    "font_xl": 15,
+    "font_2xl": 18,
+    "font_3xl": 22
+  },
+  "shape": {
+    "radius_xs": 3,
+    "radius_sm": 4,
+    "radius_base": 6,
+    "radius_lg": 8,
+    "radius_xl": 12
+  }
+}

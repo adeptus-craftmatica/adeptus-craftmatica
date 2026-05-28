@@ -171,6 +171,8 @@ class _GenerateDialog(QDialog):
         # Tab widget
         self._tabs = QTabWidget()
         self._tabs.setDocumentMode(True)
+        self._tabs.tabBar().setElideMode(Qt.ElideNone)
+        self._tabs.tabBar().setExpanding(False)
         self._tabs.setStyleSheet("""
             QTabWidget::pane { border: none; background: #1a1a1a; }
             QTabBar { background: #141414; border-bottom: 1px solid #2a2a2a; }
@@ -530,7 +532,7 @@ class _GenerateDialog(QDialog):
         self._render_paint_list()
 
         # Schemes
-        svc_s = self._ctx.services.get("scheme_service")
+        svc_s = self._ctx.services.try_get("scheme_service")
         if svc_s:
             try:
                 self._all_schemes = sorted(
@@ -541,7 +543,7 @@ class _GenerateDialog(QDialog):
         self._render_scheme_list()
 
         # Armies
-        svc_a = self._ctx.services.get("army_service")
+        svc_a = self._ctx.services.try_get("army_service")
         if svc_a:
             try:
                 self._all_armies = sorted(
@@ -786,10 +788,17 @@ class ThemeEditorDialog(QDialog):
         self.setWindowTitle("Theme Manager")
         self.setMinimumSize(940, 640)
         self.setModal(True)
+        self._maximized_once = False
 
         self._build_ui()
         self._populate_list()
         self._select_theme_by_id(self._tm.current_theme_id)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self._maximized_once:
+            self._maximized_once = True
+            self.showMaximized()
 
     # ── UI construction ───────────────────────────────────────────────────────
 

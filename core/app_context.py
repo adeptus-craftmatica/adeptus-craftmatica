@@ -58,6 +58,7 @@ class AppContext:
 
         settings_service.register_defaults({
             "app.theme": "dark",
+            "app.theme_manager_mode": "fabricator",
             "app.window_width": 1200,
             "app.window_height": 800,
             "paint_tracker.default_brand": "",

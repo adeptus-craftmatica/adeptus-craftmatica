@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "id": "gen_seafoam",
+    "name": "Seafoam",
+    "author": "Paint Scheme Generator",
+    "builtin": false,
+    "generated_from": "manual"
+  },
+  "colors": {
+    "bg_deep": "#101313",
+    "bg_base": "#191D1C",
+    "bg_raised": "#202525",
+    "bg_input": "#282F2E",
+    "header_bg": "#0E1110",
+    "card_bg": "#1B201F",
+    "sidebar_bg": "#121515",
+    "border": "#353B3A",
+    "border_hi": "#495050",
+    "text_hi": "#ECEEEE",
+    "text_mid": "#D7DADA",
+    "text_lo": "#89908F",
+    "text_dim": "#5C6060",
+    "accent": "#5DD6C9",
+    "accent_hi": "#86E0D7",
+    "accent_lo": "#223A38",
+    "danger": "#e05555",
+    "danger_hi": "#eb6868",
+    "danger_lo": "#2a1515",
+    "success": "#3dba6e",
+    "warning": "#e07800"
+  },
+  "typography": {
+    "font_family": "Segoe UI",
+    "font_mono": "Consolas",
+    "font_xs": 10,
+    "font_sm": 11,
+    "font_base": 12,
+    "font_lg": 13,
+    "font_xl": 8,
+    "font_2xl": 18,
+    "font_3xl": 22
+  },
+  "shape": {
+    "radius_xs": 3,
+    "radius_sm": 4,
+    "radius_base": 6,
+    "radius_lg": 8,
+    "radius_xl": 12
+  }
+}

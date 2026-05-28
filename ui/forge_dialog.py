@@ -666,6 +666,8 @@ class TheForgeDialog(QDialog):
         # ── Tab widget ────────────────────────────────────────────────────────
         self._tabs = QTabWidget()
         self._tabs.setDocumentMode(True)
+        self._tabs.tabBar().setElideMode(Qt.ElideNone)
+        self._tabs.tabBar().setExpanding(False)
 
         # Tab 1: Browse & Import
         self._browse_pane = BrowsePane(self._ctx)
