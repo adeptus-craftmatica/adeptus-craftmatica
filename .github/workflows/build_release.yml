@@ -18,6 +18,8 @@ jobs:
   build-macos:
     runs-on: macos-latest
     timeout-minutes: 45
+    permissions:
+      contents: write   # required to create releases and upload assets
 
     steps:
       # ── Checkout ────────────────────────────────────────────────────────────
