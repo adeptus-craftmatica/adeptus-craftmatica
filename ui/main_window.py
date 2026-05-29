@@ -198,6 +198,7 @@ class MainWindow(QMainWindow):
             ("go_tools",        "Go to Tool Tracker",       "🔧", "tool_tracker",      "Manage your hobby tools and equipment"),
             ("go_chroma_codex", "Go to Chroma Codex",       "🌈", "chroma_codex_v2",   "Explore colour palettes and schemes"),
             ("go_dev_tools",    "Dev Tools",                "🛠", "dev_tools",         "Developer and debug utilities"),
+            ("go_shopping_list", "Go to Shopping List",     "🛒", "shopping_list",      "Open your shopping list"),
         ]
         for i, (cmd_id, title, icon, plugin_id, desc) in enumerate(nav_plugins):
             sc = f"Ctrl+{i + 1}" if i < 9 else ("Ctrl+0" if i == 9 else "")
@@ -355,6 +356,7 @@ class MainWindow(QMainWindow):
         "materials_tracker_v2":   ["materials_tracker"],
         "tool_tracker":           ["tool_tracker_v2"],
         "tool_tracker_v2":        ["tool_tracker"],
+        "shopping_list":          [],
     }
 
     def _navigate_to_plugin(self, plugin_id: str) -> None:

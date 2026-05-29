@@ -1,0 +1,13 @@
+{
+    "name": "Shopping List",
+    "id": "shopping_list",
+    "version": "1.0.0",
+    "description": "Build, organise, and share hobby shopping lists with inventory integration and project sections.",
+    "author": "The Fabricator",
+    "entry": "plugin",
+    "ui": true,
+    "category": "hobby",
+    "dependencies": [],
+    "optional_dependencies": [],
+    "events": ["shopping_item_added", "shopping_item_updated", "shopping_item_removed", "shopping_list_cleared"]
+}
