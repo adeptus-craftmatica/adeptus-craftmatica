@@ -2,9 +2,24 @@
 
 > A professional command center for miniature painters, hobbyists, collectors, and campaign organizers.
 
-Adeptus Craftmatica is a cross-platform hobby management application designed to bring structure, momentum, and satisfaction to creative workflows. Track projects. Organize paints. Manage armies. Plan campaigns. Build shopping lists. Visualize progress — all in one place.
+Adeptus Craftmatica is a cross-platform desktop application designed to bring structure, momentum, and satisfaction to creative hobby workflows. Track projects. Organize paints. Manage armies. Plan campaigns. Build shopping lists. Visualize progress — all in one place, fully offline.
 
 Built by a hobbyist, for hobbyists.
+
+---
+
+## 📦 Downloads
+
+| Platform | Format | Notes |
+|---|---|---|
+| **macOS** | `.dmg` | Drag to Applications, double-click to launch |
+| **Windows** | `.zip` | Extract and run `Adeptus Craftmatica.exe` |
+
+Download the latest release from the [Releases page](../../releases).
+
+> **User data** is stored separately from the app and survives updates automatically:
+> - macOS: `~/Library/Application Support/AdeptusCraftmatica/`
+> - Windows: `%APPDATA%\AdeptusCraftmatica\`
 
 ---
 
@@ -84,7 +99,7 @@ A dedicated hobby shopping list plugin:
 | **Service Registry** | Plugins expose typed services other plugins can consume safely. |
 | **Settings Registry** | Each plugin registers its own settings page into the global Settings dialog. |
 | **Theme Engine** | 13 built-in themes including dark defaults, faction-inspired palettes (Ultramarines, Necron Horde, Blood for the Blood God), and user-created themes. Full QSS token system. |
-| **Command Palette** | `Ctrl+P` (or `Cmd+P`) global launcher — navigate, create, and trigger actions from anywhere. |
+| **Command Palette** | `Ctrl+P` / `Cmd+P` global launcher — navigate, create, and trigger actions from anywhere. |
 | **Dashboard Registry** | Plugins register dashboard widgets and stat providers that surface automatically on the Dashboard. |
 
 ---
@@ -116,7 +131,7 @@ A dedicated hobby shopping list plugin:
 | Materials Tracker 2.0 | 1.0.0 | Supplies |
 | Shopping List | 1.0.0 | Supplies |
 
-> v1 plugins are retained for data compatibility. v2 plugins read from the same database tables, so upgrading loses nothing.
+> v1 plugins are retained for data compatibility. v2 plugins read from the same database tables — upgrading loses nothing.
 
 ---
 
@@ -134,17 +149,19 @@ The goal is not just tracking collections. The goal is helping people finish thi
 
 | | |
 |---|---|
-| **Language** | Python 3.11+ |
+| **Language** | Python 3.13 |
 | **UI Framework** | PySide6 (Qt 6.6+) |
 | **Database** | SQLite (via Python `sqlite3`) |
 | **Architecture** | Modular plugin system with event bus |
 | **Styling** | Qt Style Sheets (QSS) with full token theming |
+| **Packaging** | PyInstaller — native `.app` on macOS, `.exe` on Windows |
+| **CI/CD** | GitHub Actions — builds both platforms automatically on every release tag |
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Running from Source
 
-**Requirements:** Python 3.11+, PySide6
+**Requirements:** Python 3.13, PySide6
 
 ```bash
 # Clone the repo
@@ -154,11 +171,11 @@ cd "Adeptus Craftmatica"
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the application
+# Run
 python main.py
 ```
 
-The application creates `app.db` in the project root on first launch. All data is stored locally — no cloud accounts required.
+When running from source, `app.db` is created in the project root. All data is stored locally — no cloud accounts required.
 
 ---
 
@@ -182,9 +199,21 @@ Additional themes can be created and placed in the `themes/` directory as JSON t
 
 ---
 
+## 🔨 Building a Release
+
+Releases are built with a single script. Both macOS and Windows are handled automatically — you only need to run it once from your Mac.
+
+```bash
+python release_mac.py
+```
+
+Enter a version number when prompted. The script builds the macOS DMG locally, commits, tags, and pushes. GitHub Actions then automatically builds the Windows release in parallel and attaches both files to the GitHub Release page.
+
+---
+
 ## 🚧 Development Status
 
-Active development. Core systems are stable and all plugins are operational. Current focus areas:
+Active development. Core systems are stable and all plugins operational on both macOS and Windows. Current focus areas:
 
 - UX refinement and visual consistency
 - Cross-plugin event integration
