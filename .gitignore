@@ -34,9 +34,20 @@ app.db
 logs/
 *.log
 
-# Build artifacts
+# Build artifacts & release output
 dist/
 build/
+*.spec.bak
+*.dmg
+*.app
+
+# PyInstaller work files
+*.pkg
+*.egg-info/
+_internal/
+
+# Release script leftovers
+build.log
 
 # Dev-only plugin/tools
 plugins/dev_tools/

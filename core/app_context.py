@@ -1,9 +1,27 @@
 # core/app_context.py
 
+import sys
 from pathlib import Path
 
 import logging
 log = logging.getLogger(__name__)
+
+
+def _resolve_db_path() -> Path:
+    """
+    Return the path to app.db.
+
+    - Frozen bundle (PyInstaller): ~/Library/Application Support/AdeptusCraftmatica/app.db
+      The user data directory is created on first run if it doesn't exist.
+      This means the database survives app updates and is never inside the bundle.
+
+    - Development / source run: app.db in the current working directory (existing behaviour).
+    """
+    if getattr(sys, 'frozen', False):
+        data_dir = Path.home() / 'Library' / 'Application Support' / 'AdeptusCraftmatica'
+        data_dir.mkdir(parents=True, exist_ok=True)
+        return data_dir / 'app.db'
+    return Path('app.db')
 
 from core.event_bus import EventBus
 from core.database_service import DatabaseService
@@ -38,7 +56,7 @@ class AppContext:
         # ----------------------------
 
         # Database
-        db_service = DatabaseService()
+        db_service = DatabaseService(db_path=str(_resolve_db_path()))
         self.services.register("db", db_service)
 
         # Settings service
