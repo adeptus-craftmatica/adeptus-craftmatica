@@ -76,6 +76,7 @@ all_hidden += [
     'logging',
     'importlib',
     'importlib.util',
+    'uuid',
 ]
 
 # ── Icon — .icns on macOS, .ico on Windows ───────────────────────────────────
