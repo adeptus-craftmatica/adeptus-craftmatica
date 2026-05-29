@@ -115,6 +115,37 @@ def build_app():
     return app_path
 
 
+def inject_plugins(app_path: Path):
+    """
+    Manually copy plugins into the bundle.
+    PyInstaller doesn't reliably preserve the plugins/ directory structure
+    for dynamically-loaded local packages, so we inject them directly.
+    """
+    info("Injecting plugins into bundle…")
+
+    EXCLUDE = {'dev_tools', '__pycache__'}
+
+    resources = app_path / "Contents" / "Resources"
+    plugins_dest = resources / "plugins"
+    plugins_src  = ROOT / "plugins"
+
+    if plugins_dest.exists():
+        shutil.rmtree(plugins_dest)
+    plugins_dest.mkdir()
+
+    count = 0
+    for plugin_dir in sorted(plugins_src.iterdir()):
+        if plugin_dir.is_dir() and plugin_dir.name not in EXCLUDE:
+            shutil.copytree(
+                plugin_dir,
+                plugins_dest / plugin_dir.name,
+                ignore=shutil.ignore_patterns('__pycache__', '*.pyc'),
+            )
+            count += 1
+
+    success(f"Plugins injected  ({count} plugins)")
+
+
 def create_dmg(app_path: Path) -> Path:
     info("Creating DMG…")
 
@@ -238,6 +269,7 @@ def main():
     check_dependencies()
 
     app_path = build_app()
+    inject_plugins(app_path)
     dmg_path = create_dmg(app_path)
 
     update_spec_version(version)
