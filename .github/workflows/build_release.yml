@@ -19,38 +19,44 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 45
     permissions:
-      contents: write   # required to create releases and upload assets
+      contents: write
 
     steps:
-      # ── Checkout ────────────────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── Python ──────────────────────────────────────────────────────────────
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
           cache: 'pip'
 
-      # ── Dependencies ────────────────────────────────────────────────────────
       - name: Install runtime dependencies
         run: pip install -r requirements.txt
 
       - name: Install build dependencies
         run: pip install -r build_requirements.txt
 
-      # ── Build .app ──────────────────────────────────────────────────────────
       - name: Build .app bundle
         run: pyinstaller Adeptus_Craftmatica.spec --noconfirm
 
-      # ── Create DMG ──────────────────────────────────────────────────────────
+      - name: Inject plugins into bundle
+        run: |
+          RESOURCES="dist/Adeptus Craftmatica.app/Contents/Resources"
+          mkdir -p "$RESOURCES/plugins"
+          for plugin in plugins/*/; do
+            name=$(basename "$plugin")
+            if [ "$name" != "dev_tools" ] && [ "$name" != "__pycache__" ]; then
+              cp -r "$plugin" "$RESOURCES/plugins/$name"
+            fi
+          done
+          echo "Plugins injected: $(ls "$RESOURCES/plugins" | wc -l)"
+
       - name: Install create-dmg
         run: brew install create-dmg
 
       - name: Create DMG
         run: |
-          # Attempt polished DMG; fall back to hdiutil on any error
           create-dmg \
             --volname "Adeptus Craftmatica" \
             --window-pos 200 140 \
@@ -68,7 +74,6 @@ jobs:
             -ov -format UDZO \
             "dist/Adeptus_Craftmatica.dmg"
 
-      # ── Determine version label ──────────────────────────────────────────────
       - name: Resolve version
         id: version
         run: |
@@ -78,7 +83,6 @@ jobs:
             echo "label=${{ github.event.inputs.version || 'dev' }}" >> "$GITHUB_OUTPUT"
           fi
 
-      # ── Upload artefact (always available in Actions tab) ──────────────────
       - name: Upload DMG as artefact
         uses: actions/upload-artifact@v4
         with:
@@ -86,7 +90,6 @@ jobs:
           path: dist/Adeptus_Craftmatica.dmg
           retention-days: 30
 
-      # ── Attach to GitHub Release (tag builds only) ─────────────────────────
       - name: Attach DMG to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
@@ -117,6 +120,18 @@ jobs:
 
       - name: Build .exe
         run: pyinstaller Adeptus_Craftmatica.spec --noconfirm
+
+      - name: Inject plugins into bundle
+        shell: pwsh
+        run: |
+          $dest = "dist\Adeptus Craftmatica\plugins"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Get-ChildItem -Directory plugins | Where-Object {
+            $_.Name -ne "dev_tools" -and $_.Name -ne "__pycache__"
+          } | ForEach-Object {
+            Copy-Item -Recurse -Path $_.FullName -Destination "$dest\$($_.Name)"
+          }
+          Write-Host "Plugins injected: $((Get-ChildItem $dest -Directory).Count)"
 
       - name: Create ZIP
         run: |
