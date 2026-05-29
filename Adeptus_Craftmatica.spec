@@ -9,6 +9,7 @@
 #   ./build_macos.sh
 
 import os
+import sys
 from pathlib import Path
 from PyInstaller.utils.hooks import collect_all, collect_submodules
 
@@ -24,6 +25,13 @@ plugins_root = Path('plugins')
 for entry in sorted(plugins_root.iterdir()):
     if not entry.is_dir() or entry.name in EXCLUDE_PLUGINS:
         continue
+
+    # Explicitly copy the entire plugin folder into the bundle as data.
+    # This guarantees the filesystem structure (plugins/<name>/) exists at
+    # runtime so the plugin manager's directory scan works correctly.
+    all_datas.append((str(entry), f'plugins/{entry.name}'))
+
+    # Also collect compiled modules and hidden imports via collect_all
     pkg = f'plugins.{entry.name}'
     try:
         d, b, h = collect_all(pkg)
@@ -36,6 +44,7 @@ for entry in sorted(plugins_root.iterdir()):
 
 # ── Collect core and ui packages ─────────────────────────────────────────────
 for pkg in ('core', 'ui'):
+    all_datas.append((pkg, pkg))   # preserve directory on disk
     d, b, h = collect_all(pkg)
     all_datas    += d
     all_binaries += b
@@ -69,8 +78,11 @@ all_hidden += [
     'importlib.util',
 ]
 
-# ── Icon (place an .icns file at assets/icon.icns to use a custom icon) ──────
-ICON = 'assets/icon.icns' if Path('assets/icon.icns').exists() else None
+# ── Icon — .icns on macOS, .ico on Windows ───────────────────────────────────
+if sys.platform == 'win32':
+    ICON = 'assets/icon.ico'  if Path('assets/icon.ico').exists()  else None
+else:
+    ICON = 'assets/icon.icns' if Path('assets/icon.icns').exists() else None
 
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -123,18 +135,20 @@ coll = COLLECT(
     name='Adeptus Craftmatica',
 )
 
-app = BUNDLE(
-    coll,
-    name='Adeptus Craftmatica.app',
-    icon=ICON,
-    bundle_identifier='com.adeptus.craftmatica',
-    info_plist={
-        'CFBundleDisplayName':        'Adeptus Craftmatica',
-        'CFBundleShortVersionString': '0.1.0',
-        'CFBundleVersion': '0.1.0',
-        'NSPrincipalClass':           'NSApplication',
-        'NSHighResolutionCapable':    True,
-        'NSAppleScriptEnabled':       False,
-        'LSMinimumSystemVersion':     '11.0',
-    },
-)
+# BUNDLE is macOS-only — skip on Windows
+if sys.platform == 'darwin':
+    app = BUNDLE(
+        coll,
+        name='Adeptus Craftmatica.app',
+        icon=ICON,
+        bundle_identifier='com.adeptus.craftmatica',
+        info_plist={
+            'CFBundleDisplayName':        'Adeptus Craftmatica',
+            'CFBundleShortVersionString': '0.1.0',
+            'CFBundleVersion': '0.1.0',
+            'NSPrincipalClass':           'NSApplication',
+            'NSHighResolutionCapable':    True,
+            'NSAppleScriptEnabled':       False,
+            'LSMinimumSystemVersion':     '11.0',
+        },
+    )

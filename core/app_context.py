@@ -11,14 +11,21 @@ def _resolve_db_path() -> Path:
     """
     Return the path to app.db.
 
-    - Frozen bundle (PyInstaller): ~/Library/Application Support/AdeptusCraftmatica/app.db
-      The user data directory is created on first run if it doesn't exist.
-      This means the database survives app updates and is never inside the bundle.
+    - Frozen bundle (PyInstaller):
+        macOS:   ~/Library/Application Support/AdeptusCraftmatica/app.db
+        Windows: %APPDATA%/AdeptusCraftmatica/app.db
+      The directory is created on first run. The database survives app updates
+      and is never stored inside the bundle itself.
 
     - Development / source run: app.db in the current working directory (existing behaviour).
     """
     if getattr(sys, 'frozen', False):
-        data_dir = Path.home() / 'Library' / 'Application Support' / 'AdeptusCraftmatica'
+        if sys.platform == 'win32':
+            import os
+            base = Path(os.environ.get('APPDATA', Path.home()))
+        else:
+            base = Path.home() / 'Library' / 'Application Support'
+        data_dir = base / 'AdeptusCraftmatica'
         data_dir.mkdir(parents=True, exist_ok=True)
         return data_dir / 'app.db'
     return Path('app.db')

@@ -92,3 +92,57 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/Adeptus_Craftmatica.dmg
+
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install build dependencies
+        run: pip install -r build_requirements.txt
+
+      - name: Build .exe
+        run: pyinstaller Adeptus_Craftmatica.spec --noconfirm
+
+      - name: Create ZIP
+        run: |
+          Compress-Archive -Path "dist\Adeptus Craftmatica\*" `
+            -DestinationPath "dist\Adeptus_Craftmatica_Windows.zip"
+        shell: pwsh
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "label=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          else
+            echo "label=${{ github.event.inputs.version || 'dev' }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload ZIP as artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Adeptus-Craftmatica-Windows-${{ steps.version.outputs.label }}
+          path: dist/Adeptus_Craftmatica_Windows.zip
+          retention-days: 30
+
+      - name: Attach ZIP to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Adeptus_Craftmatica_Windows.zip
