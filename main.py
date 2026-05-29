@@ -2,17 +2,37 @@
 
 import sys
 import logging
+from pathlib import Path
 from PySide6.QtWidgets import QApplication
 
 from core.app_context import AppContext
 from core.plugin_manager import PluginManager
 from ui.main_window import MainWindow
 
-logging.basicConfig(
-    level=logging.WARNING,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
 
+def _setup_logging():
+    """
+    In a frozen (packaged) build, also write logs to a file next to the database
+    so errors are visible even without a console window.
+    In development, log to stderr only.
+    """
+    fmt = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    handlers = [logging.StreamHandler()]
+
+    if getattr(sys, 'frozen', False):
+        if sys.platform == 'win32':
+            import os
+            log_dir = Path(os.environ.get('APPDATA', Path.home())) / 'AdeptusCraftmatica'
+        else:
+            log_dir = Path.home() / 'Library' / 'Application Support' / 'AdeptusCraftmatica'
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_file = log_dir / 'adeptus_craftmatica.log'
+        handlers.append(logging.FileHandler(log_file, encoding='utf-8'))
+
+    logging.basicConfig(level=logging.WARNING, format=fmt, handlers=handlers)
+
+
+_setup_logging()
 log = logging.getLogger(__name__)
 
 
