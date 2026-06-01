@@ -1274,6 +1274,11 @@ class CampaignV2UI(QWidget):
         self._char_title.setObjectName("pageTitle")
         hdr.addWidget(self._char_title)
         hdr.addStretch()
+        wizard_btn = QPushButton("🧙 Character Wizard")
+        wizard_btn.setObjectName("accentBtn")
+        wizard_btn.setToolTip("Create a full D&D 5e character with the guided wizard")
+        wizard_btn.clicked.connect(self._on_character_wizard)
+        hdr.addWidget(wizard_btn)
         add_btn = QPushButton("＋  Add Character")
         add_btn.setObjectName("accentBtn")
         add_btn.clicked.connect(self._on_new_character)
@@ -2600,6 +2605,14 @@ class CampaignV2UI(QWidget):
             QMessageBox.critical(self, "Error", str(e))
 
     # ── Characters ────────────────────────────────────────────────────────────
+
+    def _on_character_wizard(self):
+        if not self._camp_id:
+            return
+        from .character_creator import CharacterCreatorWizard
+        dlg = CharacterCreatorWizard(self._camp_id, self._svc, parent=self)
+        dlg.character_created.connect(lambda _: self._load_characters())
+        dlg.exec()
 
     def _on_new_character(self):
         if not self._camp_id:

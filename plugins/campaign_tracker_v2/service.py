@@ -527,3 +527,19 @@ class CampaignV2Service:
         if not self._custom_monsters:
             return False
         return self._custom_monsters.delete(monster_id)
+
+    # ── Character Creator Extension ───────────────────────────────────────────
+
+    def save_character_ext(self, character_id: int, data: dict) -> bool:
+        try:
+            return self._repo.save_character_ext(character_id, data)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] save_character_ext error: {e}")
+            return False
+
+    def get_character_ext(self, character_id: int) -> dict:
+        try:
+            return self._repo.get_character_ext(character_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] get_character_ext error: {e}")
+            return {}
