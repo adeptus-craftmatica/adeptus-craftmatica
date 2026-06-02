@@ -61,9 +61,41 @@ class Plugin(PluginBase):
             custom_monster_repo,
         )
 
+        # ── Rules Library ──────────────────────────────────────────────────
+        from .rules_library_repository import RulesLibraryRepository
+        from .rules_library_service    import RulesLibraryService
+        rules_lib_repo = RulesLibraryRepository(db)
+        rules_lib_svc  = RulesLibraryService(rules_lib_repo)
+        self._service._rules_lib = rules_lib_svc
+        try:
+            self.context.services.register(
+                "rules_library_service", rules_lib_svc, override=True
+            )
+        except Exception:
+            pass
+
+        # ── Order of Battle ────────────────────────────────────────────────
+        from .order_of_battle_repository import OrderOfBattleRepository
+        oob_repo = OrderOfBattleRepository(db)
+        self._service._oob_repo = oob_repo
+
+        # ── Crusade records ────────────────────────────────────────────────
+        from .crusade_repository import CrusadeRepository
+        crusade_repo = CrusadeRepository(db)
+        self._service._crusade_repo = crusade_repo
+
+        # ── Map system ─────────────────────────────────────────────────────
+        from .map_repository import MapRepository
+        map_repo = MapRepository(db)
+        self._service._map_repo = map_repo
+
         # ── Build UI ───────────────────────────────────────────────────────
         from .ui import CampaignV2UI
-        self._ui_widget = CampaignV2UI(self._service, self.context)
+        self._ui_widget = CampaignV2UI(
+            self._service, self.context,
+            rules_lib_svc=rules_lib_svc,
+            map_repo=map_repo,
+        )
         self._ui_widget.setProperty("plugin_id", "campaign_tracker_v2")
 
         # ── Dashboard provider ─────────────────────────────────────────────

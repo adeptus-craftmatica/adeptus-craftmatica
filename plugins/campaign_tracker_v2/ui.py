@@ -63,6 +63,10 @@ _SEC_GALLERY    = 6
 _SEC_DICE       = 7
 _SEC_ASSETS     = 8
 _SEC_QUESTS     = 9
+_SEC_RULES      = 10
+_SEC_OOB        = 11
+_SEC_CRUSADE    = 12
+_SEC_MAPS       = 13
 
 _NAV_ITEMS = [
     (_SEC_OVERVIEW,   "🏠", "Overview"),
@@ -74,6 +78,10 @@ _NAV_ITEMS = [
     (_SEC_GALLERY,    "🖼",  "Gallery"),
     (_SEC_ASSETS,     "📁", "Assets"),
     (_SEC_DICE,       "🎲", "Dice"),
+    (_SEC_RULES,      "📚", "Rules Library"),
+    (_SEC_OOB,        "⚔",  "Order of Battle"),
+    (_SEC_CRUSADE,    "📊", "Campaign Records"),
+    (_SEC_MAPS,       "🗺", "Maps"),
 ]
 
 # ── Quest metadata ──────────────────────────────────────────────────────────────
@@ -966,10 +974,12 @@ class _CampaignAddPhotoDialog(QDialog):
 # ══════════════════════════════════════════════════════════════════════════════
 
 class CampaignV2UI(QWidget):
-    def __init__(self, service, context, parent=None):
+    def __init__(self, service, context, parent=None, rules_lib_svc=None, map_repo=None):
         super().__init__(parent)
-        self._svc      = service
-        self._ctx      = context
+        self._svc           = service
+        self._ctx           = context
+        self._rules_lib_svc = rules_lib_svc
+        self._map_repo      = map_repo
         self._camp_id: Optional[int] = None
         self._camp     = None
         self._sys_id   = "custom"
@@ -1010,7 +1020,7 @@ class CampaignV2UI(QWidget):
         # ── Left sidebar ──────────────────────────────────────────────────────
         self._sidebar = QFrame()
         self._sidebar.setObjectName("sidebar")
-        self._sidebar.setFixedWidth(170)
+        self._sidebar.setFixedWidth(200)
         sb_lay = QVBoxLayout(self._sidebar)
         sb_lay.setContentsMargins(0, 0, 0, 0)
         sb_lay.setSpacing(0)
@@ -1085,6 +1095,10 @@ class CampaignV2UI(QWidget):
         self._stack.addWidget(self._build_dice_page())        # 7
         self._stack.addWidget(self._build_assets_page())      # 8
         self._stack.addWidget(self._build_quests_page())      # 9
+        self._stack.addWidget(self._build_rules_library_page())  # 10
+        self._stack.addWidget(self._build_oob_page())         # 11
+        self._stack.addWidget(self._build_crusade_page())     # 12
+        self._stack.addWidget(self._build_maps_page())         # 13
 
         root.addWidget(content, 1)
 
@@ -2033,6 +2047,36 @@ class CampaignV2UI(QWidget):
 
         return w
 
+    # ── 10 · Rules Library ────────────────────────────────────────────────────
+
+    def _build_rules_library_page(self) -> QWidget:
+        from .rules_library_ui import RulesLibraryUI
+        self._rules_library_ui = RulesLibraryUI(
+            self._rules_lib_svc, self._ctx
+        )
+        return self._rules_library_ui
+
+    # ── 11 · Order of Battle ──────────────────────────────────────────────────
+
+    def _build_oob_page(self) -> QWidget:
+        from .order_of_battle_ui import OrderOfBattleUI
+        army_svc = None
+        try:
+            army_svc = self._ctx.services.try_get("army_service")
+        except Exception:
+            pass
+        self._oob_ui = OrderOfBattleUI(
+            self._svc, self._rules_lib_svc, army_svc, self._ctx
+        )
+        return self._oob_ui
+
+    # ── 12 · Campaign Records (Crusade) ───────────────────────────────────────
+
+    def _build_crusade_page(self) -> QWidget:
+        from .crusade_ui import CrusadeUI
+        self._crusade_ui = CrusadeUI(self._svc, self._svc, self._ctx)
+        return self._crusade_ui
+
     # ══════════════════════════════════════════════════════════════════════════
     #  Navigation
     # ══════════════════════════════════════════════════════════════════════════
@@ -2052,6 +2096,10 @@ class CampaignV2UI(QWidget):
             _SEC_DICE:        self._load_dice_page,
             _SEC_ASSETS:      self._load_assets,
             _SEC_QUESTS:      self._load_quests,
+            _SEC_RULES:       self._load_rules_library,
+            _SEC_OOB:         self._load_oob,
+            _SEC_CRUSADE:     self._load_crusade,
+            _SEC_MAPS:        self._load_maps,
         }
         if sec in loaders:
             loaders[sec]()
@@ -4372,6 +4420,39 @@ class CampaignV2UI(QWidget):
     # ══════════════════════════════════════════════════════════════════════════
     #  Helpers
     # ══════════════════════════════════════════════════════════════════════════
+
+    def _load_rules_library(self):
+        if hasattr(self, "_rules_library_ui") and self._rules_library_ui:
+            try:
+                self._rules_library_ui.refresh(self._camp_id)
+            except Exception as e:
+                log.error(f"[CAMPAIGN V2] rules library refresh error: {e}")
+
+    def _load_oob(self):
+        if hasattr(self, "_oob_ui") and self._oob_ui:
+            try:
+                self._oob_ui.refresh(self._camp_id)
+            except Exception as e:
+                log.error(f"[CAMPAIGN V2] OoB refresh: {e}")
+
+    def _load_crusade(self):
+        if hasattr(self, "_crusade_ui") and self._crusade_ui:
+            try:
+                self._crusade_ui.refresh(self._camp_id)
+            except Exception as e:
+                log.error(f"[CAMPAIGN V2] crusade refresh: {e}")
+
+    def _build_maps_page(self) -> QWidget:
+        from .map_ui import MapUI
+        self._maps_ui = MapUI(self._map_repo, self._ctx)
+        return self._maps_ui
+
+    def _load_maps(self):
+        if hasattr(self, "_maps_ui") and self._maps_ui:
+            try:
+                self._maps_ui.refresh(self._camp_id)
+            except Exception as e:
+                log.error(f"[CAMPAIGN V2] maps refresh: {e}")
 
     def refresh(self):
         if self._camp_id:

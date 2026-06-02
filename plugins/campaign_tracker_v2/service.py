@@ -25,6 +25,8 @@ class CampaignV2Service:
         self._quests          = quest_repo
         self._custom_monsters = custom_monster_repo
         self._db              = v2_repo._db
+        self._oob_repo        = None   # set by plugin.py after construction
+        self._crusade_repo    = None   # set by plugin.py after construction
 
     # ── Campaigns ─────────────────────────────────────────────────────────────
 
@@ -543,3 +545,191 @@ class CampaignV2Service:
         except Exception as e:
             log.error(f"[CAMPAIGN V2] get_character_ext error: {e}")
             return {}
+
+    # ── Order of Battle ───────────────────────────────────────────────────────
+
+    def get_order_of_battle(self, campaign_id: int) -> list[dict]:
+        try:
+            return self._oob_repo.get_entries(campaign_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] get_order_of_battle: {e}")
+            return []
+
+    def add_to_order_of_battle(self, campaign_id: int, **kwargs) -> int:
+        try:
+            return self._oob_repo.add_entry(campaign_id, **kwargs)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] add_to_order_of_battle: {e}")
+            return 0
+
+    def update_oob_entry(self, entry_id: int, **kwargs) -> bool:
+        try:
+            return self._oob_repo.update_entry(entry_id, **kwargs)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] update_oob_entry: {e}")
+            return False
+
+    def remove_from_order_of_battle(self, entry_id: int) -> bool:
+        try:
+            return self._oob_repo.delete_entry(entry_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] remove_from_order_of_battle: {e}")
+            return False
+
+    def get_oob_stats(self, campaign_id: int) -> dict:
+        try:
+            return self._oob_repo.get_stats(campaign_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] get_oob_stats: {e}")
+            return {"total_units": 0, "total_points": 0, "total_supply": 0, "by_role": {}}
+
+    def get_linked_army_lists(self, campaign_id: int) -> list[dict]:
+        try:
+            return self._oob_repo.get_linked_armies(campaign_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] get_linked_army_lists: {e}")
+            return []
+
+    def link_army_list(self, campaign_id: int, army_id: int,
+                       label: str = "", is_primary: bool = False) -> int:
+        try:
+            return self._oob_repo.link_army(campaign_id, army_id, label, is_primary)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] link_army_list: {e}")
+            return 0
+
+    def unlink_army_list(self, campaign_id: int, army_id: int) -> bool:
+        try:
+            return self._oob_repo.unlink_army(campaign_id, army_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] unlink_army_list: {e}")
+            return False
+
+    # ── Crusade / Campaign Progression ────────────────────────────────────────
+
+    def get_or_create_force(self, campaign_id: int, faction: str = '',
+                             system_id: str = 'wh40k') -> dict:
+        try:
+            return self._crusade_repo.get_or_create_force(campaign_id, faction, system_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] get_or_create_force: {e}")
+            return {}
+
+    def update_crusade_force(self, campaign_id: int, **kwargs) -> bool:
+        try:
+            return self._crusade_repo.update_force(campaign_id, **kwargs)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] update_crusade_force: {e}")
+            return False
+
+    def add_requisition(self, campaign_id: int, amount: int, action: str,
+                        description: str = '') -> bool:
+        try:
+            return self._crusade_repo.add_requisition(campaign_id, amount, action, description)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] add_requisition: {e}")
+            return False
+
+    def spend_requisition(self, campaign_id: int, amount: int, action: str,
+                          description: str = '') -> bool:
+        try:
+            return self._crusade_repo.spend_requisition(campaign_id, amount, action, description)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] spend_requisition: {e}")
+            return False
+
+    def get_requisition_log(self, campaign_id: int) -> list[dict]:
+        try:
+            return self._crusade_repo.get_requisition_log(campaign_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] get_requisition_log: {e}")
+            return []
+
+    def get_unit_crusade_record(self, oob_entry_id: int) -> dict:
+        try:
+            return self._crusade_repo.get_or_create_unit_record(oob_entry_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] get_unit_crusade_record: {e}")
+            return {}
+
+    def update_unit_crusade_record(self, oob_entry_id: int, **kwargs) -> bool:
+        try:
+            return self._crusade_repo.update_unit_record(oob_entry_id, **kwargs)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] update_unit_crusade_record: {e}")
+            return False
+
+    def add_unit_experience(self, oob_entry_id: int, xp: int) -> dict:
+        try:
+            return self._crusade_repo.add_experience(oob_entry_id, xp)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] add_unit_experience: {e}")
+            return {}
+
+    def add_unit_honour(self, oob_entry_id: int, honour_type: str,
+                        name: str, effect: str) -> bool:
+        try:
+            return self._crusade_repo.add_honour(oob_entry_id, honour_type, name, effect)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] add_unit_honour: {e}")
+            return False
+
+    def remove_unit_honour(self, oob_entry_id: int, index: int) -> bool:
+        try:
+            return self._crusade_repo.remove_honour(oob_entry_id, index)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] remove_unit_honour: {e}")
+            return False
+
+    def add_unit_scar(self, oob_entry_id: int, scar_type: str,
+                      name: str, effect: str) -> bool:
+        try:
+            return self._crusade_repo.add_scar(oob_entry_id, scar_type, name, effect)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] add_unit_scar: {e}")
+            return False
+
+    def remove_unit_scar(self, oob_entry_id: int, index: int) -> bool:
+        try:
+            return self._crusade_repo.remove_scar(oob_entry_id, index)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] remove_unit_scar: {e}")
+            return False
+
+    def get_all_unit_crusade_records(self, campaign_id: int) -> list[dict]:
+        try:
+            return self._crusade_repo.get_all_unit_records_for_campaign(campaign_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] get_all_unit_crusade_records: {e}")
+            return []
+
+    def add_battle(self, campaign_id: int, **kwargs) -> int:
+        try:
+            battle_id = self._crusade_repo.add_battle(campaign_id, **kwargs)
+            result = kwargs.get('result', 'Draw')
+            self._crusade_repo.increment_force_battles(campaign_id, result)
+            return battle_id
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] add_battle: {e}")
+            return 0
+
+    def get_battles(self, campaign_id: int) -> list[dict]:
+        try:
+            return self._crusade_repo.get_battles(campaign_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] get_battles: {e}")
+            return []
+
+    def update_battle(self, battle_id: int, **kwargs) -> bool:
+        try:
+            return self._crusade_repo.update_battle(battle_id, **kwargs)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] update_battle: {e}")
+            return False
+
+    def delete_battle(self, battle_id: int) -> bool:
+        try:
+            return self._crusade_repo.delete_battle(battle_id)
+        except Exception as e:
+            log.error(f"[CAMPAIGN V2] delete_battle: {e}")
+            return False
