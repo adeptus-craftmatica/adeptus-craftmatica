@@ -145,8 +145,8 @@ if sys.platform == 'darwin':
         bundle_identifier='com.adeptus.craftmatica',
         info_plist={
             'CFBundleDisplayName':        'Adeptus Craftmatica',
-            'CFBundleShortVersionString': '0.1.0',
-            'CFBundleVersion': '0.1.0',
+            'CFBundleShortVersionString': '0.2.0',
+            'CFBundleVersion': '0.2.0',
             'NSPrincipalClass':           'NSApplication',
             'NSHighResolutionCapable':    True,
             'NSAppleScriptEnabled':       False,
