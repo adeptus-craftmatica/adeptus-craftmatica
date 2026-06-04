@@ -23,6 +23,12 @@ def _parse_map(row: dict) -> dict:
         row["fog_data"] = json.loads(raw) if isinstance(raw, str) else list(raw or [])
     except Exception:
         row["fog_data"] = []
+    for field in ("col_widths_json", "row_heights_json", "layers_json"):
+        raw = row.get(field, "[]")
+        try:
+            row[field] = json.loads(raw) if isinstance(raw, str) else (raw or [])
+        except Exception:
+            row[field] = []
     row["grid_enabled"] = bool(row.get("grid_enabled", 1))
     row["fog_enabled"]  = bool(row.get("fog_enabled",  0))
     return row
@@ -118,6 +124,23 @@ class MapRepository:
                 "CREATE INDEX IF NOT EXISTS idx_map_tokens_mid "
                 "ON map_tokens(map_id)"
             )
+            # Add new columns to campaign_maps (ALTER TABLE is a no-op if column exists)
+            for col_sql in [
+                "ALTER TABLE campaign_maps ADD COLUMN col_widths_json TEXT DEFAULT '[]'",
+                "ALTER TABLE campaign_maps ADD COLUMN row_heights_json TEXT DEFAULT '[]'",
+                "ALTER TABLE campaign_maps ADD COLUMN layers_json TEXT DEFAULT '[]'",
+            ]:
+                try:
+                    self._db.execute(col_sql)
+                except Exception:
+                    pass  # Column already exists
+            # Add layer_key to map_tokens
+            try:
+                self._db.execute(
+                    "ALTER TABLE map_tokens ADD COLUMN layer_key TEXT DEFAULT 'tokens'"
+                )
+            except Exception:
+                pass  # Column already exists
         except Exception as e:
             log.error(f"[MapRepository] init_tables: {e}")
 
@@ -183,14 +206,23 @@ class MapRepository:
             return False
 
     def save_map_state(self, map_id: int, zoom: float, pan_x: float,
-                       pan_y: float, fog_data: list) -> bool:
-        return self.update_map(
-            map_id,
+                       pan_y: float, fog_data: list,
+                       col_widths: list = None,
+                       row_heights: list = None,
+                       layers: list = None) -> bool:
+        kwargs = dict(
             zoom_level=float(zoom),
             pan_x=float(pan_x),
             pan_y=float(pan_y),
-            fog_data=fog_data,
+            fog_data=json.dumps(fog_data),
         )
+        if col_widths is not None:
+            kwargs["col_widths_json"] = json.dumps(col_widths)
+        if row_heights is not None:
+            kwargs["row_heights_json"] = json.dumps(row_heights)
+        if layers is not None:
+            kwargs["layers_json"] = json.dumps(layers)
+        return self.update_map(map_id, **kwargs)
 
     # ── Tokens ────────────────────────────────────────────────────────────────
 
